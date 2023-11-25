@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">ezBusPassengerApplication</string>
+    <string name="app_logo_name">EZBus</string>
+    <string name="app_tag_line">Real-time public bus tracking and contactless fare payment system</string>
+    <string name="mapSearch_text">Your destination...?</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="welcome">Welcome !</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="login_failed">Login failed</string>
+    <string name="privacy_url">https://sites.google.com/view/ezbuspassenger-privacy-policy</string>
+    <string name="terms_conditions_url">https://sites.google.com/view/ezbuspassenger-terms-condition</string>
+    <string name="main_app_name">EZBus</string>
+    <string name="sub_app_name">Passenger</string>
+
+
+</resources>
