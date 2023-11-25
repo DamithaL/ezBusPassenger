@@ -16,27 +16,29 @@
         android:theme="@style/Theme.EzBusPassenger"
         tools:targetApi="31">
         <activity
-            android:name=".Login"
-            android:theme="@style/Theme.Login"
-            android:exported="true">
+            android:name=".ui.SignUp"
+            android:exported="false" />
+        <activity
+            android:name=".ui.Login"
+            android:exported="true"
+            android:theme="@style/Theme.Login">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
-                    <intent-filter>
-                        <action android:name="android.intent.action.MAIN" />
-
-                        <category android:name="android.intent.category.LAUNCHER" />
-                    </intent-filter>
-    </activity>
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <activity
-            android:name=".TermConditions"
+            android:name=".ui.TermConditions"
             android:exported="false" />
         <activity
-            android:name=".PrivacyPolicyActivity"
+            android:name=".ui.PrivacyPolicyActivity"
             android:exported="false" />
         <activity
-            android:name=".Settings"
+            android:name=".ui.Settings"
             android:exported="false" />
         <activity
-            android:name=".virtualTicket"
+            android:name=".ui.virtualTicket"
             android:exported="false" />
         <!--
              TODO: Before you run your application, you need a Google Maps API key.
@@ -54,14 +56,16 @@
             android:value="${MAPS_API_KEY}" />
 
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:exported="true">
-<!--            -->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
 
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
+            <!--  -->
+            <!-- <intent-filter> -->
+            <!-- <action android:name="android.intent.action.MAIN" /> -->
+
+
+            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
+            <!-- </intent-filter> -->
         </activity>
     </application>
 

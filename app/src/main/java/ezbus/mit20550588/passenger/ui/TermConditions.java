@@ -1,4 +1,4 @@
-package ezbus.mit20550588.passenger;
+package ezbus.mit20550588.passenger.ui;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -7,6 +7,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.webkit.WebView;
+
+import ezbus.mit20550588.passenger.R;
 
 public class TermConditions extends AppCompatActivity {
 

@@ -1,12 +1,10 @@
-package ezbus.mit20550588.passenger;
+package ezbus.mit20550588.passenger.ui;
 
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Point;
 import android.location.Address;
 import android.location.Geocoder;
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -16,7 +14,6 @@ import android.widget.EditText;
 import android.widget.SearchView;
 import android.widget.Switch;
 import android.widget.TableRow;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -48,6 +45,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import ezbus.mit20550588.passenger.R;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 

@@ -1,8 +1,8 @@
-package ezbus.mit20550588.passenger;
+package ezbus.mit20550588.passenger.ui;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.graphics.Color;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.Spannable;
@@ -11,8 +11,11 @@ import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import ezbus.mit20550588.passenger.R;
 
 public class Login extends AppCompatActivity {
 
@@ -23,14 +26,14 @@ public class Login extends AppCompatActivity {
 
         // EZBus Passenger app main text
 
-//        TextView textView = findViewById(R.id.main_app_name);
-//        String html = "<font color=#22C9D3>EZBus</font> <font color=#74EEF5>Passenger</font>";
-//        textView.setText(Html.fromHtml(html));
+        TextView textView0 = findViewById(R.id.main_app_name);
+        String html = "<font color=Color.WHITE>EZBus</font> <font color=#74EEF5>Passenger</font>";
+        textView0.setText(Html.fromHtml(html));
 
         TextView textView = findViewById(R.id.signUpText);
 
         // Create the SpannableString
-        SpannableString spannableString = new SpannableString("Don’t have an account? Sign up");
+        SpannableString spannableString = new SpannableString("Don’t have an account? Sign Up");
 
         // Set a ClickableSpan for the "Sign up" part
         ClickableSpan clickableSpan = new ClickableSpan() {
@@ -56,7 +59,20 @@ public class Login extends AppCompatActivity {
 
         // Make the TextView clickable
         textView.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
+
+
+        // go to Main Activity
+        Button LoginButton = (Button) this.findViewById(R.id.LoginButton);
+        LoginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Intent intent = new Intent(getApplicationContext(),
+                        MainActivity.class);
+                startActivity(intent);
+            }
+        });
+
+
     }
-
-
 }

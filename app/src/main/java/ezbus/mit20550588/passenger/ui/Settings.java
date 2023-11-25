@@ -1,4 +1,4 @@
-package ezbus.mit20550588.passenger;
+package ezbus.mit20550588.passenger.ui;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -9,6 +9,8 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+
+import ezbus.mit20550588.passenger.R;
 
 public class Settings extends AppCompatActivity {
 
