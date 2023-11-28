@@ -9,6 +9,12 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.google.android.material.button.MaterialButton;
 
 import ezbus.mit20550588.passenger.R;
 
@@ -19,18 +25,18 @@ public class Settings extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        // Remove the title (text) from the action bar
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-
-        // calling the action bar
-        ActionBar actionBar = getSupportActionBar();
-
-        // showing the back button in action bar
-        actionBar.setDisplayHomeAsUpEnabled(true);
+//        // Remove the title (text) from the action bar
+//        getSupportActionBar().setDisplayShowTitleEnabled(false);
+//
+//        // calling the action bar
+//        ActionBar actionBar = getSupportActionBar();
+//
+//        // showing the back button in action bar
+//        actionBar.setDisplayHomeAsUpEnabled(true);
 
         // go to Privacy Policy Web page
-        Button privacyPolicyButton = (Button) this.findViewById(R.id.privacyPolicyButton);
-        privacyPolicyButton.setTextSize(18);
+        MaterialButton privacyPolicyButton = findViewById(R.id.privacyPolicyButton);
+
         privacyPolicyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -42,8 +48,8 @@ public class Settings extends AppCompatActivity {
         });
 
         // go to Terms Conditions Web page
-        Button termsConditionsButton = (Button) this.findViewById(R.id.termsOfServiceButton);
-        termsConditionsButton.setTextSize(18);
+        Button termsConditionsButton = findViewById(R.id.terms_of_service_button);
+
         termsConditionsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
