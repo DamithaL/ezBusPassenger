@@ -1,4 +1,4 @@
-package ezbus.mit20550588.passenger.ui;
+package ezbus.mit20550588.passenger.ui.ForgotPassword;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import ezbus.mit20550588.passenger.R;
+import ezbus.mit20550588.passenger.ui.Login.Login;
 
 public class ForgotPassword extends AppCompatActivity {
 

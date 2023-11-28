@@ -1,4 +1,4 @@
-package ezbus.mit20550588.passenger.ui;
+package ezbus.mit20550588.passenger.ui.Login;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 
 import ezbus.mit20550588.passenger.R;
+import ezbus.mit20550588.passenger.ui.MainActivity;
 
 public class AccountSetupCompleted extends AppCompatActivity {
 

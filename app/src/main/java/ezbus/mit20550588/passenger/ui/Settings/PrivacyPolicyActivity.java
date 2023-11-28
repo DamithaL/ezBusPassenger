@@ -1,4 +1,4 @@
-package ezbus.mit20550588.passenger.ui;
+package ezbus.mit20550588.passenger.ui.Settings;
 
 import androidx.appcompat.app.AppCompatActivity;
 

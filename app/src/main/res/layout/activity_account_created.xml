@@ -1,9 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.AccountCreated">
+    tools:context=".ui.Login.AccountCreated">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white" />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp"
+        >
+
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="30dp" />
+
+        <TextView
+            android:id="@+id/main_app_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/main_app_name"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textStyle="bold"
+            android:textSize="28sp"
+            android:textColor="@color/my_primary"
+            android:layout_gravity="center"
+            />
+
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="70dp" />
+
+        <TextView
+            android:id="@+id/textView6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Congratulations"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:textSize="25sp"
+            />
+
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="10dp"/>
+
+        <TextView
+            android:id="@+id/textView7"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Your account has been successfully created."
+            />
+
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="50dp" />
+
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"/>
+
+
+        <View
+            android:id="@+id/view4"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/howToUseButton"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="How to Use"
+            app:cornerRadius="30dp"/>
+
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="20dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/addPaymentButton"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="Add Payment Method"
+            app:cornerRadius="30dp"/>
+
+
+    </LinearLayout>
+
+
+
+</RelativeLayout>

@@ -1,96 +1,333 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.Settings">
+    tools:context=".ui.Settings.Settings"
+    android:orientation="vertical">
 
-    <LinearLayout
-        android:id="@+id/linearLayout"
+
+    <!-- App Bar- Custom -->
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="20dp">
+        android:layout_height="wrap_content">
 
+        <!--Back button-->
+        <ImageButton
+            android:id="@+id/BackButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/button_back_24"
+            android:backgroundTint="@color/white"
+            app:iconTint="@color/black"
+            android:padding="14dp"/>
 
-        <ImageView
-            android:id="@+id/imageView3"
-            android:layout_width="match_parent"
-            android:layout_height="221dp"
-            app:background="@color/gray"
-            app:srcCompat="@drawable/ic_baseline_account_circle_24" />
-
+        <!--App title -->
         <TextView
-            android:id="@+id/textView0"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="10dp"
-            android:textSize="20dp"
+            android:text="Settings"
+            android:layout_centerInParent="true"
+            android:textColor="@color/black"
             android:textStyle="bold"
-            android:text="Damitha Liyanaarachchi" />
+            android:textSize="@dimen/app_title_font_size"/>
 
-        <TextView
-            android:id="@+id/textView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="10dp"
-            android:text="Your profile" />
+    </RelativeLayout>
 
-        <TextView
-            android:id="@+id/textView2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="10dp"
-            android:text="Payment settings" />
 
-        <TextView
-            android:id="@+id/textView3"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="10dp"
-            android:text="Account settings" />
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
+        <!--   Ticket card + All the tabs   -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_weight="1"
-            android:layout_alignParentBottom="true"
-            >
+            android:orientation="vertical"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp">
 
-            <Button
-                android:id="@+id/privacyPolicyButton"
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/space_size_settings">
+            </Space>
+
+            <!--   Ticket card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:background="@drawable/rounded_edittext_bg"
+                android:orientation="horizontal"
+                android:layout_gravity="center"
+                android:padding="20dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:elevation="20dp"
+                android:backgroundTint="#B2EBF2">
+
+                <!--  Texts and button of the Ticket card -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Your account has"
+                        android:textStyle="bold"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="10dp">
+                    </TextView>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="4 Tickets"
+                        android:textStyle="bold"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="10dp"                  >
+                    </TextView>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="available for use"
+
+                        android:textSize="16sp"
+                        android:layout_marginBottom="10dp"                  >
+                    </TextView>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/MyTicketsButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="60dp"
+                        android:text="My Tickets"
+                        app:rippleColor="@color/quantum_vanillagreen300"
+                        android:paddingStart="30dp"
+                        android:paddingEnd="30dp"
+                        android:textAllCaps="false"
+                        app:cornerRadius="30dp"/>
+
+                </LinearLayout>
+
+                <!-- Bus ticket image  -->
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:src="@drawable/bus_tickets_two">
+                </ImageView>
+
+            </LinearLayout>
+
+            <!--   Settings pages buttons         -->
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/space_size_settings">
+            </Space>
+
+            <!-- First tab - Profile, payment, security settings-->
+
+                <!--Profile settings-->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonProfileSettings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/button_settings_1"
+                    android:textAlignment="textStart"
+                    android:textColor="@color/black"
+                    android:textAllCaps="false"
+                    app:icon="@drawable/sidebar_user_24"
+                    app:iconTint="@color/black"
+                    app:cornerRadius="30dp"
+                    android:backgroundTint="@color/gray100"
+                    app:iconPadding="20dp"
+                    android:paddingStart="20dp"
+                    android:padding="20dp"
+                    app:iconSize="@dimen/icon_size_settings"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    app:rippleColor="@color/button_ripple">
+                </com.google.android.material.button.MaterialButton>
+
+                <!--Payment settings-->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonPaymentSettings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/button_settings_2"
+                    android:textAlignment="textStart"
+                    android:textColor="@color/black"
+                    android:textAllCaps="false"
+                    app:icon="@drawable/sidebar_payment_24"
+                    app:iconTint="@color/black"
+                    app:cornerRadius="30dp"
+                    android:backgroundTint="@color/gray100"
+                    app:iconPadding="20dp"
+                    android:paddingStart="20dp"
+                    android:padding="20dp"
+                    app:iconSize="@dimen/icon_size_settings"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    app:rippleColor="@color/button_ripple">
+                </com.google.android.material.button.MaterialButton>
+
+                <!--Security settings-->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonSecuritySettings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/button_settings_3"
+                    android:textAlignment="textStart"
+                    android:textColor="@color/black"
+                    android:textAllCaps="false"
+                    app:icon="@drawable/sidebar_security_24"
+                    app:iconTint="@color/black"
+                    app:cornerRadius="30dp"
+                    android:backgroundTint="@color/gray100"
+                    app:iconPadding="20dp"
+                    android:paddingStart="20dp"
+                    android:padding="20dp"
+                    app:iconSize="@dimen/icon_size_settings"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    app:rippleColor="@color/button_ripple">
+                </com.google.android.material.button.MaterialButton>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/space_size_settings">
+            </Space>
+
+            <!-- Second tab - About us, Contact us, Privacy Policy-->
+                <!--About us-->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonAboutUs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/button_settings_4"
+                    android:textAlignment="textStart"
+                    android:textColor="@color/black"
+                    android:textAllCaps="false"
+                    app:icon="@drawable/icon_about_us"
+                    app:iconTint="@color/black"
+                    app:cornerRadius="30dp"
+                    android:backgroundTint="@color/gray100"
+                    app:iconPadding="20dp"
+                    android:paddingStart="20dp"
+                    android:padding="20dp"
+                    app:iconSize="@dimen/icon_size_settings"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    app:rippleColor="@color/button_ripple">
+                </com.google.android.material.button.MaterialButton>
+
+                <!--Contact us-->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonContactUs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/button_settings_5"
+                    android:textAlignment="textStart"
+                    android:textColor="@color/black"
+                    android:textAllCaps="false"
+                    app:icon="@drawable/sidebar_contact_24"
+                    app:iconTint="@color/black"
+                    app:cornerRadius="30dp"
+                    android:backgroundTint="@color/gray100"
+                    app:iconPadding="20dp"
+                    android:paddingStart="20dp"
+                    android:padding="20dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    app:iconSize="@dimen/icon_size_settings"
+                    app:rippleColor="@color/button_ripple">
+                </com.google.android.material.button.MaterialButton>
+
+                <!--Privacy policy-->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/privacyPolicyButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/button_settings_6"
+                    android:textAlignment="textStart"
+                    android:textColor="@color/black"
+                    android:textAllCaps="false"
+                    app:icon="@drawable/icon_policy_policy"
+                    app:iconTint="@color/black"
+                    app:cornerRadius="30dp"
+                    android:backgroundTint="@color/gray100"
+                    app:iconPadding="20dp"
+                    android:paddingStart="20dp"
+                    android:padding="20dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    app:iconSize="@dimen/icon_size_settings"
+                    app:rippleColor="@color/button_ripple">
+                </com.google.android.material.button.MaterialButton>
+
+                <!--Terms of service-->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/terms_of_service_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/button_settings_7"
+                    android:textAlignment="textStart"
+                    android:textColor="@color/black"
+                    android:textAllCaps="false"
+                    app:icon="@drawable/icon_terms"
+                    app:iconTint="@color/black"
+                    app:cornerRadius="30dp"
+                    android:backgroundTint="@color/gray100"
+                    app:iconPadding="20dp"
+                    android:paddingStart="20dp"
+                    android:padding="20dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    app:iconSize="@dimen/icon_size_settings"
+                    app:rippleColor="@color/button_ripple">
+                </com.google.android.material.button.MaterialButton>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/space_size_settings">
+            </Space>
+
+            <!-- Third tab - Log out-->
+            <!--Log Out -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/logoutButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:padding="5dp"
-                android:background="@android:color/transparent"
-                android:textColor="@color/black"
-                android:textSize="10dp"
-                android:layout_alignParentBottom="true"
-                android:text="Privacy Policy" />
+                android:text="Log Out"
+                android:textAlignment="textStart"
+                android:textAllCaps="false"
+                app:icon="@drawable/round_power_settings_new_24"
+                app:cornerRadius="30dp"
+                app:iconSize="@dimen/icon_size_settings"
+                android:backgroundTint="#595959"
+                app:iconPadding="20dp"
+                android:paddingStart="20dp"
+                android:padding="20dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:theme="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                app:rippleColor="@color/quantum_googred"          >
 
-            <Button
-                android:id="@+id/termsOfServiceButton"
+            </com.google.android.material.button.MaterialButton>
+
+            <Space
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:padding="5dp"
-                android:background="@android:color/transparent"
-                android:textColor="@color/black"
-                android:textSize="10dp"
-                android:layout_alignParentBottom="true"
-                android:text="Terms of Service" />
+                android:layout_height="@dimen/space_size_settings">
+            </Space>
 
         </LinearLayout>
 
+    </ScrollView>
 
-    </LinearLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

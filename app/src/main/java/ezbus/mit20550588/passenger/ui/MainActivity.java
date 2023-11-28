@@ -11,6 +11,9 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.SearchView;
 import android.widget.Switch;
 import android.widget.TableRow;
@@ -37,6 +40,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.json.JSONArray;
@@ -47,6 +51,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ezbus.mit20550588.passenger.R;
+import ezbus.mit20550588.passenger.ui.Settings.Settings;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -57,7 +62,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Switch switchButton;
     private TableRow bannerTableRow;
     private SearchView mapSearchView;
-    private FloatingActionButton fab;
+
+
+    private ProgressBar loadingProgressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,16 +72,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         getSupportActionBar().hide();
 
+        // Retrieve the content view that renders the map.
+        setContentView(R.layout.activity_main);
+
+        // Initialize the loadingProgressBar after setting the content view
+        loadingProgressBar = findViewById(R.id.loadingProgressBar);
+        showProgressBar(); // Show progress bar before making the request
 //        TableRow bannerTableRow = (TableRow) findViewById(R.id.bannerTableRow);
 //        bannerTableRow.setVisibility(View.GONE);
 
 
-        // Retrieve the content view that renders the map.
-        setContentView(R.layout.activity_main);
+
+
+
+
 
         // Get the SupportMapFragment and request notification when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
+        showProgressBar(); // Show progress bar before making the request
         mapFragment.getMapAsync(this);
 
 
@@ -83,8 +99,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //        mapSearchView.setVisibility(View.GONE);
 
 
-        bannerTableRow = findViewById(R.id.bannerTableRow);
-        bannerTableRow.setVisibility(View.GONE);
+//        bannerTableRow = findViewById(R.id.bannerTableRow);
+//        bannerTableRow.setVisibility(View.GONE);
 
         mapSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -117,10 +133,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //            @Override public void onClick(View view) { settings(); } });
 
         // Initialize fab
-        fab = findViewById(R.id.fab);
+        ImageView settingsButton = findViewById(R.id.SettingsButton);
 
         // Set an OnClickListener for the fab
-        fab.setOnClickListener(new View.OnClickListener() {
+        settingsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Open the SettingsActivity when the fab is clicked
@@ -129,11 +145,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        Button purchase = (Button) findViewById(R.id.button);
-        purchase.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View view) { virtualTicket(); } });
+//        Button purchase = (Button) findViewById(R.id.button);
+//        purchase.setOnClickListener(new View.OnClickListener() {
+//            @Override public void onClick(View view) { virtualTicket(); } });
 
 
+    }
+
+    private void showProgressBar() {
+        loadingProgressBar.setVisibility(View.VISIBLE);
+    }
+
+    private void hideProgressBar() {
+        loadingProgressBar.setVisibility(View.GONE);
     }
 
     private void virtualTicket() {
@@ -321,9 +345,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             } else {
                                 Toast.makeText(MainActivity.this, "No routes found.", Toast.LENGTH_SHORT).show();
                             }
+                            // After parsing is done, hide the progress bar
+                            hideProgressBar();
                         } catch (JSONException e) {
                             e.printStackTrace();
                             Toast.makeText(MainActivity.this, "Error parsing directions.", Toast.LENGTH_SHORT).show();
+                            // Hide the progress bar in case of an error
+                            hideProgressBar();
                         }
                     }
                 },
@@ -332,6 +360,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     public void onErrorResponse(VolleyError error) {
                         error.printStackTrace();
                         Toast.makeText(MainActivity.this, "Error fetching directions.", Toast.LENGTH_SHORT).show();
+                        // Hide the progress bar in case of an error
+                        hideProgressBar();
                     }
                 });
 

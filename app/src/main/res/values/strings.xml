@@ -17,5 +17,35 @@
     <string name="main_app_name">EZBus</string>
     <string name="sub_app_name">Passenger</string>
 
+    <!--Settings Page - Buttons names-->
+    <string name="button_settings_1">Profile Settings</string>
+    <string name="button_settings_2">Payment Settings</string>
+    <string name="button_settings_3">Security Settings</string>
+    <string name="button_settings_4">About Us</string>
+    <string name="button_settings_5">Contact Us</string>
+    <string name="button_settings_6">Privacy Policy</string>
+    <string name="button_settings_7">Terms of Service</string>
+    <string name="button_settings_8">Log Out</string>
+
+    <!--    About us -->
+    <string name="about_us_overview">Welcome to the forefront of transformative technology with EZBus; the Mobile-based Real-Time Public Bus Tracking and Contactless Fare Payment System, a revolutionary initiative developed by Damitha Liyanaarachchi for the fulfillment of the Master of Information Technology degree at the University of Colombo School of Computing.</string>
+    <string name="about_us_vision">At the heart of this project lies the ambition to address the absence of a fully functional Mobility as a Service (MaaS) platform in Sri Lanka. Our mission is to pioneer a mobile-based solution that seamlessly integrates real-time bus tracking and contactless fare payment, ultimately elevating the accessibility and popularity of public transportation. /nJoin us on the journey towards a sustainable and technologically advanced future in public transportation!</string>
+    <string name="about_us_contact_us">For inquiries, collaborations, or additional information, please Contact Us</string>
+    <string name="about_us_join_us">Join us on the journey towards a sustainable and technologically advanced future in public transportation!</string>
+
+    <!--    Contact us -->
+    <string name="contact_us_welcome">We value your feedback and inquiries! Reach out to us for any questions related to EZBus</string>
+    <string name="contact_us_name">Damitha Liyanaarachchi</string>
+    <string name="contact_us_email">damithaliyanaarachchi@gmail.com</string>
+    <string name="contact_us_phone">0777 123 456</string>
+    <string name="contact_us_linkedin">https://www.linkedin.com/in/damitha-liyanaarachchi-084b3a54/</string>
+    <string name="contact_us_share">Share the app with your friends, family, and fellow commuters.</string>
+    <string name="contact_us_quick_chat_welcome">Got a quick question or need instant assistance? We\'re here to help! Chat with us!</string>
+
+
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 
 </resources>

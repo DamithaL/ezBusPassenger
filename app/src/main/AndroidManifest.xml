@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="ezbus.mit20550588.passenger">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -16,10 +15,63 @@
         android:theme="@style/Theme.EzBusPassenger"
         tools:targetApi="31">
         <activity
-            android:name=".ui.SignUp"
-            android:exported="false" />
+            android:name=".ui.Settings.ContactUs"
+            android:exported="false"
+            android:theme="@style/Theme.Settings"/>
         <activity
-            android:name=".ui.Login"
+            android:name=".ui.Settings.AboutUs"
+            android:exported="false"
+            android:theme="@style/Theme.Settings" />
+        <activity
+            android:name=".ui.Settings.SecuritySettings"
+            android:exported="false"
+            android:theme="@style/Theme.Settings" />
+        <activity
+            android:name=".ui.Settings.PaymentSettings"
+            android:exported="false"
+            android:theme="@style/Theme.Settings" />
+        <activity
+            android:name=".ui.Settings.ProfileSettings"
+            android:exported="false"
+            android:theme="@style/Theme.Settings" />
+        <activity
+            android:name=".ui.Login.AccountSetupCompleted"
+            android:exported="false"
+            android:theme="@style/Theme.Login" />
+        <activity
+            android:name=".ui.Login.AddPayment"
+            android:exported="false"
+            android:theme="@style/Theme.Login" />
+        <activity
+            android:name=".ui.Login.AccountCreated"
+            android:exported="false"
+            android:theme="@style/Theme.Login" />
+        <activity
+            android:name=".ui.Login.SignUpEmailVerification"
+            android:exported="false"
+            android:theme="@style/Theme.Login" />
+        <activity
+            android:name=".ui.ForgotPassword.PasswordChanged"
+            android:exported="false"
+            android:theme="@style/Theme.Login" />
+        <activity
+            android:name=".ui.ForgotPassword.CreateNewPassword"
+            android:exported="false"
+            android:theme="@style/Theme.Login" />
+        <activity
+            android:name=".ui.ForgotPassword.ForgotPasswordCodeCheck"
+            android:exported="false"
+            android:theme="@style/Theme.Login" />
+        <activity
+            android:name=".ui.ForgotPassword.ForgotPassword"
+            android:exported="false"
+            android:theme="@style/Theme.Login" />
+        <activity
+            android:name=".ui.Login.SignUp"
+            android:exported="false"
+            android:theme="@style/Theme.Login" />
+        <activity
+            android:name=".ui.Login.Login"
             android:exported="true"
             android:theme="@style/Theme.Login">
             <intent-filter>
@@ -29,17 +81,21 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.TermConditions"
-            android:exported="false" />
+            android:name=".ui.Settings.TermConditions"
+            android:exported="false"
+            android:theme="@style/Theme.Settings"/>
         <activity
-            android:name=".ui.PrivacyPolicyActivity"
-            android:exported="false" />
+            android:name=".ui.Settings.PrivacyPolicyActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Settings" />
         <activity
-            android:name=".ui.Settings"
-            android:exported="false" />
+            android:name=".ui.Settings.Settings"
+            android:exported="false"
+            android:theme="@style/Theme.Settings" />
         <activity
             android:name=".ui.virtualTicket"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.Settings"/>
         <!--
              TODO: Before you run your application, you need a Google Maps API key.
 

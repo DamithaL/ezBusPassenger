@@ -1,4 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
-  
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn = "navigation_view">
+
+    <group
+        android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/tickets"
+            android:icon="@drawable/saidebar_tickets_24"
+            android:title="My Tickets"/>
+
+        <item
+            android:id="@+id/profile"
+            android:icon="@drawable/sidebar_user_24"
+            android:title="Profile Settings"/>
+
+        <item
+            android:id="@+id/payment"
+            android:icon="@drawable/sidebar_payment_24"
+            android:title="Payment Settings"/>
+
+        <item
+            android:id="@+id/security"
+            android:icon="@drawable/sidebar_security_24"
+            android:title="Security Settings"/>
+
+
+
+
+    </group>
+
+    <item
+        android:title="">
+
+        <menu>
+            <item
+                android:id="@+id/contact"
+                android:icon="@drawable/sidebar_contact_24"
+                android:title="Contact Us"/>
+
+            <item
+                android:id="@+id/about"
+                android:icon="@drawable/sidebar_info_24"
+                android:title="About Us"/>
+        </menu>
+    </item>
+
+    <item
+        android:title="">
+
+        <menu>
+            <item
+                android:id="@+id/logout"
+                android:icon="@drawable/sidebar_logout_24"
+                android:title="Logout"/>
+        </menu>
+    </item>
+
 </menu>

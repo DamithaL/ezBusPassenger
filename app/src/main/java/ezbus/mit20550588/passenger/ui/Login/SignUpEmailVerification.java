@@ -1,4 +1,4 @@
-package ezbus.mit20550588.passenger.ui;
+package ezbus.mit20550588.passenger.ui.Login;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -19,6 +19,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import ezbus.mit20550588.passenger.R;
+import ezbus.mit20550588.passenger.ui.Login.AccountCreated;
 
 public class SignUpEmailVerification extends AppCompatActivity {
 

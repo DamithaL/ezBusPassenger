@@ -1,147 +1,170 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.MainActivity">
+    tools:context=".ui.MainActivity"
+    android:orientation="vertical"
+     >
 
-    <TableLayout
+    <!-- App Bar- Custom -->
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:padding="10dp">
 
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            >
-
-               <SearchView
-                android:id="@+id/mapSearch"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                android:background="@drawable/bg_searchview_rounded"
-                android:iconifiedByDefault="false"
-                android:queryHint="@string/mapSearch_text"
-                tools:layout_editor_absoluteX="10dp"
-                tools:layout_editor_absoluteY="10dp">
-
-            </SearchView>
-
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/fab"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_gravity="center"
-                android:layout_marginLeft="-2dp"
-                app:tint="@color/colorWhite"
-                app:backgroundTint="@color/brand_blue"
-                app:fabCustomSize="50dp"
-                app:maxImageSize="50dp"
-                app:srcCompat="@drawable/ic_baseline_account_circle_24" />
-
-        </TableRow>
-
-
-        <TableRow
+        <!-- Search View  -->
+        <SearchView
+            android:id="@+id/mapSearch"
             android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_weight="1">
-
-            <fragment
-                android:id="@+id/map"
-                android:name="com.google.android.gms.maps.SupportMapFragment"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_span="2"
-                 />
-
-        </TableRow>
-        <!-- Additional TableRow for the Banner -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="10dp"
-            android:background="@drawable/bg_bottom_banner"
-            android:orientation="vertical"
-
-            />
-
-        <TableRow
-            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/bannerTableRow"
-            android:layout_span="2"
-            android:padding="10dp"
-            android:background="@color/colorWhite"
+            android:layout_marginEnd="5dp"
+            android:background="@drawable/bg_searchview_rounded"
+            android:iconifiedByDefault="false"
+            android:queryHint="@string/mapSearch_text">
+        </SearchView>
 
-            > <!-- Initially set to gone -->
+        <!-- Settings button-->
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                >
-
-
-
-                <TextView
-                    android:id="@+id/bannerText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@color/colorWhite"
-                    android:gravity="left"
-                    android:padding="8dp"
-                    android:text="120 Horana - Colombo"
-                    android:textColor="@color/black"
-                    android:textStyle="bold"
-                    android:textSize="20dp"
-
-                    />
-
-                <TextView
-                    android:id="@+id/bannerText2"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@color/colorWhite"
-                    android:gravity="left"
-                    android:padding="8dp"
-                    android:text="9 minutes"
-                    android:textColor="@color/black"
-                    android:textSize="15dp"
-                    />
-
-                <TextView
-                    android:id="@+id/bannerText3"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@color/colorWhite"
-                    android:gravity="left"
-                    android:padding="8dp"
-                    android:text="ND-XXXX"
-                    android:textColor="@color/black"
-                    android:textSize="15dp"
-                    />
-
-                <Button
-                    android:id="@+id/button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="+ Rs. 32"
-                    app:backgroundTint="@color/colorGreen"
-                    android:gravity="center"
-
-
-                    />
-
-
-            </LinearLayout>
-
-        </TableRow>
-    </TableLayout>
+        <ImageView
+            android:id="@+id/SettingsButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_centerInParent="true"
+            android:layout_toEndOf="@id/mapSearch"
+            android:background="@drawable/settings_icons_bg"
+            android:backgroundTint="@color/white"
+            android:padding="3dp"
+            android:src="@drawable/sidebar_settings_24"
+            app:backgroundTint="@color/brand_blue"
+            app:tint="@color/white" />
 
 
 
 
+    </RelativeLayout>
+
+    <fragment
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        />
+
+                    <ProgressBar
+                        android:id="@+id/loadingProgressBar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:visibility="gone" />
+
+<!--    <TableLayout-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent">-->
+
+<!--      -->
 
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+<!--        <TableRow-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="0dp"-->
+<!--            android:layout_weight="1">-->
+
+<!--           -->
+
+
+
+<!--        </TableRow>-->
+<!--        &lt;!&ndash; Additional TableRow for the Banner &ndash;&gt;-->
+<!--        <LinearLayout-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="10dp"-->
+<!--            android:background="@drawable/bg_bottom_banner"-->
+<!--            android:orientation="vertical"-->
+
+<!--            />-->
+
+<!--        <TableRow-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:id="@+id/bannerTableRow"-->
+<!--            android:layout_span="2"-->
+<!--            android:padding="10dp"-->
+<!--            android:background="@color/colorWhite"-->
+
+<!--            > &lt;!&ndash; Initially set to gone &ndash;&gt;-->
+
+<!--            <LinearLayout-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="match_parent"-->
+<!--                android:orientation="vertical"-->
+<!--                >-->
+
+
+
+<!--                <TextView-->
+<!--                    android:id="@+id/bannerText"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:background="@color/colorWhite"-->
+<!--                    android:gravity="left"-->
+<!--                    android:padding="8dp"-->
+<!--                    android:text="120 Horana - Colombo"-->
+<!--                    android:textColor="@color/black"-->
+<!--                    android:textStyle="bold"-->
+<!--                    android:textSize="20dp"-->
+
+<!--                    />-->
+
+<!--                <TextView-->
+<!--                    android:id="@+id/bannerText2"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:background="@color/colorWhite"-->
+<!--                    android:gravity="left"-->
+<!--                    android:padding="8dp"-->
+<!--                    android:text="9 minutes"-->
+<!--                    android:textColor="@color/black"-->
+<!--                    android:textSize="15dp"-->
+<!--                    />-->
+
+<!--                <TextView-->
+<!--                    android:id="@+id/bannerText3"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:background="@color/colorWhite"-->
+<!--                    android:gravity="left"-->
+<!--                    android:padding="8dp"-->
+<!--                    android:text="ND-XXXX"-->
+<!--                    android:textColor="@color/black"-->
+<!--                    android:textSize="15dp"-->
+<!--                    />-->
+
+<!--                <Button-->
+<!--                    android:id="@+id/button"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="+ Rs. 32"-->
+<!--                    app:backgroundTint="@color/colorGreen"-->
+<!--                    android:gravity="center"-->
+
+
+<!--                    />-->
+
+
+
+
+<!--            </LinearLayout>-->
+
+<!--        </TableRow>-->
+<!--    </TableLayout>-->
+
+
+
+
+
+
+</LinearLayout>

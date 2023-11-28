@@ -1,9 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.Settings.ProfileSettings">
+    tools:context=".ui.Settings.ProfileSettings"
+    android:orientation="vertical">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- App Bar- Custom -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!--Back button-->
+        <ImageButton
+            android:id="@+id/BackButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/button_back_24"
+            android:backgroundTint="@color/white"
+            app:iconTint="@color/black"
+            android:padding="14dp"/>
+
+        <!--App title -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Profile Settings"
+            android:layout_centerInParent="true"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:textSize="@dimen/app_title_font_size"/>
+
+    </RelativeLayout>
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="30dp">
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/space_size_settings">
+            </Space>
+
+            <!-- Name  -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Name">
+            </TextView>
+
+            <EditText
+                android:id="@+id/editTextName"
+                style="@style/EditTextSettings"
+                android:inputType="textPersonName"
+                android:hint="Name" />
+
+            <!-- Email  -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Email address">
+            </TextView>
+
+            <EditText
+                android:id="@+id/editTextEmail"
+                style="@style/EditTextSettings"
+                android:inputType="textEmailAddress"
+               android:hint="Email address" />
+
+            <!-- Phone number  -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Phone number">
+
+            </TextView>
+
+            <EditText
+                android:id="@+id/editTextPhoneNumber"
+                style="@style/EditTextSettings"
+                android:inputType="phone"
+                android:hint="Phone number" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/space_size_settings">
+            </Space>
+
+            <!-- Save Button  -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/SaveButton"
+                android:layout_width="wrap_content"
+                android:layout_height="60dp"
+                android:text="Save Changes"
+                app:rippleColor="@color/quantum_vanillagreen300"
+                android:paddingStart="30dp"
+                android:paddingEnd="30dp"
+                android:textAllCaps="false"
+                android:layout_gravity="center_horizontal"
+                app:cornerRadius="30dp"/>
+
+    </LinearLayout>
+
+
+
+</LinearLayout>

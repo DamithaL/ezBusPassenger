@@ -1,7 +1,6 @@
-package ezbus.mit20550588.passenger.ui;
+package ezbus.mit20550588.passenger.ui.Settings;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -10,9 +9,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.google.android.material.button.MaterialButton;
 
@@ -25,18 +21,80 @@ public class Settings extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-//        // Remove the title (text) from the action bar
-//        getSupportActionBar().setDisplayShowTitleEnabled(false);
-//
-//        // calling the action bar
-//        ActionBar actionBar = getSupportActionBar();
-//
-//        // showing the back button in action bar
-//        actionBar.setDisplayHomeAsUpEnabled(true);
+        // Back button
+        ImageButton backButton = findViewById(R.id.BackButton);
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Finish the current activity
+                finish();
+            }
+        });
+
+        // go to Profile Settings
+        MaterialButton profileSettingsButton = findViewById(R.id.buttonProfileSettings);
+        profileSettingsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Intent intent = new Intent(getApplicationContext(),
+                        ProfileSettings.class);
+                startActivity(intent);
+            }
+        });
+
+        // go to Payment Settings
+        MaterialButton paymentSettingsButton = findViewById(R.id.buttonPaymentSettings);
+        paymentSettingsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Intent intent = new Intent(getApplicationContext(),
+                        PaymentSettings.class);
+                startActivity(intent);
+            }
+        });
+
+        // go to Security Settings
+        MaterialButton securitySettingsButton = findViewById(R.id.buttonSecuritySettings);
+        securitySettingsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Intent intent = new Intent(getApplicationContext(),
+                        SecuritySettings.class);
+                startActivity(intent);
+            }
+        });
+
+
+        // go to About Us
+        MaterialButton aboutUsButton = findViewById(R.id.buttonAboutUs);
+        aboutUsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Intent intent = new Intent(getApplicationContext(),
+                        AboutUs.class);
+                startActivity(intent);
+            }
+        });
+
+
+        // go to Contact Us
+        MaterialButton contactUsButton = findViewById(R.id.buttonContactUs);
+        contactUsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Intent intent = new Intent(getApplicationContext(),
+                        ContactUs.class);
+                startActivity(intent);
+            }
+        });
 
         // go to Privacy Policy Web page
         MaterialButton privacyPolicyButton = findViewById(R.id.privacyPolicyButton);
-
         privacyPolicyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

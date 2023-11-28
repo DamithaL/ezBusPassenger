@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.Settings.AboutUs"
+    android:orientation="vertical">
+
+
+    <!-- App Bar- Custom -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/black">
+
+        <!--Back button-->
+        <ImageButton
+            android:id="@+id/BackButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/button_back_24"
+            android:backgroundTint="@color/black"
+            app:iconTint="@color/white"
+            android:padding="14dp"/>
+
+        <!--App title -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="About Us"
+            android:layout_centerInParent="true"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:textSize="@dimen/app_title_font_size"/>
+
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"            >
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:src="@drawable/bus_prem_bg_2"/>
+
+            <!--  Overview -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/about_us_overview"
+                android:textColor="@color/white"
+                android:textSize="@dimen/about_us_font_size"
+                android:shadowColor="@color/black"
+                android:background="@color/black"
+                android:padding="30dp"
+                android:lineHeight="22dp"
+                android:ellipsize="end"
+                android:textAlignment="center"
+                android:backgroundTint="@color/black"/>
+
+            <!--  Our Vision -->
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Our Vision"
+                android:textColor="@color/white"
+                android:textSize="20dp"
+                android:textStyle="bold"
+                android:shadowColor="@color/black"
+                android:background="@color/black"
+                android:paddingStart="30dp"
+                android:lineHeight="22dp"
+                android:ellipsize="end"
+                android:backgroundTint="@color/black"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/about_us_vision"
+                android:textColor="@color/white"
+                android:textSize="@dimen/about_us_font_size"
+                android:shadowColor="@color/black"
+                android:background="@color/black"
+                android:paddingHorizontal="30dp"
+                android:paddingVertical="10dp"
+                android:lineHeight="22dp"
+                android:ellipsize="end"
+                android:backgroundTint="@color/black"/>
+
+
+            <!--Contact us button-->
+            <TextView
+                android:id="@+id/textContactUs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/about_us_contact_us"
+                android:textColor="@color/white"
+                android:textSize="@dimen/about_us_font_size"
+                android:shadowColor="@color/black"
+                android:background="@color/black"
+                android:paddingHorizontal="30dp"
+                android:paddingVertical="10dp"
+                android:lineHeight="22dp"
+                android:ellipsize="end"
+                android:backgroundTint="@color/black"/>
+
+            <!--Join us button-->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/about_us_join_us"
+                android:textColor="@color/white"
+                android:textSize="@dimen/about_us_font_size"
+                android:shadowColor="@color/black"
+                android:background="@color/black"
+                android:paddingHorizontal="30dp"
+                android:paddingBottom="40dp"
+                android:lineHeight="22dp"
+                android:ellipsize="end"
+                android:backgroundTint="@color/black"/>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

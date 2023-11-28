@@ -8,6 +8,8 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="gray">#808080</color>
+    <color name="gray100">#E3E3E3</color>
+    <color name="orange">@android:color/holo_orange_dark</color>
 
     <color name="colorPrimary">#6200EE</color>
     <color name="colorPrimaryDark">#3700B3</color>
@@ -22,5 +24,9 @@
 
     <color name="my_primary">#00ACC1</color>
     <color name="my_secondary">#00BCD4</color>
+
+    <color name="button_ripple">#B2EBF2</color>
+
+    <color name="contact_us_page_bg_color">#fff1ed</color>
 
 </resources>

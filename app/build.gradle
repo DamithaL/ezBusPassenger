@@ -30,6 +30,7 @@ android {
     buildFeatures {
         viewBinding true
     }
+    namespace 'ezbus.mit20550588.passenger'
 }
 
 dependencies {
