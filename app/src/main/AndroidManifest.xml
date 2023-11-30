@@ -4,6 +4,11 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!--    ////////// PLACES API TASK //////////////-->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -17,7 +22,7 @@
         <activity
             android:name=".ui.Settings.ContactUs"
             android:exported="false"
-            android:theme="@style/Theme.Settings"/>
+            android:theme="@style/Theme.Settings" />
         <activity
             android:name=".ui.Settings.AboutUs"
             android:exported="false"
@@ -74,16 +79,16 @@
             android:name=".ui.Login.Login"
             android:exported="true"
             android:theme="@style/Theme.Login">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+            <!--            <intent-filter>-->
+            <!--                <action android:name="android.intent.action.MAIN" />-->
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            <!--                <category android:name="android.intent.category.LAUNCHER" />-->
+            <!--            </intent-filter>-->
         </activity>
         <activity
             android:name=".ui.Settings.TermConditions"
             android:exported="false"
-            android:theme="@style/Theme.Settings"/>
+            android:theme="@style/Theme.Settings" />
         <activity
             android:name=".ui.Settings.PrivacyPolicyActivity"
             android:exported="false"
@@ -95,7 +100,7 @@
         <activity
             android:name=".ui.virtualTicket"
             android:exported="false"
-            android:theme="@style/Theme.Settings"/>
+            android:theme="@style/Theme.Settings" />
         <!--
              TODO: Before you run your application, you need a Google Maps API key.
 
@@ -111,17 +116,21 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />
 
+        <!--        ADDED TO DEBUG THE MAP FRAGMENT ERROR-->
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
         <activity
             android:name=".ui.MainActivity"
             android:exported="true">
 
-            <!--  -->
-            <!-- <intent-filter> -->
-            <!-- <action android:name="android.intent.action.MAIN" /> -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
 
-            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
-            <!-- </intent-filter> -->
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
     </application>
 

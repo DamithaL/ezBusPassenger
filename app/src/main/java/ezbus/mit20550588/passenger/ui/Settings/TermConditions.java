@@ -6,7 +6,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
 import android.webkit.WebView;
+import android.widget.ImageButton;
 
 import ezbus.mit20550588.passenger.R;
 
@@ -19,14 +21,15 @@ public class TermConditions extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_term_conditions);
 
-        // Remove the title (text) from the action bar
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-
-        // calling the action bar
-        ActionBar actionBar = getSupportActionBar();
-
-        // showing the back button in action bar
-        actionBar.setDisplayHomeAsUpEnabled(true);
+        // Back button
+        ImageButton backButton = findViewById(R.id.BackButton);
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Finish the current activity
+                finish();
+            }
+        });
 
         web =(WebView)findViewById(R.id.webView);
         web.loadUrl(getString(R.string.terms_conditions_url));

@@ -13,6 +13,7 @@ import android.widget.ImageButton;
 import com.google.android.material.button.MaterialButton;
 
 import ezbus.mit20550588.passenger.R;
+import ezbus.mit20550588.passenger.ui.Login.Login;
 
 public class Settings extends AppCompatActivity {
 
@@ -114,6 +115,19 @@ public class Settings extends AppCompatActivity {
                 // TODO Auto-generated method stub
                 Intent intent = new Intent(getApplicationContext(),
                         TermConditions.class);
+                startActivity(intent);
+            }
+        });
+
+        // Log out button clicked
+        Button logOutButton = findViewById(R.id.logoutButton);
+
+        logOutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                Intent intent = new Intent(getApplicationContext(),
+                        Login.class);
                 startActivity(intent);
             }
         });
