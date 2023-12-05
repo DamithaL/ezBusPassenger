@@ -8,7 +8,12 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="gray">#808080</color>
-    <color name="gray100">#E3E3E3</color>
+    <color name="gray100">#F5F5F5F5</color>
+    <color name="gray200">#EDEEEEEE</color>
+    <color name="gray300">#DEE0E0E0</color>
+    <color name="gray400">#BDBDBDBD</color>
+    <color name="gray500">#9C9E9E9E</color>
+    <color name="gray800">#40424242</color>
     <color name="orange">@android:color/holo_orange_dark</color>
 
     <color name="colorPrimary">#6200EE</color>

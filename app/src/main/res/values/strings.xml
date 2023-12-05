@@ -17,6 +17,13 @@
     <string name="main_app_name">EZBus</string>
     <string name="sub_app_name">Passenger</string>
 
+    <string name="MAPS_API_KEY">AIzaSyDDTamV9IieqbDXoWKxjEHmBo7jRcNuhFg</string>
+
+    <!-- Login successful screen   -->
+    <string name="login_results_welcome_text_1">Great to see you again!</string>
+    <string name="login_results_welcome_text_2">You\'ve logged in successfully.</string>
+
+
     <!--Settings Page - Buttons names-->
     <string name="button_settings_1">Profile Settings</string>
     <string name="button_settings_2">Payment Settings</string>

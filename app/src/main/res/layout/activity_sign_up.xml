@@ -78,7 +78,7 @@
                 android:layout_height="15dp" />
 
             <EditText
-                android:id="@+id/editTextTextEmailAddress2"
+                android:id="@+id/editTextEmailAddress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
@@ -96,11 +96,11 @@
 
 
             <EditText
-                android:id="@+id/editTextPhoneNumber"
+                android:id="@+id/editTextPassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="phone"
+                android:inputType="textPassword"
                 android:drawableEnd="@drawable/done_icon"
                 android:background="@drawable/rounded_edittext_bg"
                 android:padding="15dp"
@@ -113,7 +113,7 @@
 
 
             <EditText
-                android:id="@+id/editTextTextPassword"
+                android:id="@+id/editTextConfirmPassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"

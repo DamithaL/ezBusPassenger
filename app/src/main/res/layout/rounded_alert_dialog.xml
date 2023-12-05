@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/rounded_dialog_bg"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:id="@+id/dialogContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Welcome text 1       -->
+        <TextView
+            android:id="@+id/titleTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="30dp"
+            android:textColor="#000000"
+            android:textSize="18sp"
+            android:text="@string/login_results_welcome_text_1"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/messageTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="#333333"
+            android:text="@string/login_results_welcome_text_2"
+            android:textSize="16sp" />
+    </LinearLayout>
+</RelativeLayout>

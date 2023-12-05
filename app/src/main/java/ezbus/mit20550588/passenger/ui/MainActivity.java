@@ -1,7 +1,8 @@
 package ezbus.mit20550588.passenger.ui;
 
 
-import android.annotation.SuppressLint;
+import static androidx.constraintlayout.widget.Constraints.TAG;
+
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -9,20 +10,18 @@ import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.SearchView;
-import android.widget.Switch;
-import android.widget.TableRow;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -39,9 +38,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.ErrorDialogFragment;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -53,29 +50,34 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
-import com.google.android.libraries.places.api.model.TypeFilter;
 import com.google.android.libraries.places.api.net.PlacesClient;
-import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
-import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
+
+import ezbus.mit20550588.passenger.adapters.PlacesAutoCompleteAdapter;
 import ezbus.mit20550588.passenger.R;
 import ezbus.mit20550588.passenger.ui.Settings.Settings;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import android.text.Editable;
+import android.text.TextWatcher;
+
+
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, PlacesAutoCompleteAdapter.ClickListener {
 
     // widgets
     private GoogleMap myMap;
@@ -84,7 +86,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ImageView mGps;
 
     // constants
-    private static final String TAG = MainActivity.class.getSimpleName();
     private static final String FINE_LOCATION = android.Manifest.permission.ACCESS_COARSE_LOCATION;
     private static final String COURSE_LOCATION = android.Manifest.permission.ACCESS_COARSE_LOCATION;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1234;
@@ -97,6 +98,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean isSearchInProgress = false;
     private Handler handler = new Handler();
     private PlacesClient placesClient;
+    private PlacesAutoCompleteAdapter mAutoCompleteAdapter;
+    private RecyclerView recyclerView;
+    private LatLng SourceLocationLatLng;
+    private LatLng DestinationLocationLatLng;
+    private Polyline directionRoutePolyline;
+//    private ArrayList<BusLocation>
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,51 +118,43 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         getLocationPermission();
 
 
+        // PLACES
+        Places.initialize(this, getResources().getString(R.string.MAPS_API_KEY));
 
-//
-//
-//        // Initialize Places SDK
-//        Places.initialize(getApplicationContext(), "YOUR_API_KEY");
-//        placesClient = Places.createClient(this);
-//
-//        // Initialize AutocompleteSupportFragment
-//        AutocompleteSupportFragment autocompleteFragment =
-//                (AutocompleteSupportFragment) getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment_container);
-//
-//        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG));
-//        autocompleteFragment.setHint("Search for a place");
-//        autocompleteFragment.setActivityMode(AutocompleteActivityMode.OVERLAY);
-//        autocompleteFragment.setTypeFilter(TypeFilter.ADDRESS);
-//        autocompleteFragment.setCountry("SL");  // e.g., "US" for United States
-//
+        recyclerView = (RecyclerView) findViewById(R.id.places_recycler_view);
+        ((EditText) findViewById(R.id.place_search)).addTextChangedListener(filterTextWatcher);
 
-//        autocompleteFragment.setOnPlaceSelectedListener(new OnPlaceSelectedListener() {
-//            @Override
-//            public void onPlaceSelected(@NonNull com.google.android.libraries.places.api.model.Place place) {
-//                LatLng location = place.getLatLng();
-//                String placeName = place.getName();
-//                updateMap(location, placeName);
-//
-//                // Hide the keyboard when a place is selected
-//                hideKeyboard();
-//
-//                return true;
-//            }
-//
-//            @Override
-//            public void onError(@NonNull Status status) {
-//                Log.e(TAG, "Error: " + status.getStatusMessage());
-//                Toast.makeText(MainActivity.this, "Error: " + status.getStatusMessage(), Toast.LENGTH_SHORT).show();
-//            }
-//        });
+        mAutoCompleteAdapter = new PlacesAutoCompleteAdapter(this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mAutoCompleteAdapter.setClickListener(this);
+        recyclerView.setAdapter(mAutoCompleteAdapter);
+        mAutoCompleteAdapter.notifyDataSetChanged();
 
 
-//        View.OnClickListener listener = new View.OnClickListener() {
-//            public void onClick(View view) {
-//                virtualTicket();
-//            }
-//        };
-//        findViewById(R.id.button).setOnClickListener(listener);
+        // Source Location Text
+        EditText SourceLocationText = findViewById(R.id.sourceLocation);
+
+        // Set up an OnClickListener for the SourceLocationText
+        SourceLocationText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Show or make the RecyclerView visible
+                recyclerView.setVisibility(View.VISIBLE);
+                RelativeLayout SearchBarLayout = findViewById(R.id.SearchBarRelLayout);
+                SearchBarLayout.setVisibility(View.VISIBLE);
+            }
+        });
+
+        // Initialize Current Location Button
+
+        ImageView mGps = findViewById(R.id.ic_gps);
+        mGps.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "onClick: clicked gps icon");
+                getDeviceLocation();
+            }
+        });
 
 
         // Initialize Settings Button
@@ -167,6 +167,35 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // Open the SettingsActivity when the fab is clicked
                 Intent intent = new Intent(MainActivity.this, Settings.class);
                 startActivity(intent);
+            }
+        });
+
+        // Back button
+        ImageButton backButton = findViewById(R.id.BackButton);
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Show Direction Bar
+                RelativeLayout DirectionBar = findViewById(R.id.directionBar);
+                DirectionBar.setVisibility(View.GONE);
+
+                // Hide Search bar
+                RelativeLayout SearchBarLayout = findViewById(R.id.SearchBarRelLayout);
+                SearchBarLayout.setVisibility(View.VISIBLE);
+
+                // Clear Polylines
+                clearDirectionRoute();
+            }
+        });
+
+
+        // Swap location button
+        ImageButton swapButton = findViewById(R.id.SwapButton);
+        swapButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                swapLocations();
             }
         });
 
@@ -218,17 +247,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Show current location
             getDeviceLocation();
 
-            ImageView mGps = findViewById(R.id.ic_gps);
-            mGps.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Log.d(TAG, "onClick: clicked gps icon");
-                    getDeviceLocation();
-                }
-            });
 
             // Initiate Search Bar
-            initSearchBar();
+//            initSearchBar();
 
             // Hide waiting progress bar
             hideProgressBar();
@@ -237,6 +258,59 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
+
+    private TextWatcher filterTextWatcher = new TextWatcher() {
+        public void afterTextChanged(Editable s) {
+            if (!s.toString().equals("")) {
+                mAutoCompleteAdapter.getFilter().filter(s.toString());
+                if (recyclerView.getVisibility() == View.GONE) {
+                    recyclerView.setVisibility(View.VISIBLE);
+                }
+            } else {
+                if (recyclerView.getVisibility() == View.VISIBLE) {
+                    recyclerView.setVisibility(View.GONE);
+                }
+            }
+        }
+
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        }
+
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+        }
+    };
+
+
+    public void click(Place place) {
+
+        Toast.makeText(this, place.getAddress() + ", " + place.getLatLng().latitude + place.getLatLng().longitude, Toast.LENGTH_SHORT).show();
+        recyclerView.setVisibility(View.GONE);
+        moveCamera(place.getLatLng(), DEFAULT_ZOOM, place.getName());
+        EditText PlaceSearchEditText = findViewById(R.id.place_search);
+        PlaceSearchEditText.setText("");
+
+        DestinationLocationLatLng = place.getLatLng();
+
+
+        if (SourceLocationLatLng != null) {
+            direction("Your current location", SourceLocationLatLng, place.getName().toString(), DestinationLocationLatLng);
+
+            // Show Direction Bar
+            RelativeLayout DirectionBar = findViewById(R.id.directionBar);
+            DirectionBar.setVisibility(View.VISIBLE);
+
+            // Hide Search bar
+            RelativeLayout SearchBarLayout = findViewById(R.id.SearchBarRelLayout);
+            SearchBarLayout.setVisibility(View.GONE);
+
+            // Hide keyboard
+            // Assume you have a view (e.g., an EditText) where the keyboard is currently open
+            View view = findViewById(R.id.place_search);
+            hideKeyboard(view);
+        }
+
+
+    }
 
     public boolean isServicesOK() {
         Log.d(TAG, "isServicesOK: checking google services version");
@@ -337,9 +411,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             Location currentLocation = (Location) task.getResult();
                             if (currentLocation != null) {
                                 Log.d(TAG, "found location: " + currentLocation);
+                                SourceLocationLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
                                 // Did not use moveCamera method here since it will mark the current location by a marker
                                 myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()),
                                         DEFAULT_ZOOM));
+
                             } else {
                                 Log.d(TAG, "onComplete: current location is null");
                                 Toast.makeText(MainActivity.this, "unable to get current location", Toast.LENGTH_SHORT).show();
@@ -356,47 +432,47 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private void initSearchBar() {
-
-        Log.d(TAG, "Search bar initiated");
-
-        mapSearchView = findViewById(R.id.mapSearch);
-
-
-        mapSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String s) {
-                if (!TextUtils.isEmpty(s) && myMap != null && !isSearchInProgress) {
-
-
-                    isSearchInProgress = true; // Set the flag to indicate search is in progress
-
-                    Log.d(TAG, "Search query submitted");
-                    Log.d(TAG, "Search query: " + s);
-                    try {
-                        searchByLocationName();
-
-                        // Reset the flag after a short delay to prevent rapid consecutive searches
-                        handler.postDelayed(() -> isSearchInProgress = false, 1000);
-
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error during calling searchByLocationName() in setQueryTextListener " + e.getMessage());
-
-
-                    }
-//                    // Hide the keyboard when the button is clicked
-//                    hideKeyboard();
-                }
-
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String s) {
-                return false;
-            }
-        });
-    }
+//    private void initSearchBar() {
+//
+//        Log.d(TAG, "Search bar initiated");
+//
+//        mapSearchView = findViewById(R.id.place_search);
+//
+//
+//        mapSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+//            @Override
+//            public boolean onQueryTextSubmit(String s) {
+//                if (!TextUtils.isEmpty(s) && myMap != null && !isSearchInProgress) {
+//
+//
+//                    isSearchInProgress = true; // Set the flag to indicate search is in progress
+//
+//                    Log.d(TAG, "Search query submitted");
+//                    Log.d(TAG, "Search query: " + s);
+//                    try {
+//                        searchByLocationName();
+//
+//                        // Reset the flag after a short delay to prevent rapid consecutive searches
+//                        handler.postDelayed(() -> isSearchInProgress = false, 1000);
+//
+//                    } catch (Exception e) {
+//                        Log.e(TAG, "Error during calling searchByLocationName() in setQueryTextListener " + e.getMessage());
+//
+//
+//                    }
+////                    // Hide the keyboard when the button is clicked
+////                    hideKeyboard();
+//                }
+//
+//                return false;
+//            }
+//
+//            @Override
+//            public boolean onQueryTextChange(String s) {
+//                return false;
+//            }
+//        });
+//    }
 
     // ORIGINAL METHODS - CODE
 
@@ -583,17 +659,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    private void hideKeyboard(View view) {
 
-    private void hideKeyboard() {
-        View view = getCurrentFocus();
         if (view != null) {
+
+
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
 
     // Add a method to request and display directions
-    private void direction(LatLng origin, LatLng destination) {
+    private void direction(String originName, LatLng origin, String destinationName, LatLng destination) {
+
+        // set Location bars
+        EditText SourceLocation = findViewById(R.id.sourceLocation);
+        EditText DestinationLocation = findViewById(R.id.destinationLocation);
+
+        SourceLocation.setText(originName);
+        DestinationLocation.setText(destinationName);
+
+
         // Construct the URL for the Google Directions API request
         String apiKey = "AIzaSyDDTamV9IieqbDXoWKxjEHmBo7jRcNuhFg"; // Replace with your actual API key
         String url = "https://maps.googleapis.com/maps/api/directions/json" +
@@ -620,7 +706,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                         .addAll(decodedPolyline)
                                         .width(15)
                                         .color(ContextCompat.getColor(MainActivity.this, R.color.colorPrimary));
-                                myMap.addPolyline(polylineOptions);
+
+                                directionRoutePolyline = myMap.addPolyline(polylineOptions);
 
                                 // After adding the polyline, adjust the camera to fit the entire route
                                 LatLngBounds.Builder builder = new LatLngBounds.Builder();
@@ -637,13 +724,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             } else {
                                 Toast.makeText(MainActivity.this, "No routes found.", Toast.LENGTH_SHORT).show();
                             }
-//                            // After parsing is done, hide the progress bar
-//                            hideProgressBar();
+
                         } catch (JSONException e) {
                             e.printStackTrace();
                             Toast.makeText(MainActivity.this, "Error parsing directions.", Toast.LENGTH_SHORT).show();
-                            // Hide the progress bar in case of an error
-//                            hideProgressBar();
+
                         }
                     }
                 },
@@ -652,8 +737,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     public void onErrorResponse(VolleyError error) {
                         error.printStackTrace();
                         Toast.makeText(MainActivity.this, "Error fetching directions.", Toast.LENGTH_SHORT).show();
-                        // Hide the progress bar in case of an error
-//                        hideProgressBar();
+
                     }
                 });
 
@@ -703,6 +787,51 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         return points;
+    }
+
+    // Method to clear or hide the direction route
+    private void clearDirectionRoute() {
+        if (directionRoutePolyline != null) {
+            directionRoutePolyline.remove();
+            directionRoutePolyline = null;
+        }
+    }
+
+    private void swapLocations() {
+
+        clearDirectionRoute();
+
+        EditText SourceLocation = findViewById(R.id.sourceLocation);
+        EditText DestinationLocation = findViewById(R.id.destinationLocation);
+        Editable temp;
+        LatLng tempLatLng;
+
+        Log.d(TAG, "Before SourceLocationLatLng: "+ SourceLocationLatLng);
+        Log.d(TAG, "Before DestinationLocationLatLng: "+  DestinationLocationLatLng);
+
+
+
+        if (SourceLocation.getText() != null && DestinationLocation.getText() != null) {
+            temp = SourceLocation.getText();
+            SourceLocation.setText(DestinationLocation.getText());
+            DestinationLocation.setText(temp);
+
+            tempLatLng = SourceLocationLatLng;
+            SourceLocationLatLng = DestinationLocationLatLng;
+            DestinationLocationLatLng = tempLatLng;
+
+            Log.d(TAG, "SourceLocation.getText().toString(): "+ SourceLocation.getText().toString());
+            Log.d(TAG, "SourceLocationLatLng: "+ SourceLocationLatLng);
+            Log.d(TAG, "DestinationLocation.getText().toString(): "+ DestinationLocation.getText().toString());
+            Log.d(TAG, "DestinationLocationLatLng: "+  DestinationLocationLatLng);
+
+
+            direction(SourceLocation.getText().toString(), SourceLocationLatLng, DestinationLocation.getText().toString(), DestinationLocationLatLng);
+
+
+
+
+        }
     }
 
 

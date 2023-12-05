@@ -7,76 +7,201 @@
     android:orientation="vertical"
     tools:context=".ui.MainActivity">
 
-    <!-- Map Fragment -->
-    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
 
-    <!-- Search Bar -->
+    <!--Direction bar-->
+
     <RelativeLayout
-        android:id="@+id/SearchBarRelLayout"
+        android:id="@+id/directionBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:padding="10dp">
+        android:elevation="40dp"
+        android:padding="10dp"
+        android:visibility="gone">
 
-        <!-- Search View  -->
-        <SearchView
-            android:id="@+id/mapSearch"
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:layout_marginEnd="5dp"
-            android:background="@drawable/bg_searchview_rounded"
-            android:iconifiedByDefault="false"
-            android:elevation="10dp"
+        <!--Back button + Source Location-->
+        <RelativeLayout
+            android:id="@+id/SourceLocationBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-            android:queryHint="@string/mapSearch_text">
-        </SearchView>
+            <!--Back button-->
+            <ImageButton
+                android:id="@+id/BackButton"
+                android:layout_width="30dp"
+                android:layout_height="50dp"
+                android:backgroundTint="@color/white"
 
-        <!-- Settings button-->
-        <ImageView
-            android:id="@+id/SettingsButton"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_centerInParent="true"
-            android:layout_toEndOf="@id/mapSearch"
-            android:background="@drawable/settings_icons_bg"
-            android:backgroundTint="@color/white"
-            android:padding="3dp"
-            android:src="@drawable/sidebar_settings_24"
-            app:backgroundTint="@color/brand_blue"
-            app:tint="@color/white" />
+                android:src="@drawable/button_back_24"
+                app:iconTint="@color/black" />
 
-<!--        <fragment-->
-<!--            android:id="@+id/autocomplete_fragment_container"-->
-<!--            android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_below="@id/mapSearch"-->
-<!--            android:layout_marginTop="16dp" />-->
+            <!--Source Location Text-->
+            <EditText
+                android:id="@+id/sourceLocation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="10dp"
+                android:layout_toEndOf="@id/BackButton"
+                android:background="@drawable/rounded_cards_bg"
+                android:backgroundTint="@color/gray400"
+                android:drawableStart="@drawable/ic_source_location"
+                android:drawablePadding="10dp"
+                android:padding="15dp"
+                android:text="From"
+                android:inputType="textNoSuggestions"
+                android:textColor="@android:color/black"
+                android:textSize="14sp" />
+
+        </RelativeLayout>
+
+        <!--Swap button + Destination Location-->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/SourceLocationBar">
+
+            <EditText
+                android:id="@+id/destinationLocation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+
+                android:layout_centerHorizontal="true"
+                android:layout_toStartOf="@id/SwapButton"
+                android:background="@drawable/rounded_cards_bg"
+                android:backgroundTint="@color/gray400"
+                android:drawableStart="@drawable/ic_destination_location"
+                android:drawablePadding="10dp"
+                android:padding="15dp"
+                android:text="To"
+                android:inputType="textNoSuggestions"
+                android:textColor="@android:color/black"
+                android:textSize="14sp" />
+
+            <!--Reverse button-->
+            <ImageButton
+                android:id="@+id/SwapButton"
+                android:layout_width="30dp"
+                android:layout_height="50dp"
+                android:layout_alignParentEnd="true"
+                android:backgroundTint="@color/white"
+                android:src="@drawable/ic_swap_locations"
+                app:iconTint="@color/black" />
+
+        </RelativeLayout>
 
     </RelativeLayout>
 
-    <ImageView
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_below="@id/SearchBarRelLayout"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="10dp"
-        android:scaleType="centerCrop"
-        android:id="@+id/ic_gps"
-        android:src="@drawable/ic_gps"/>
 
-    <ProgressBar
-        android:id="@+id/loadingProgressBar"
+    <!--    Map, Search Bar, Settings btn, Location btn,....-->
+    <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:layout_gravity="center" />
+        android:layout_below="@id/directionBar">
+
+        <!--     Map Fragment-->
+        <fragment
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <!-- Search Bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:id="@+id/SearchBarRelLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:padding="10dp">
+
+                <!--Search text bar-->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/place_search_layout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dp"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginEnd="5dp"
+                    android:layout_marginBottom="15dp"
+                    android:layout_toStartOf="@id/SettingsButton"
+                    android:elevation="10dp"
+                    android:inputType="textPostalAddress"
+                    app:boxBackgroundMode="none"
+                    app:endIconMode="clear_text"
+                    app:hintEnabled="false"
+                    app:startIconDrawable="@drawable/places_ic_search">
+
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/place_search"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_searchview_rounded"
+                        android:ellipsize="end"
+                        android:hint="@string/mapSearch_text"
+                        android:padding="10dp"
+                        android:textSize="20sp" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Settings button-->
+                <ImageView
+                    android:id="@+id/SettingsButton"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_alignParentEnd="true"
+                    android:background="@drawable/settings_icons_bg"
+                    android:backgroundTint="@color/white"
+                    android:padding="3dp"
+                    android:src="@drawable/sidebar_settings_24"
+                    app:backgroundTint="@color/brand_blue"
+                    app:tint="@color/white" />
+
+                <!-- Search autocomplete recycler-->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/places_recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/place_search_layout"
+                    android:layout_marginTop="-10dp"
+                    android:background="@drawable/rounded_places_autocomplete_bg"
+                    android:layout="@id/place_search"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="15dp"
+                    android:visibility="gone"
+                    app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+
+            </RelativeLayout>
+
+            <!--Current location button -->
+            <ImageView
+                android:id="@+id/ic_gps"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end"
+                android:layout_marginTop="0dp"
+                android:layout_marginRight="10dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_gps" />
+
+        </LinearLayout>
+
+
+        <ProgressBar
+            android:id="@+id/loadingProgressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_gravity="center" />
+
+    </RelativeLayout>
+
 
 </RelativeLayout>
 
@@ -177,4 +302,7 @@
 
     <!--        </TableRow>-->
     <!--    </TableLayout>-->
+
+
+
 
