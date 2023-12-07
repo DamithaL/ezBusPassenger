@@ -1,4 +1,4 @@
-package ezbus.mit20550588.passenger.adapters;
+package ezbus.mit20550588.passenger.ui.adapters;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.text.style.CharacterStyle;
@@ -62,7 +62,7 @@ public class PlacesAutoCompleteAdapter extends RecyclerView.Adapter<PlacesAutoCo
     }
 
     public interface ClickListener {
-        void click(Place place);
+        void handleAutocompleteItemClick(Place place);
     }
 
     /**
@@ -195,7 +195,7 @@ public class PlacesAutoCompleteAdapter extends RecyclerView.Adapter<PlacesAutoCo
                     @Override
                     public void onSuccess(FetchPlaceResponse response) {
                         Place place = response.getPlace();
-                        clickListener.click(place);
+                        clickListener.handleAutocompleteItemClick(place);
                     }
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override

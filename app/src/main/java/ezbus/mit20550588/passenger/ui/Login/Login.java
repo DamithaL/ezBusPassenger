@@ -1,7 +1,9 @@
 package ezbus.mit20550588.passenger.ui.Login;
 
-import androidx.appcompat.app.AlertDialog;
+import static androidx.constraintlayout.widget.Constraints.TAG;
+
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.app.Dialog;
 import android.content.Intent;
@@ -9,7 +11,6 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.Editable;
 import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -18,7 +19,6 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,6 +26,10 @@ import android.widget.Toast;
 import java.util.HashMap;
 
 import ezbus.mit20550588.passenger.R;
+import ezbus.mit20550588.passenger.data.model.UserModel;
+import ezbus.mit20550588.passenger.data.remote.ApiServiceAuthentication;
+import ezbus.mit20550588.passenger.data.viewModel.AuthResult;
+import ezbus.mit20550588.passenger.data.viewModel.AuthViewModel;
 import ezbus.mit20550588.passenger.ui.ForgotPassword.ForgotPassword;
 import ezbus.mit20550588.passenger.ui.MainActivity;
 import retrofit2.Call;
@@ -35,22 +39,35 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class Login extends AppCompatActivity {
-    private static final String TAG = MainActivity.class.getSimpleName();
-    private Retrofit retrofit;
-    private RetrofitInterface retrofitInterface;
-    private String BASE_URL = "http://10.0.2.2:3000";  //http://localhost:3000/
+
+    private AuthViewModel authViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // For Authentication methods with Server
-        retrofit = new Retrofit.Builder().baseUrl(BASE_URL).addConverterFactory(GsonConverterFactory.create()).build();
+        initializeViewModel();
+        initializeUI();
+        setupClickListeners();
 
-        // Instantiate retrofit interface
-        retrofitInterface = retrofit.create(RetrofitInterface.class);
+//        authViewModel = new ViewModelProvider(this, new ViewModelFactory(userRepository)).get(AuthViewModel.class);
 
+
+    }
+
+    private void initializeViewModel() {
+        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+
+        // Observe authentication result
+        authViewModel.getAuthResultLiveData().observe(this, authResult -> {
+            if (authResult != null) {
+                handleAuthResult(authResult);
+            }
+        });
+    }
+
+    private void setupClickListeners() {
         // Listening to the Login Button
         findViewById(R.id.LoginButton).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -59,7 +76,9 @@ public class Login extends AppCompatActivity {
                 LoginSubmit();
             }
         });
+    }
 
+    private void initializeUI() {
         // EZBus Passenger app main text
 
         TextView textView0 = findViewById(R.id.main_app_name);
@@ -119,46 +138,55 @@ public class Login extends AppCompatActivity {
             }
         });
 
-
     }
 
     private void LoginSubmit() {
-        final EditText emailText = findViewById(R.id.editTextEmailAddress);
-        final EditText passwordText = findViewById(R.id.editTextPassword);
+        EditText emailText = findViewById(R.id.editTextEmailAddress);
+        EditText passwordText = findViewById(R.id.editTextPassword);
 
-        HashMap<String, String> map = new HashMap<>();
+        String email = emailText.getText().toString();
+        String password = passwordText.getText().toString();
 
-        map.put("email", emailText.getText().toString());
-        map.put("password", passwordText.getText().toString());
+        // Trigger login operation in ViewModel
+        authViewModel.loginUser(email, password);
 
-        Call<LoginResult> call = retrofitInterface.executeLogin(map);
+//        authViewModel.loginUser(email, password).observe(this, userModel -> {
+//            if (userModel != null) {
+//                handleLoginSuccess(userModel.getName());
+//            } else {
+//                handleLoginFailure();
+//            }
+//        });
+
 
         Log.d(TAG, "Login button clicked");
 
-        call.enqueue(new Callback<LoginResult>() {
+
+    }
+
+
+    private void handleAuthResult(AuthResult authResult) {
+        if (authResult.getStatus() == AuthResult.Status.SUCCESS) {
+            // Authentication successful
+           // UserModel user = authResult.getUser();
+            handleLoginSuccess(authResult);
+        } else {
+            // Authentication failed, show an error message
+            String errorMessage = authResult.getErrorMessage();
+            handleLoginFailure(authResult);
+        }
+    }
+
+    private void handleLoginSuccess(AuthResult result) {
+        showLoginSuccessDialog(result.getUser().getName());
+        Log.d(TAG, "Login successful");
+
+        new Handler().postDelayed(new Runnable() {
             @Override
-            public void onResponse(Call<LoginResult> call, Response<LoginResult> response) {
-                if (response.code() == 200) {
-
-                    LoginResult result = response.body();
-                    showLoginSuccessDialog(result.getName());
-                    Log.d(TAG, response.code() + "Login successful");
-
-                } else if (response.code() == 401) {
-                    Log.d(TAG, response.code() + "Invalid email or password");
-                    Toast.makeText(Login.this, "Invalid email or password", Toast.LENGTH_LONG).show();
-                }
-
-                Log.d(TAG, response.code() + "error");
+            public void run() {
+                navigateToMainActivity();
             }
-
-            @Override
-            public void onFailure(Call<LoginResult> call, Throwable t) {
-                Log.d(TAG, "Connection failed: " + t);
-                Toast.makeText(Login.this, t.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        });
-
+        }, 3000);
     }
 
     private void showLoginSuccessDialog(String name) {
@@ -174,30 +202,52 @@ public class Login extends AppCompatActivity {
 
         dialog.show();
 
-        // Dismiss the dialog after 5 seconds
+        // Dismiss the dialog after 3 seconds
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 dialog.dismiss();
-
-                // Start your new activity here
-                Intent intent = new Intent(Login.this, MainActivity.class);
-
-                // Add any data you want to pass to the new activity
-                //  intent.putExtra("key", "value");
-
-                startActivity(intent);
-                // For example, if you want to finish the current activity
-                finish();
+                navigateToMainActivity();
             }
         }, 3000); // 5000 milliseconds = 5 seconds
 
-//                    AlertDialog.Builder builder1 = new AlertDialog.Builder(Login.this);
-//                    builder1.setTitle(result.getName());
-//                    builder1.setMessage(result.getEmail());
-//
-//                    builder1.show();
-
 
     }
+
+    private void handleLoginFailure(AuthResult error) {
+        showToast(error.getErrorMessage().toString());
+
+
+        Log.d(TAG, "Login failed with code: " + error.getErrorMessage());
+//        showToast(error.getErrorMessage().toString());
+
+//        if (responseCode == 401) {
+//            showToast("Invalid email or password");
+//        } else {
+//            showToast("Login failed with code: " + responseCode);
+//        }
+//        Log.d(TAG, "Login failed with code: " + responseCode);
+    }
+
+    private void handleNetworkFailure(String errorMessage) {
+        showToast("Connection failed: " + errorMessage);
+        Log.d(TAG, "Connection failed: " + errorMessage);
+    }
+
+    private void showToast(String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(Login.this, message, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void navigateToMainActivity() {
+        Intent intent = new Intent(Login.this, MainActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+
 }

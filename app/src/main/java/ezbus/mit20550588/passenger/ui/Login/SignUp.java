@@ -12,7 +12,6 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,6 +19,7 @@ import android.widget.Toast;
 import java.util.HashMap;
 
 import ezbus.mit20550588.passenger.R;
+import ezbus.mit20550588.passenger.data.remote.ApiServiceAuthentication;
 import ezbus.mit20550588.passenger.ui.MainActivity;
 import ezbus.mit20550588.passenger.ui.Settings.PrivacyPolicyActivity;
 import ezbus.mit20550588.passenger.ui.Settings.TermConditions;
@@ -32,7 +32,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class SignUp extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private Retrofit retrofit;
-    private RetrofitInterface retrofitInterface;
+    private ApiServiceAuthentication apiServiceAuthentication;
     private String BASE_URL = "http://10.0.2.2:3000";
 
     @Override
@@ -44,14 +44,14 @@ public class SignUp extends AppCompatActivity {
         retrofit = new Retrofit.Builder().baseUrl(BASE_URL).addConverterFactory(GsonConverterFactory.create()).build();
 
         // Instantiate retrofit interface
-        retrofitInterface = retrofit.create(RetrofitInterface.class);
+        apiServiceAuthentication = retrofit.create(ApiServiceAuthentication.class);
 
         // Listening to the Login Button
         findViewById(R.id.SignUpButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                SignupSubmit();
+//                SignupSubmit();
             }
         });
 
@@ -168,43 +168,43 @@ public class SignUp extends AppCompatActivity {
 //        });
     }
 
-    private void SignupSubmit() {
-        final EditText nameText = findViewById(R.id.editTextName);
-        final EditText emailText = findViewById(R.id.editTextEmailAddress);
-        final EditText passwordText = findViewById(R.id.editTextPassword);
-
-        HashMap<String, String> map = new HashMap<>();
-
-        map.put("name", nameText.getText().toString());
-        map.put("email", emailText.getText().toString());
-        map.put("password", passwordText.getText().toString());
-
-        Call<Void> call = retrofitInterface.executeSignup(map);
-
-        Log.d(TAG, "Submit button clicked");
-        Log.d(TAG, "map: "+ map);
-
-        call.enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.code() == 201) {
-                    Toast.makeText(SignUp.this, "Signed up successfully", Toast.LENGTH_LONG).show();
-                } else if (response.code() == 208) {
-                    Toast.makeText(SignUp.this, "Already registered", Toast.LENGTH_LONG).show();
-                }
-                else if (response.code() == 500) {
-                    Toast.makeText(SignUp.this, "Error", Toast.LENGTH_LONG).show();
-                }
-
-            }
-
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(SignUp.this, t.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        });
-
-
-
-    }
+//    private void SignupSubmit() {
+//        final EditText nameText = findViewById(R.id.editTextName);
+//        final EditText emailText = findViewById(R.id.editTextEmailAddress);
+//        final EditText passwordText = findViewById(R.id.editTextPassword);
+//
+//        HashMap<String, String> map = new HashMap<>();
+//
+//        map.put("name", nameText.getText().toString());
+//        map.put("email", emailText.getText().toString());
+//        map.put("password", passwordText.getText().toString());
+//
+//        Call<Void> call = apiServiceAuthentication.executeSignup(map);
+//
+//        Log.d(TAG, "Submit button clicked");
+//        Log.d(TAG, "map: "+ map);
+//
+//        call.enqueue(new Callback<Void>() {
+//            @Override
+//            public void onResponse(Call<Void> call, Response<Void> response) {
+//                if (response.code() == 201) {
+//                    Toast.makeText(SignUp.this, "Signed up successfully", Toast.LENGTH_LONG).show();
+//                } else if (response.code() == 208) {
+//                    Toast.makeText(SignUp.this, "Already registered", Toast.LENGTH_LONG).show();
+//                }
+//                else if (response.code() == 500) {
+//                    Toast.makeText(SignUp.this, "Error", Toast.LENGTH_LONG).show();
+//                }
+//
+//            }
+//
+//            @Override
+//            public void onFailure(Call<Void> call, Throwable t) {
+//                Toast.makeText(SignUp.this, t.getMessage(), Toast.LENGTH_LONG).show();
+//            }
+//        });
+//
+//
+//
+//    }
 }

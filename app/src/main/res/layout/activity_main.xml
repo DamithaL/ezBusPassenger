@@ -46,9 +46,9 @@
                 android:backgroundTint="@color/gray400"
                 android:drawableStart="@drawable/ic_source_location"
                 android:drawablePadding="10dp"
+                android:inputType="textNoSuggestions"
                 android:padding="15dp"
                 android:text="From"
-                android:inputType="textNoSuggestions"
                 android:textColor="@android:color/black"
                 android:textSize="14sp" />
 
@@ -71,9 +71,9 @@
                 android:backgroundTint="@color/gray400"
                 android:drawableStart="@drawable/ic_destination_location"
                 android:drawablePadding="10dp"
+                android:inputType="textNoSuggestions"
                 android:padding="15dp"
                 android:text="To"
-                android:inputType="textNoSuggestions"
                 android:textColor="@android:color/black"
                 android:textSize="14sp" />
 
@@ -129,7 +129,7 @@
                     android:layout_marginBottom="15dp"
                     android:layout_toStartOf="@id/SettingsButton"
                     android:elevation="10dp"
-                    android:inputType="textPostalAddress"
+                    android:tooltipText="@string/tooltip_text_search_bar"
                     app:boxBackgroundMode="none"
                     app:endIconMode="clear_text"
                     app:hintEnabled="false"
@@ -143,6 +143,7 @@
                         android:background="@drawable/bg_searchview_rounded"
                         android:ellipsize="end"
                         android:hint="@string/mapSearch_text"
+                        android:inputType="textPostalAddress"
                         android:padding="10dp"
                         android:textSize="20sp" />
 
@@ -158,6 +159,7 @@
                     android:backgroundTint="@color/white"
                     android:padding="3dp"
                     android:src="@drawable/sidebar_settings_24"
+                    android:tooltipText="@string/tooltip_text_settings_button"
                     app:backgroundTint="@color/brand_blue"
                     app:tint="@color/white" />
 
@@ -176,6 +178,58 @@
                     android:visibility="gone"
                     app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
+                <!-- Recent Search Relative layout -->
+                <RelativeLayout
+                    android:id="@+id/recent_search_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/place_search_layout"
+                    android:layout_marginTop="-10dp"
+                    android:background="@drawable/rounded_places_autocomplete_bg"
+                    android:layout="@id/place_search"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="15dp"
+                    android:visibility="gone">
+
+                    <!-- Recent Search heading -->
+                    <TextView
+                        android:id="@+id/recentSearchHeading"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf="@id/recentSearchCloseButton"
+                        android:paddingTop="10dp"
+                        android:paddingBottom="20dp"
+                        android:text="@string/auto_complete_recycler_heading_text"
+                        android:textSize="18sp" />
+
+                    <!-- Recent Search Close button -->
+                    <ImageButton
+                        android:id="@+id/recentSearchCloseButton"
+                        android:layout_width="10dp"
+                        android:layout_height="10dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_margin="15dp"
+                        android:alpha="0.5"
+                        android:background="@android:color/transparent"
+                        android:src="@drawable/ic_close"
+                        android:tooltipText="@string/tooltip_text_close_button" />
+
+                    <!-- Recent Search recycler-->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recent_search_recycler_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/recentSearchHeading"
+                        android:layout_alignParentStart="true"
+                        android:orientation="vertical"
+                        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+
+                </RelativeLayout>
+
 
             </RelativeLayout>
 
@@ -187,8 +241,10 @@
                 android:layout_gravity="end"
                 android:layout_marginTop="0dp"
                 android:layout_marginRight="10dp"
+                android:background="@drawable/rounded_cards_bg"
                 android:scaleType="centerCrop"
-                android:src="@drawable/ic_gps" />
+                android:src="@drawable/ic_gps"
+                android:tooltipText="@string/tooltip_text_gps_button" />
 
         </LinearLayout>
 
@@ -199,6 +255,40 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:layout_gravity="center" />
+
+        <!-- Directions Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/directionsButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/spacer2"
+            android:layout_margin="30dp"
+            android:backgroundTint="@color/quantum_lightgreen"
+            android:elevation="20dp"
+            android:padding="15dp"
+            android:text="@string/button_show_directions"
+            android:textAlignment="center"
+            android:textAllCaps="false"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:theme="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            app:cornerRadius="30dp"
+            app:icon="@drawable/ic_directions"
+            app:iconGravity="textStart"
+            app:iconPadding="20dp"
+            app:iconSize="@dimen/icon_size_settings"
+            android:visibility="gone"
+            app:iconTint="@color/black"
+            app:rippleColor="@color/colorGreen">
+
+        </com.google.android.material.button.MaterialButton>
+
+        <Space
+            android:id="@+id/spacer2"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:layout_alignParentBottom="true" />
+
 
     </RelativeLayout>
 

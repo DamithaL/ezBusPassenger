@@ -46,6 +46,11 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     implementation 'com.android.volley:volley:1.2.1'
+    implementation "androidx.cardview:cardview:1.0.0"
+
+    implementation 'androidx.room:room-runtime:2.6.1' // Use the latest version
+    annotationProcessor 'androidx.room:room-compiler:2.6.1' // Use the latest version
+
 
     // Google maps and places dependencies
     implementation 'com.google.android.gms:play-services-maps:18.2.0'
@@ -54,6 +59,22 @@ dependencies {
     implementation 'com.google.android.gms:play-services-places:17.0.0'
 
     // For the NodeJS dependencies
-    implementation 'com.squareup.retrofit2:retrofit:2.3.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
+
+    // For hashing passwords
+    implementation 'org.mindrot:jbcrypt:0.4'
+
+    //----------- Android architectural components --------------//
+    def lifecycle_version = "2.6.2"
+    // ViewModel
+    implementation "androidx.lifecycle:lifecycle-viewmodel:$lifecycle_version"
+    // LiveData
+    implementation "androidx.lifecycle:lifecycle-livedata:$lifecycle_version"
+    // Annotation processor
+    annotationProcessor "androidx.lifecycle:lifecycle-compiler:$lifecycle_version"
+    // Room
+    def room_version = "2.6.1"
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
 }

@@ -1,8 +1,13 @@
 <resources>
+
+    <!-- Application  -->
+    <string name="main_app_name">EZBus</string>
+    <string name="sub_app_name">Passenger</string>
+
+    <!-- Login screens  -->
     <string name="app_name">ezBusPassengerApplication</string>
     <string name="app_logo_name">EZBus</string>
     <string name="app_tag_line">Real-time public bus tracking and contactless fare payment system</string>
-    <string name="mapSearch_text">Your destination...?</string>
     <string name="title_activity_login">LoginActivity</string>
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password</string>
@@ -12,17 +17,22 @@
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">Login failed</string>
-    <string name="privacy_url">https://sites.google.com/view/ezbuspassenger-privacy-policy</string>
-    <string name="terms_conditions_url">https://sites.google.com/view/ezbuspassenger-terms-condition</string>
-    <string name="main_app_name">EZBus</string>
-    <string name="sub_app_name">Passenger</string>
-
-    <string name="MAPS_API_KEY">AIzaSyDDTamV9IieqbDXoWKxjEHmBo7jRcNuhFg</string>
 
     <!-- Login successful screen   -->
     <string name="login_results_welcome_text_1">Great to see you again!</string>
     <string name="login_results_welcome_text_2">You\'ve logged in successfully.</string>
 
+    <!-- Map screen   -->
+    <string name="MAPS_API_KEY">AIzaSyDDTamV9IieqbDXoWKxjEHmBo7jRcNuhFg</string>
+    <string name="mapSearch_text">Your destination…?</string>
+    <string name="auto_complete_recycler_heading_text">Your recent searches</string>
+    <string name="button_show_directions">Show Directions</string>
+
+    <!-- ToolTip Texts   -->
+    <string name="tooltip_text_close_button">Close</string>
+    <string name="tooltip_text_gps_button">My Location</string>
+    <string name="tooltip_text_settings_button">Settings</string>
+    <string name="tooltip_text_search_bar">Search</string>
 
     <!--Settings Page - Buttons names-->
     <string name="button_settings_1">Profile Settings</string>
@@ -33,6 +43,7 @@
     <string name="button_settings_6">Privacy Policy</string>
     <string name="button_settings_7">Terms of Service</string>
     <string name="button_settings_8">Log Out</string>
+
 
     <!--    About us -->
     <string name="about_us_overview">Welcome to the forefront of transformative technology with EZBus; the Mobile-based Real-Time Public Bus Tracking and Contactless Fare Payment System, a revolutionary initiative developed by Damitha Liyanaarachchi for the fulfillment of the Master of Information Technology degree at the University of Colombo School of Computing.</string>
@@ -48,5 +59,10 @@
     <string name="contact_us_linkedin">https://www.linkedin.com/in/damitha-liyanaarachchi-084b3a54/</string>
     <string name="contact_us_share">Share the app with your friends, family, and fellow commuters.</string>
     <string name="contact_us_quick_chat_welcome">Got a quick question or need instant assistance? We\'re here to help! Chat with us!</string>
+
+    <!-- Privacy and TOS pages   -->
+    <string name="privacy_url">https://sites.google.com/view/ezbuspassenger-privacy-policy</string>
+    <string name="terms_conditions_url">https://sites.google.com/view/ezbuspassenger-terms-condition</string>
+
 
 </resources>
