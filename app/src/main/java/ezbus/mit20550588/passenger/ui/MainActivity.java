@@ -730,6 +730,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void showLocationOfRecentSearch(RecentSearchModel recentSearch) {
+        hideKeyboard(recentSearchLayout);
+        toggleItemVisibility(recentSearchLayout, false);
+
         DestinationLocationLatLng = recentSearch.getLocationLatLang();
         DestinationLocationName = recentSearch.getLocationName();
         if (DestinationLocationLatLng != null && DestinationLocationName != null) {
@@ -741,13 +744,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             locationMarked = true;
             toggleItemVisibility(findViewById(R.id.directionsButton), true);
 
+
         } else {
             Toast.makeText(MainActivity.this, "Unable to get recent location", Toast.LENGTH_SHORT).show();
             Log("showLocationOfRecentSearch", "ERROR", "unable to get recent location");
         }
 
-        hideKeyboard(recentSearchLayout);
-        toggleItemVisibility(recentSearchLayout, false);
+
 
     }
 
