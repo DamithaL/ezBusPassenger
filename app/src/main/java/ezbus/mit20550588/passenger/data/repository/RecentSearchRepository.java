@@ -2,9 +2,11 @@ package ezbus.mit20550588.passenger.data.repository;
 
 import android.app.Application;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -12,6 +14,8 @@ import java.util.concurrent.Executors;
 import ezbus.mit20550588.passenger.data.dao.RecentSearchDao;
 import ezbus.mit20550588.passenger.data.database.AppDatabase;
 import ezbus.mit20550588.passenger.data.model.RecentSearchModel;
+
+import static ezbus.mit20550588.passenger.util.Constants.Log;
 
 public class RecentSearchRepository {
     private RecentSearchDao recentSearchDao;
@@ -54,7 +58,24 @@ public class RecentSearchRepository {
                 @Override
                 public void run() {
                     if (recentSearch.length > 0) {
-                        recentSearchDao.insertRecentSearch(recentSearch[0]);
+                        RecentSearchModel search = recentSearch[0];
+
+                        // Check if the search already exists
+                        RecentSearchModel existingSearch = recentSearchDao.getRecentSearchByName(search.getLocationName());
+
+                        if (existingSearch == null) {
+                            // If it doesn't exist, insert as a new search
+                            recentSearchDao.insertRecentSearch(search);
+                            Log("RecentSearchRepository", "InsertAsyncTask","New entry found, saved to recent searches");
+                        } else {
+                            // If it exists, update the search date
+                            Date currentDate = new Date();
+                            existingSearch.setSearchDate(currentDate);
+                            recentSearchDao.updateRecentSearch(existingSearch);
+                            Log("RecentSearchRepository", "InsertAsyncTask","Location is already exist in recent searches");
+
+                        }
+
 
                         int currentCount = recentSearchDao.getRecentSearchesCount();
 
@@ -65,6 +86,8 @@ public class RecentSearchRepository {
                             List<RecentSearchModel> oldestSearches = recentSearchDao.getOldestSearches();
                             if (oldestSearches != null && oldestSearches.size() > 0) {
                                 recentSearchDao.deleteOldestSearches(oldestSearches.toArray(new RecentSearchModel[0]));
+                                Log("RecentSearchRepository", "InsertAsyncTask","Recent searches count maxed. Deleted oldest searches");
+
                             }
                         }
                     }

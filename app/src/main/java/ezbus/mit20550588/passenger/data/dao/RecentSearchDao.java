@@ -39,4 +39,8 @@ public interface RecentSearchDao {
     @Update
     void updateRecentSearch(RecentSearchModel recentSearch);
 
+    @Query("SELECT * FROM recent_search_table WHERE locationName = :searchName LIMIT 1")
+    RecentSearchModel getRecentSearchByName(String searchName);
+
+
 }

@@ -5,6 +5,7 @@ import android.text.style.CharacterStyle;
 import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Filter;
@@ -62,6 +63,9 @@ public class PlacesAutoCompleteAdapter extends RecyclerView.Adapter<PlacesAutoCo
     }
 
     public interface ClickListener {
+        // Override onTouchEvent to hide the keyboard when the map is clicked
+        boolean onTouchEvent(MotionEvent event);
+
         void handleAutocompleteItemClick(Place place);
     }
 

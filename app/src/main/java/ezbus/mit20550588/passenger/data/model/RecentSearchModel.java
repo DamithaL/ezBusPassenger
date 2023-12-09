@@ -17,7 +17,7 @@ public class RecentSearchModel {
 
     private String locationName;
     private LatLng locationLatLang;
-    private final Date searchDate;
+    private Date searchDate;
 
 
     public int getSearchId() {
@@ -44,5 +44,9 @@ public class RecentSearchModel {
 
     public void setSearchId(int searchId) {
         this.searchId = searchId;
+    }
+
+    public void setSearchDate(Date searchDate) {
+        this.searchDate = searchDate;
     }
 }
