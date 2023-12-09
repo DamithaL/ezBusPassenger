@@ -30,7 +30,6 @@
                 android:layout_width="30dp"
                 android:layout_height="50dp"
                 android:backgroundTint="@color/white"
-
                 android:src="@drawable/button_back_24"
                 app:iconTint="@color/black" />
 
@@ -64,7 +63,6 @@
                 android:id="@+id/destinationLocation"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-
                 android:layout_centerHorizontal="true"
                 android:layout_toStartOf="@id/SwapButton"
                 android:background="@drawable/rounded_cards_bg"
@@ -175,7 +173,7 @@
                     android:orientation="vertical"
                     android:paddingHorizontal="20dp"
                     android:paddingVertical="15dp"
-                    android:visibility="gone"
+
                     app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
                 <!-- Recent Search Relative layout -->
@@ -190,7 +188,7 @@
                     android:orientation="vertical"
                     android:paddingHorizontal="20dp"
                     android:paddingVertical="15dp"
-                    android:visibility="gone">
+                   >
 
                     <!-- Recent Search heading -->
                     <TextView
