@@ -26,7 +26,10 @@
     <string name="MAPS_API_KEY">AIzaSyDDTamV9IieqbDXoWKxjEHmBo7jRcNuhFg</string>
     <string name="mapSearch_text">Your destination…?</string>
     <string name="auto_complete_recycler_heading_text">Your recent searches</string>
+    <string name="current_location_heading_text">Your current location</string>
     <string name="button_show_directions">Show Directions</string>
+    <string name="Source_Location_text">Origin</string>
+    <string name="Destination_Location_text">Destination</string>
 
     <!-- ToolTip Texts   -->
     <string name="tooltip_text_close_button">Close</string>

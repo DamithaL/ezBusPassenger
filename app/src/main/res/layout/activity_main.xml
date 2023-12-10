@@ -9,7 +9,6 @@
 
 
     <!--Direction bar-->
-
     <RelativeLayout
         android:id="@+id/directionBar"
         android:layout_width="match_parent"
@@ -34,22 +33,59 @@
                 app:iconTint="@color/black" />
 
             <!--Source Location Text-->
-            <EditText
-                android:id="@+id/sourceLocation"
+            <!--            <EditText-->
+            <!--                android:id="@+id/sourceLocation"-->
+            <!--                android:layout_width="match_parent"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:layout_centerHorizontal="true"-->
+            <!--                android:layout_marginBottom="10dp"-->
+            <!--                android:layout_toEndOf="@id/BackButton"-->
+            <!--                android:background="@drawable/rounded_cards_bg"-->
+            <!--                android:backgroundTint="@color/gray400"-->
+            <!--                android:drawableStart="@drawable/ic_source_location"-->
+            <!--                android:drawablePadding="10dp"-->
+            <!--                android:inputType="textNoSuggestions"-->
+            <!--                android:padding="15dp"-->
+            <!--                android:text="From"-->
+            <!--                android:textColor="@android:color/black"-->
+            <!--                android:textSize="14sp" />-->
+
+            <!--Source Location Text Input Layout-->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/sourceLocationInputLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
                 android:layout_marginBottom="10dp"
                 android:layout_toEndOf="@id/BackButton"
-                android:background="@drawable/rounded_cards_bg"
-                android:backgroundTint="@color/gray400"
-                android:drawableStart="@drawable/ic_source_location"
                 android:drawablePadding="10dp"
+                android:elevation="10dp"
                 android:inputType="textNoSuggestions"
-                android:padding="15dp"
-                android:text="From"
+                android:text="@string/Source_Location_text"
                 android:textColor="@android:color/black"
-                android:textSize="14sp" />
+                android:tooltipText="@string/Source_Location_text"
+                app:boxBackgroundMode="none"
+                app:endIconMode="clear_text"
+                app:hintEnabled="false"
+                app:startIconDrawable="@drawable/ic_source_location"
+                app:startIconTint="@color/quantum_vanillablue600">
+
+                <!--Source Location Text-->
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/sourceLocationText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/rounded_cards_bg"
+                    android:backgroundTint="@color/gray400"
+                    android:ellipsize="end"
+                    android:hint="@string/Source_Location_text"
+                    android:inputType="textPostalAddress"
+                    android:padding="10dp"
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
 
         </RelativeLayout>
 
@@ -59,21 +95,58 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/SourceLocationBar">
 
-            <EditText
-                android:id="@+id/destinationLocation"
+            <!--            <EditText-->
+            <!--                android:id="@+id/destinationLocation"-->
+            <!--                android:layout_width="match_parent"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:layout_centerHorizontal="true"-->
+            <!--                android:layout_toStartOf="@id/SwapButton"-->
+            <!--                android:background="@drawable/rounded_cards_bg"-->
+            <!--                android:backgroundTint="@color/gray400"-->
+            <!--                android:drawableStart="@drawable/ic_destination_location"-->
+            <!--                android:drawablePadding="10dp"-->
+            <!--                android:inputType="textNoSuggestions"-->
+            <!--                android:padding="15dp"-->
+            <!--                android:text="To"-->
+            <!--                android:textColor="@android:color/black"-->
+            <!--                android:textSize="14sp" />-->
+
+
+            <!--Destination Location Text Input Layout-->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/destinationLocationInputLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
+                android:layout_marginBottom="10dp"
                 android:layout_toStartOf="@id/SwapButton"
-                android:background="@drawable/rounded_cards_bg"
-                android:backgroundTint="@color/gray400"
-                android:drawableStart="@drawable/ic_destination_location"
                 android:drawablePadding="10dp"
+                android:elevation="10dp"
                 android:inputType="textNoSuggestions"
-                android:padding="15dp"
-                android:text="To"
+                android:text="@string/Source_Location_text"
                 android:textColor="@android:color/black"
-                android:textSize="14sp" />
+                android:tooltipText="@string/Source_Location_text"
+                app:boxBackgroundMode="none"
+                app:endIconMode="clear_text"
+                app:hintEnabled="false"
+                app:startIconDrawable="@drawable/ic_destination_location"
+                app:startIconTint="@color/quantum_googred">
+
+                <!--Destination Location Text-->
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/destinationLocationText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/rounded_cards_bg"
+                    android:backgroundTint="@color/gray400"
+                    android:ellipsize="end"
+                    android:hint="@string/Source_Location_text"
+                    android:inputType="textPostalAddress"
+                    android:padding="10dp"
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
 
             <!--Reverse button-->
             <ImageButton
@@ -90,7 +163,7 @@
     </RelativeLayout>
 
 
-    <!--    Map, Search Bar, Settings btn, Location btn,....-->
+    <!--    Map, Search Bar, Settings btn, Location btn, Autocomplete, Recent search  -->
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -103,19 +176,20 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-        <!-- Search Bar -->
-        <LinearLayout
+        <!-- Search Bar (+Settings btn) + Autocomplete + Recent Search -->
+        <RelativeLayout
+            android:id="@+id/RelativeLayout1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:padding="10dp">
 
+            <!--Search text Relative layout (Search text bar + Settings btn) -->
             <RelativeLayout
                 android:id="@+id/SearchBarRelLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
-                android:layout_alignParentTop="true"
-                android:padding="10dp">
+                android:layout_alignParentTop="true">
 
                 <!--Search text bar-->
                 <com.google.android.material.textfield.TextInputLayout
@@ -161,91 +235,134 @@
                     app:backgroundTint="@color/brand_blue"
                     app:tint="@color/white" />
 
-                <!-- Search autocomplete recycler-->
+
+            </RelativeLayout>
+
+
+            <!-- Search autocomplete recycler-->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/places_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/SearchBarRelLayout"
+                android:layout_marginTop="-10dp"
+                android:background="@drawable/rounded_places_autocomplete_bg"
+                android:layout="@id/place_search"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="15dp"
+                android:visibility="gone"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+
+            <!-- Your current location  Relative layout -->
+            <RelativeLayout
+                android:id="@+id/current_location_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/SearchBarRelLayout"
+                android:layout_marginTop="-10dp"
+                android:background="@color/white"
+                android:layout="@id/place_search"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="15dp">
+                <!-- Your current location heading -->
+                <TextView
+                    android:id="@+id/current_location_Heading"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="20dp"
+                    android:text="@string/current_location_heading_text"
+                    android:textSize="18sp" />
+
+                <!--    Your current location   -->
+                <TextView
+                    android:id="@+id/current_location_text_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/current_location_Heading"
+                    android:drawablePadding="15dp"
+                    android:paddingBottom="5dp"
+                    android:text="Your current GPS location"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:drawableStartCompat="@drawable/ic_gps"
+                    app:drawableTint="@color/quantum_lightblue" />
+
+            </RelativeLayout>
+
+            <!-- Recent Search Relative layout -->
+            <RelativeLayout
+                android:id="@+id/recent_search_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/current_location_layout"
+                android:layout_marginTop="-10dp"
+                android:background="@drawable/rounded_places_autocomplete_bg"
+                android:layout="@id/place_search"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="15dp"
+
+                >
+
+                <!-- Recent Search heading -->
+                <TextView
+                    android:id="@+id/recentSearchHeading"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_toStartOf="@id/recentSearchCloseButton"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="20dp"
+                    android:text="@string/auto_complete_recycler_heading_text"
+                    android:textSize="18sp" />
+
+                <!-- Recent Search Close button -->
+                <ImageButton
+                    android:id="@+id/recentSearchCloseButton"
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_margin="15dp"
+                    android:alpha="0.5"
+                    android:background="@android:color/transparent"
+                    android:src="@drawable/ic_close"
+                    android:tooltipText="@string/tooltip_text_close_button" />
+
+                <!-- Recent Search recycler-->
                 <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/places_recycler_view"
+                    android:id="@+id/recent_search_recycler_view"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/place_search_layout"
-                    android:layout_marginTop="-10dp"
-                    android:background="@drawable/rounded_places_autocomplete_bg"
-                    android:layout="@id/place_search"
+                    android:layout_below="@id/recentSearchHeading"
+                    android:layout_alignParentStart="true"
                     android:orientation="vertical"
-                    android:paddingHorizontal="20dp"
-                    android:paddingVertical="15dp"
-
                     app:layout_behavior="@string/appbar_scrolling_view_behavior" />
-
-                <!-- Recent Search Relative layout -->
-                <RelativeLayout
-                    android:id="@+id/recent_search_layout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@id/place_search_layout"
-                    android:layout_marginTop="-10dp"
-                    android:background="@drawable/rounded_places_autocomplete_bg"
-                    android:layout="@id/place_search"
-                    android:orientation="vertical"
-                    android:paddingHorizontal="20dp"
-                    android:paddingVertical="15dp"
-                   >
-
-                    <!-- Recent Search heading -->
-                    <TextView
-                        android:id="@+id/recentSearchHeading"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:layout_alignParentTop="true"
-                        android:layout_toStartOf="@id/recentSearchCloseButton"
-                        android:paddingTop="10dp"
-                        android:paddingBottom="20dp"
-                        android:text="@string/auto_complete_recycler_heading_text"
-                        android:textSize="18sp" />
-
-                    <!-- Recent Search Close button -->
-                    <ImageButton
-                        android:id="@+id/recentSearchCloseButton"
-                        android:layout_width="10dp"
-                        android:layout_height="10dp"
-                        android:layout_alignParentEnd="true"
-                        android:layout_margin="15dp"
-                        android:alpha="0.5"
-                        android:background="@android:color/transparent"
-                        android:src="@drawable/ic_close"
-                        android:tooltipText="@string/tooltip_text_close_button" />
-
-                    <!-- Recent Search recycler-->
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/recent_search_recycler_view"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@id/recentSearchHeading"
-                        android:layout_alignParentStart="true"
-                        android:orientation="vertical"
-                        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
-
-
-                </RelativeLayout>
 
 
             </RelativeLayout>
 
-            <!--Current location button -->
-            <ImageView
-                android:id="@+id/ic_gps"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_gravity="end"
-                android:layout_marginTop="0dp"
-                android:layout_marginRight="10dp"
-                android:background="@drawable/rounded_cards_bg"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_gps"
-                android:tooltipText="@string/tooltip_text_gps_button" />
 
-        </LinearLayout>
+        </RelativeLayout>
 
+        <!--Current location button -->
+        <ImageView
+            android:id="@+id/ic_gps"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_below="@+id/RelativeLayout1"
+            android:layout_alignParentEnd="true"
+            android:layout_marginRight="10dp"
+            android:background="@drawable/rounded_cards_bg"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_gps"
+            android:tooltipText="@string/tooltip_text_gps_button" />
 
         <ProgressBar
             android:id="@+id/loadingProgressBar"
@@ -261,23 +378,23 @@
             android:layout_height="wrap_content"
             android:layout_above="@id/spacer2"
             android:layout_margin="30dp"
-            android:backgroundTint="@color/quantum_lightgreen"
+            android:backgroundTint="@color/black"
             android:elevation="20dp"
             android:padding="15dp"
             android:text="@string/button_show_directions"
             android:textAlignment="center"
             android:textAllCaps="false"
-            android:textColor="@color/black"
+            android:textColor="@color/white"
             android:textStyle="bold"
             android:theme="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            android:visibility="gone"
             app:cornerRadius="30dp"
             app:icon="@drawable/ic_directions"
             app:iconGravity="textStart"
             app:iconPadding="20dp"
             app:iconSize="@dimen/icon_size_settings"
-            android:visibility="gone"
-            app:iconTint="@color/black"
-            app:rippleColor="@color/colorGreen">
+            app:iconTint="@color/white"
+            app:rippleColor="@color/quantum_lightgreen">
 
         </com.google.android.material.button.MaterialButton>
 
