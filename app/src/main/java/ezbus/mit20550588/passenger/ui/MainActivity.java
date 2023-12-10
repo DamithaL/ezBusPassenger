@@ -18,6 +18,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -46,6 +47,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -89,6 +92,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 
+import javax.xml.transform.Source;
+
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, PlacesAutoCompleteAdapter.ClickListener {
 
@@ -108,8 +113,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private PlacesAutoCompleteAdapter mAutoCompleteAdapter;
     private RecyclerView recyclerViewForAutocomplete;
     private RelativeLayout recentSearchLayout;
-    private LatLng SourceLocationLatLng = new LatLng(6.9022, 79.8612);
-    private LatLng DestinationLocationLatLng = new LatLng(6.9271, 79.8612);
+    private LatLng CurrentLocationLatLng;
+    private LatLng SourceLocationLatLng;
+    private LatLng DestinationLocationLatLng;
     private String SourceLocationName = "Origin placeholder";
     private String DestinationLocationName = "Destination placeholder";
 
@@ -120,6 +126,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private Boolean locationMarked;
     private Integer after_LocatingByRecentSearch_Method;
+    private Integer after_LocatingByAutocomplete_Method;
+
 
     // ------------------------------- LIFECYCLE METHODS ------------------------------- //
     @Override
@@ -209,6 +217,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
         myMap = googleMap;
+
+        // Click listener for map to hide other elements when it's clicked
+        myMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(@NonNull LatLng latLng) {
+                // Hide other items when the map is clicked
+
+                Log("onMapReady", "onMapClick", "Clicked");
+                /////------- ITEMS VISIBILITY  -------/////
+                Map<View, Boolean> visibilityMap = new HashMap<>();
+
+                visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
+                visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+
+                allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
+                // sourceSearchEditText.clearFocus(); // Clear the focus from search bar
+                hideKeyboard(getCurrentFocus());
+            }
+        });
+
 
         ////////// PLACES API TASK //////////////  added according to YT CodeWithMitch
 
@@ -367,13 +395,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mapFragment.getMapAsync(MainActivity.this);
         Log("initMap", "initialized");
-
-
     }
 
     // Override onTouchEvent to hide the keyboard when the map is clicked
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        /////------- ITEMS VISIBILITY  -------/////
+        Map<View, Boolean> visibilityMap = new HashMap<>();
+
+        visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
+        visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+
+
+        allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
+
         hideKeyboard(getCurrentFocus());
         return super.onTouchEvent(event);
     }
@@ -389,6 +424,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Log("initSearchBar", "SearchBar", "onClick");
 
                 after_LocatingByRecentSearch_Method = 1;
+
 
                 searchBarBackButton(true);
 
@@ -450,7 +486,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     findViewById(R.id.place_search_layout).clearFocus(); // Clear the focus from search bar
                     hideKeyboard(textView); // Hide the keyboard
 
-                    searchLocationByName(enteredText,1);
+                    searchLocationByName(enteredText, 1);
 
                     return true; // Consume the event
                 }
@@ -585,6 +621,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Log("initSourceLocationBar", "onClick");
 
                 after_LocatingByRecentSearch_Method = 2;
+                initCurrentLocationOption("Source");
 
                 Log("initSourceLocationBar", "SearchBar Text is Empty?", String.valueOf(isEmpty(SourceLocationText)));
 
@@ -595,6 +632,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 visibilityMap.put(recentSearchLayout, true); // Recent Search Layout
                 visibilityMap.put(DirectionsButton, false); // Directions button
                 visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                visibilityMap.put(findViewById(R.id.current_location_layout), true); // Current location
 
                 allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
             }
@@ -608,10 +646,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Log("initSourceLocationBar", "SearchBar Has focus?", String.valueOf(hasFocus));
 
                 after_LocatingByRecentSearch_Method = 2;
+                initCurrentLocationOption("Source");
 
                 /////------- ITEMS VISIBILITY  -------/////
                 Map<View, Boolean> visibilityMap = new HashMap<>();
                 visibilityMap.put(recentSearchLayout, hasFocus); // Recent Search Layout
+                visibilityMap.put(findViewById(R.id.current_location_layout), hasFocus); // Current location
                 allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
             }
         });
@@ -637,7 +677,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     findViewById(R.id.sourceLocationText).clearFocus(); // Clear the focus from search bar
                     hideKeyboard(textView); // Hide the keyboard
 
-                    searchLocationByName(enteredText,2);
+                    searchLocationByName(enteredText, 2);
 
                     return true; // Consume the event
                 }
@@ -648,6 +688,129 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void initDestinationBar() {
+
+        Log("initDestinationBar", "initialized");
+
+        // EditText for source location
+        EditText DestinationLocationText = findViewById(R.id.destinationLocationText);
+
+        // To show recent searches when the EditText is clicked
+        DestinationLocationText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log("initDestinationBar", "onClick");
+
+                after_LocatingByRecentSearch_Method = 3;
+                initCurrentLocationOption("Destination");
+
+                Log("initDestinationBar", "SearchBar Text is Empty?", String.valueOf(isEmpty(DestinationLocationText)));
+
+                /////------- ITEMS VISIBILITY  -------/////
+                Map<View, Boolean> visibilityMap = new HashMap<>();
+
+                visibilityMap.put(findViewById(R.id.SearchBarRelLayout), false);  // Search bar
+                visibilityMap.put(recentSearchLayout, true); // Recent Search Layout
+                visibilityMap.put(DirectionsButton, false); // Directions button
+                visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                visibilityMap.put(findViewById(R.id.current_location_layout), true); // Current location
+
+                allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
+            }
+        });
+
+        // Add a focus change listener to the EditText
+        DestinationLocationText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                // Check if the EditText is losing focus
+                Log("initDestinationBar", "SearchBar Has focus?", String.valueOf(hasFocus));
+
+                after_LocatingByRecentSearch_Method = 3;
+                initCurrentLocationOption("Destination");
+
+                /////------- ITEMS VISIBILITY  -------/////
+                Map<View, Boolean> visibilityMap = new HashMap<>();
+                visibilityMap.put(recentSearchLayout, hasFocus); // Recent Search Layout
+                visibilityMap.put(findViewById(R.id.current_location_layout), hasFocus); // Current location
+                allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
+            }
+        });
+
+        // To show autocomplete suggestions when start typing
+        DestinationLocationText.addTextChangedListener(filterTextWatcherForDestinationBar);
+
+        // To search a location when the text query submits
+        DestinationLocationText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
+                Log("initDestinationBar", "SearchBar", "onEditorAction");
+                if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    // The user pressed "Done" or "Search" on the keyboard
+                    String enteredText = textView.getText().toString();
+                    Log("initDestinationBar", "SearchBar", "Submitted query");
+
+                    /////------- ITEMS VISIBILITY  -------/////
+                    Map<View, Boolean> visibilityMap = new HashMap<>();
+                    visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
+                    visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                    allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
+                    DestinationLocationText.clearFocus(); // Clear the focus from search bar
+                    hideKeyboard(textView); // Hide the keyboard
+
+                    searchLocationByName(enteredText, 3);
+
+                    return true; // Consume the event
+                }
+                return false; // Continue processing the event
+            }
+        });
+    }
+
+    private void initCurrentLocationOption(String SourceOrDestination) {
+        Log("initCurrentLocationOption", "Started");
+        TextView currentLocationText = findViewById(R.id.current_location_text_button);
+        currentLocationText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (SourceOrDestination == null) {
+                    Log("initCurrentLocationOption", "NULL", "Clicked");
+                    SourceLocationName = "Your current location";
+                    SourceLocationLatLng = CurrentLocationLatLng;
+                    EditText SourceLocation = findViewById(R.id.sourceLocationText);
+                    SourceLocation.setText("Your current location");
+                } else if (SourceOrDestination == "Source") {
+                    Log("initCurrentLocationOption", "Source", "Clicked");
+                    SourceLocationName = "Your current location";
+                    SourceLocationLatLng = CurrentLocationLatLng;
+                    EditText SourceLocation = findViewById(R.id.sourceLocationText);
+                    SourceLocation.setText("Your current location");
+                } else if (SourceOrDestination == "Destination") {
+                    Log("initCurrentLocationOption", "Destination", "Clicked");
+                    DestinationLocationName = "Your current location";
+                    DestinationLocationLatLng = CurrentLocationLatLng;
+                    EditText DestinationLocation = findViewById(R.id.destinationLocationText);
+                    DestinationLocation.setText("Your current location");
+                }
+
+                // Redraw the Directions
+                Log("initCurrentLocationOption", "Source,Destination", SourceLocationName + DestinationLocationName);
+                direction(SourceLocationLatLng, DestinationLocationLatLng);
+
+                /////------- ITEMS VISIBILITY  -------/////
+                Map<View, Boolean> visibilityMap = new HashMap<>();
+
+                visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
+                visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                visibilityMap.put(DirectionsButton, false); // Directions button
+                visibilityMap.put((findViewById(R.id.current_location_layout)), false); // current location
+
+                allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
+                findViewById(R.id.sourceLocationInputLayout).clearFocus(); // Clear the focus from search bar
+                findViewById(R.id.destinationLocationInputLayout).clearFocus(); // Clear the focus from search bar
+                hideKeyboard(currentLocationText);
+
+            }
+        });
     }
 
     private void initBackButton() {
@@ -697,7 +860,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // ------------------------------- HELPER METHODS ------------------------------- //
 
     // ------------- Search by name ------------- //
-    private void searchLocationByName(String enteredText,  int after_LocatingByName_Method) {
+    private void searchLocationByName(String enteredText, int after_LocatingByName_Method) {
 
         // int after_LocatingByName_Method == what should do after showing locating the place
         // 1 for --- search bar
@@ -717,7 +880,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         executor.execute(() -> {
             List<Address> addressList = performGeocode(enteredText);
 
-            runOnUiThread(() -> handleGeocodeResults(addressList,after_LocatingByName_Method));
+            runOnUiThread(() -> handleGeocodeResults(addressList, after_LocatingByName_Method));
         });
     }
 
@@ -752,7 +915,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 LatLng locationLatLng = new LatLng(address.getLatitude(), address.getLongitude());
 
                 saveToRecentSearches(locationName, locationLatLng);
-                moveCamera(locationLatLng, DEFAULT_ZOOM, locationName);
+                //moveCamera(locationLatLng, DEFAULT_ZOOM, locationName);
 
                 // what should do after locating the place
                 // 1 for --- search bar
@@ -771,6 +934,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     DestinationLocationLatLng = locationLatLng;
                     afterLocatingByNameOnDestinationBar(locationName);
                 }
+
+                // Redraw directions
+                direction(SourceLocationLatLng, DestinationLocationLatLng);
             }
         } else {
             Log("handleGeocodeResults", "No results found");
@@ -864,6 +1030,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             boolean isTextEmpty = s.toString().equals("");
             if (!isTextEmpty) {
                 //if a letter is typed
+
+                // what should do after locating the place
+                // 1 for --- search bar
+                // 2 for --- source location bar
+                // 3 for --- destination bar
+                after_LocatingByAutocomplete_Method = 1;
                 mAutoCompleteAdapter.getFilter().filter(s.toString());
             }
 
@@ -893,6 +1065,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             boolean isTextEmpty = s.toString().equals("");
             if (!isTextEmpty) {
                 //if a letter is typed
+
+                // what should do after locating the place
+                // 1 for --- search bar
+                // 2 for --- source location bar
+                // 3 for --- destination bar
+                after_LocatingByAutocomplete_Method = 2;
                 mAutoCompleteAdapter.getFilter().filter(s.toString());
             }
 
@@ -922,6 +1100,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             boolean isTextEmpty = s.toString().equals("");
             if (!isTextEmpty) {
                 //if a letter is typed
+
+                // what should do after locating the place
+                // 1 for --- search bar
+                // 2 for --- source location bar
+                // 3 for --- destination bar
+                after_LocatingByAutocomplete_Method = 3;
                 mAutoCompleteAdapter.getFilter().filter(s.toString());
             }
 
@@ -947,29 +1131,74 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void handleAutocompleteItemClick(Place place) {
         if (place.getName() != null && !(place.getName().isEmpty()) && place.getLatLng() != null) {
-            TextInputEditText placeSearchEditText = findViewById(R.id.place_search);
-            placeSearchEditText.setText(place.getName());
 
-            DestinationLocationName = place.getName();
-            DestinationLocationLatLng = place.getLatLng();
-            Log("handleAutocompleteItemClick", "Place", place.getAddress() + ", " + DestinationLocationLatLng.latitude + DestinationLocationLatLng.longitude);
-
-            saveToRecentSearches(DestinationLocationName, DestinationLocationLatLng);
-
-            moveCamera(place.getLatLng(), DEFAULT_ZOOM, place.getName());
-
-            locationMarked = true;
+            Log("handleAutocompleteItemClick", "Place", "Found");
+            saveToRecentSearches(place.getName(), place.getLatLng());
 
             /////------- ITEMS VISIBILITY  -------/////
             Map<View, Boolean> visibilityMap = new HashMap<>();
 
-            visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-            visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
-            visibilityMap.put(DirectionsButton, true); // Directions button
+            // what should do after locating the place
+            // 1 for --- search bar
+            // 2 for --- source location bar
+            // 3 for --- destination bar
+
+            if (after_LocatingByAutocomplete_Method == null || after_LocatingByAutocomplete_Method == 1) {
+
+                Log("handleAutocompleteItemClick", "on", "Search Bar");
+
+                TextInputEditText placeSearchEditText = findViewById(R.id.place_search);
+                placeSearchEditText.setText(place.getName());
+
+                DestinationLocationName = place.getName();
+                DestinationLocationLatLng = place.getLatLng();
+
+                moveCamera(place.getLatLng(), DEFAULT_ZOOM, place.getName());
+
+                locationMarked = true;
+
+                visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
+                visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                visibilityMap.put(DirectionsButton, true); // Directions button
+                findViewById(R.id.place_search_layout).clearFocus(); // Clear the focus from search bar
+
+            } else if (after_LocatingByAutocomplete_Method == 2) {
+
+                Log("handleAutocompleteItemClick", "on", "Source location bar");
+
+                TextInputEditText placeSearchEditText = findViewById(R.id.sourceLocationText);
+                placeSearchEditText.setText(place.getName());
+
+                SourceLocationName = place.getName();
+                SourceLocationLatLng = place.getLatLng();
+
+                visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
+                visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                visibilityMap.put(DirectionsButton, false); // Directions button
+                findViewById(R.id.sourceLocationInputLayout).clearFocus(); // Clear the focus from search bar
+
+            } else if (after_LocatingByAutocomplete_Method == 3) {
+
+                Log("handleAutocompleteItemClick", "on", "Destination location bar");
+
+                TextInputEditText placeSearchEditText = findViewById(R.id.destinationLocationText);
+                placeSearchEditText.setText(place.getName());
+
+                DestinationLocationName = place.getName();
+                DestinationLocationLatLng = place.getLatLng();
+
+                visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
+                visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                visibilityMap.put(DirectionsButton, false); // Directions button
+                findViewById(R.id.destinationLocationInputLayout).clearFocus(); // Clear the focus from search bar
+            }
 
             allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
-            findViewById(R.id.place_search_layout).clearFocus(); // Clear the focus from search bar
-            hideKeyboard(findViewById(R.id.place_search)); // Hide the keyboard
+            hideKeyboard(getCurrentFocus()); // Hide the keyboard
+
+            // Redraw the Directions
+            direction(SourceLocationLatLng, DestinationLocationLatLng);
+
         }
     }
 
@@ -998,7 +1227,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         Log("showLocationOfRecentSearch", "started");
 
-        if (after_LocatingByRecentSearch_Method == null){
+        if (after_LocatingByRecentSearch_Method == null) {
             Log("showLocationOfRecentSearch", "after_LocatingByRecentSearch_Method is NULL");
             after_LocatingByRecentSearch_Method = 1;
         }
@@ -1037,7 +1266,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 SourceLocationName = locationName;
                 SourceLocationLatLng = locationLatLng;
                 // Redraw the Directions
-                direction(SourceLocationName,SourceLocationLatLng, DestinationLocationName, DestinationLocationLatLng);
+                direction(SourceLocationLatLng, DestinationLocationLatLng);
 
             } else if (after_LocatingByRecentSearch_Method == 3) {
                 Log("showLocationOfRecentSearch", "after_LocatingByRecentSearch_Method is 3");
@@ -1047,7 +1276,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 DestinationLocationName = locationName;
                 DestinationLocationLatLng = locationLatLng;
                 // Redraw the Directions
-                direction(SourceLocationName,SourceLocationLatLng, DestinationLocationName, DestinationLocationLatLng);
+                direction(SourceLocationLatLng, DestinationLocationLatLng);
             }
 
         } else {
@@ -1103,6 +1332,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             Location currentLocation = (Location) task.getResult();
                             if (currentLocation != null) {
                                 Log("getDeviceLocation", "found location", currentLocation.toString());
+                                CurrentLocationLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
                                 SourceLocationName = "Your current location";
                                 SourceLocationLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
                                 // Did not use moveCamera method here since it will mark the current location by a marker
@@ -1159,7 +1389,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 && SourceLocationName != null
                 && DestinationLocationName != null) {
 
-            direction(SourceLocationName, SourceLocationLatLng, DestinationLocationName, DestinationLocationLatLng);
+            // set Location bars
+            EditText SourceLocation = findViewById(R.id.sourceLocationText);
+            EditText DestinationLocation = findViewById(R.id.destinationLocationText);
+
+            SourceLocation.setText(SourceLocationName);
+            Log("direction", "SourceLocation text changed");
+            DestinationLocation.setText(DestinationLocationName);
+            Log("direction", "DestinationLocation text changed");
+
+            direction(SourceLocationLatLng, DestinationLocationLatLng);
 
             /////------- ITEMS VISIBILITY  -------/////
             Map<View, Boolean> visibilityMap = new HashMap<>();
@@ -1175,17 +1414,33 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    private void direction(String originName, LatLng origin, String destinationName, LatLng destination) {
+    private void direction(LatLng origin, LatLng destination) {
 
         Log("direction", "Started");
-        // set Location bars
-        EditText SourceLocation = findViewById(R.id.sourceLocationText);
-        EditText DestinationLocation = findViewById(R.id.destinationLocationText);
 
-        SourceLocation.setText(originName);
-        Log("direction", "SourceLocation text changed");
-        DestinationLocation.setText(destinationName);
-        Log("direction", "DestinationLocation text changed");
+        // Show waiting progress bar
+        toggleItemVisibility(findViewById(R.id.loadingProgressBar), true);
+
+        // Remove any existing markers
+        myMap.clear();
+
+        // Marking START & END points
+
+        // Create MarkerOptions objects
+        MarkerOptions startOptions = new MarkerOptions().position(origin).title("Start");
+        MarkerOptions endOptions = new MarkerOptions().position(destination).title("Destination");
+
+        // Customize the marker icon
+        BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.ic_directions_start);
+        if (icon != null) {
+            startOptions.icon(icon);
+        } else {
+            Log("direction", "ERROR: End point marker", "Icon is null");
+        }
+
+        // Add marker to the location
+        myMap.addMarker(startOptions);
+        myMap.addMarker(endOptions);
 
         // Construct the URL for the Google Directions API request
         String apiKey = "AIzaSyDDTamV9IieqbDXoWKxjEHmBo7jRcNuhFg"; // Replace with your actual API key
@@ -1265,6 +1520,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         RequestQueue queue = Volley.newRequestQueue(this);
         queue.add(directionsRequest);
 
+        // Hide waiting progress bar
+       toggleItemVisibility(findViewById(R.id.loadingProgressBar), false);
 
     }
 
@@ -1328,19 +1585,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (SourceLocation.getText() != null && DestinationLocation.getText() != null) {
             temp = SourceLocation.getText();
             SourceLocation.setText(DestinationLocation.getText());
+            SourceLocationName = DestinationLocationName;
             DestinationLocation.setText(temp);
+            DestinationLocationName = temp.toString();
 
             tempLatLng = SourceLocationLatLng;
             SourceLocationLatLng = DestinationLocationLatLng;
             DestinationLocationLatLng = tempLatLng;
 
+
             Log("swapLocations", "SourceLocation.getText().toString()", SourceLocation.getText().toString());
             Log("swapLocations", "DestinationLocation.getText().toString()", DestinationLocation.getText().toString());
 
-            direction(SourceLocation.getText().toString(), SourceLocationLatLng, DestinationLocation.getText().toString(), DestinationLocationLatLng);
-
-
+            direction(SourceLocationLatLng, DestinationLocationLatLng);
         }
+
+        /////------- ITEMS VISIBILITY  -------/////
+        Map<View, Boolean> visibilityMap = new HashMap<>();
+
+        visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
+        visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+
+        allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
+
+
     }
 
     // ORIGINAL METHODS - CODE
@@ -1360,7 +1628,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             if (view != null && isVisible != null) {
                 view.setVisibility(isVisible ? View.VISIBLE : View.GONE);
-                Log("toggleItemsVisibility", view.toString(), String.valueOf(isVisible));
+                // Log("toggleItemsVisibility", view.toString(), String.valueOf(isVisible));
             }
         }
     }

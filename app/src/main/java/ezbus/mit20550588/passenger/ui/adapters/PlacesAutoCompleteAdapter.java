@@ -139,7 +139,9 @@ public class PlacesAutoCompleteAdapter extends RecyclerView.Adapter<PlacesAutoCo
             if (findAutocompletePredictionsResponse != null)
                 for (AutocompletePrediction prediction : findAutocompletePredictionsResponse.getAutocompletePredictions()) {
                     Log.d(TAG, prediction.getPlaceId());
-                    resultList.add(new PlaceAutocomplete(prediction.getPlaceId(), prediction.getPrimaryText(STYLE_NORMAL).toString(), prediction.getFullText(STYLE_BOLD).toString()));
+                    resultList.add(new PlaceAutocomplete(prediction.getPlaceId(), prediction.getPrimaryText(STYLE_NORMAL).toString()
+                           // , prediction.getFullText(STYLE_BOLD).toString()
+                    ));
                 }
 
             return resultList;
@@ -159,7 +161,7 @@ public class PlacesAutoCompleteAdapter extends RecyclerView.Adapter<PlacesAutoCo
 
     @Override
     public void onBindViewHolder(@NonNull PredictionHolder mPredictionHolder, final int i) {
-        mPredictionHolder.address.setText(mResultList.get(i).address);
+       // mPredictionHolder.address.setText(mResultList.get(i).address);
         mPredictionHolder.area.setText(mResultList.get(i).area);
     }
 
@@ -173,13 +175,14 @@ public class PlacesAutoCompleteAdapter extends RecyclerView.Adapter<PlacesAutoCo
     }
 
     public class PredictionHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        private TextView address, area;
+       // private TextView address, area;
+        private TextView area;
         private LinearLayout mRow;
 
         PredictionHolder(View itemView) {
             super(itemView);
             area = itemView.findViewById(R.id.place_area);
-            address = itemView.findViewById(R.id.place_address);
+          //  address = itemView.findViewById(R.id.place_address);
             mRow = itemView.findViewById(R.id.place_item_view);
             itemView.setOnClickListener(this);
         }
@@ -219,12 +222,15 @@ public class PlacesAutoCompleteAdapter extends RecyclerView.Adapter<PlacesAutoCo
     public class PlaceAutocomplete {
 
         public CharSequence placeId;
-        public CharSequence address, area;
+        //public CharSequence address, area;
+        public CharSequence  area;
 
-        PlaceAutocomplete(CharSequence placeId, CharSequence area, CharSequence address) {
+        PlaceAutocomplete(CharSequence placeId, CharSequence area
+                       //   ,CharSequence address
+        ) {
             this.placeId = placeId;
             this.area = area;
-            this.address = address;
+          //  this.address = address;
         }
 
         @Override

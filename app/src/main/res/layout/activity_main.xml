@@ -60,9 +60,6 @@
                 android:layout_toEndOf="@id/BackButton"
                 android:drawablePadding="10dp"
                 android:elevation="10dp"
-                android:inputType="textNoSuggestions"
-                android:text="@string/Source_Location_text"
-                android:textColor="@android:color/black"
                 android:tooltipText="@string/Source_Location_text"
                 app:boxBackgroundMode="none"
                 app:endIconMode="clear_text"
@@ -79,6 +76,7 @@
                     android:backgroundTint="@color/gray400"
                     android:ellipsize="end"
                     android:hint="@string/Source_Location_text"
+                    android:imeOptions="actionDone"
                     android:inputType="textPostalAddress"
                     android:padding="10dp"
                     android:textColor="@color/black"
@@ -118,14 +116,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
-                android:layout_marginBottom="10dp"
                 android:layout_toStartOf="@id/SwapButton"
                 android:drawablePadding="10dp"
                 android:elevation="10dp"
-                android:inputType="textNoSuggestions"
-                android:text="@string/Source_Location_text"
-                android:textColor="@android:color/black"
-                android:tooltipText="@string/Source_Location_text"
+                android:tooltipText="@string/Destination_Location_text"
                 app:boxBackgroundMode="none"
                 app:endIconMode="clear_text"
                 app:hintEnabled="false"
@@ -140,7 +134,8 @@
                     android:background="@drawable/rounded_cards_bg"
                     android:backgroundTint="@color/gray400"
                     android:ellipsize="end"
-                    android:hint="@string/Source_Location_text"
+                    android:hint="@string/Destination_Location_text"
+                    android:imeOptions="actionDone"
                     android:inputType="textPostalAddress"
                     android:padding="10dp"
                     android:textColor="@color/black"
@@ -169,12 +164,21 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/directionBar">
 
-        <!--     Map Fragment-->
-        <fragment
-            android:id="@+id/map"
-            android:name="com.google.android.gms.maps.SupportMapFragment"
+        <!--     Map Frame Layout -->
+        <FrameLayout
+            android:id="@+id/mapFrameLayout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:clickable="true">
+
+            <!--     Map Fragment-->
+            <fragment
+                android:id="@+id/map"
+                android:name="com.google.android.gms.maps.SupportMapFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </FrameLayout>
+
 
         <!-- Search Bar (+Settings btn) + Autocomplete + Recent Search -->
         <RelativeLayout
@@ -215,6 +219,7 @@
                         android:background="@drawable/bg_searchview_rounded"
                         android:ellipsize="end"
                         android:hint="@string/mapSearch_text"
+                        android:imeOptions="actionDone"
                         android:inputType="textPostalAddress"
                         android:padding="10dp"
                         android:textSize="20sp" />
@@ -266,7 +271,9 @@
                 android:layout="@id/place_search"
                 android:orientation="vertical"
                 android:paddingHorizontal="20dp"
-                android:paddingVertical="15dp">
+                android:paddingVertical="15dp"
+                android:visibility="gone">
+
                 <!-- Your current location heading -->
                 <TextView
                     android:id="@+id/current_location_Heading"
@@ -307,8 +314,7 @@
                 android:orientation="vertical"
                 android:paddingHorizontal="20dp"
                 android:paddingVertical="15dp"
-
-                >
+                android:visibility="gone">
 
                 <!-- Recent Search heading -->
                 <TextView
@@ -364,12 +370,27 @@
             android:src="@drawable/ic_gps"
             android:tooltipText="@string/tooltip_text_gps_button" />
 
-        <ProgressBar
+        <!-- Loading ProgressBar -->
+        <RelativeLayout
             android:id="@+id/loadingProgressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:layout_gravity="center" />
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <!-- Dark overlay -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#80000000" />
+
+            <!-- ProgressBar -->
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:layout_gravity="center" />
+
+        </RelativeLayout>
+
 
         <!-- Directions Button -->
         <com.google.android.material.button.MaterialButton
