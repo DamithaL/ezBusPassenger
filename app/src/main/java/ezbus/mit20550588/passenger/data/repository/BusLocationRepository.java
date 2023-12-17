@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import ezbus.mit20550588.passenger.data.model.BusLocationModel;
@@ -69,6 +70,12 @@ public class BusLocationRepository {
             }
         }
         errorLiveData.setValue(errorMessage);
+    }
+
+
+    public void resetData() {
+        // Clear the data when necessary
+        busLocationsLiveData.setValue(Collections.emptyList());
     }
 
 

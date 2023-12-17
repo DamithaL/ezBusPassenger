@@ -6,7 +6,12 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -72,6 +77,7 @@ import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.maps.android.clustering.ClusterManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -80,6 +86,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -91,12 +98,14 @@ import java.util.concurrent.Executors;
 import ezbus.mit20550588.passenger.R;
 import ezbus.mit20550588.passenger.data.model.BusLocationModel;
 import ezbus.mit20550588.passenger.data.model.BusModel;
+import ezbus.mit20550588.passenger.data.model.ClusterMarker;
 import ezbus.mit20550588.passenger.data.model.RecentSearchModel;
 import ezbus.mit20550588.passenger.data.viewModel.BusLocationViewModel;
 import ezbus.mit20550588.passenger.data.viewModel.RecentSearchViewModel;
 import ezbus.mit20550588.passenger.ui.Settings.Settings;
 import ezbus.mit20550588.passenger.ui.adapters.PlacesAutoCompleteAdapter;
 import ezbus.mit20550588.passenger.ui.adapters.RecentSearchAdapter;
+import ezbus.mit20550588.passenger.util.ClusterManagerRenderer;
 
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, PlacesAutoCompleteAdapter.ClickListener {
@@ -128,10 +137,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Boolean locationMarked;
     private Integer after_LocatingByRecentSearch_Method;
     private Integer after_LocatingByAutocomplete_Method;
-    private ArrayList<BusLocationModel> busLocations = new ArrayList<>();
+
+    private ArrayList<BusModel> availableBusses = new ArrayList<>();
+
+    private ArrayList<BusModel> busLocations = new ArrayList<>();
+
     private BusLocationViewModel busLocationViewModel;
     // Map to store bus markers, keyed by bus ID
     private Map<String, Marker> busMarkers = new HashMap<>();
+    private LatLngBounds mapBoundarySL;
+    private ClusterManager mClusterManager;
+    private ClusterManagerRenderer mClusterManagerRenderer;
+    private ArrayList<ClusterMarker> mClusterMarkers = new ArrayList<>();
+    private BusModel busLocation;
 
 
     // ------------------------------- LIFECYCLE METHODS ------------------------------- //
@@ -202,6 +220,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Stop any operations that should not continue when the activity is not visible.
         // Example: If your app is streaming audio or video, you might pause or stop the streaming process in the onStop method. This prevents unnecessary resource usage when the user is not actively using the app.
 
+        // Remove any existing markers
+        clearBusMapMarkers();
+
+
         Log("onStop", "MainActivity stopped");
 
     }
@@ -211,6 +233,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onDestroy();
         // Release resources, unregister listeners, etc. before the activity is destroyed
         // Example: If your app is using any resources or services that need to be released explicitly, such as stopping a location tracking service, you might do so in the onDestroy method.
+        // Remove any existing markers
+        clearBusMapMarkers();
         Log("onDestroy", "MainActivity destroyed");
     }
 
@@ -275,6 +299,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             myMap.getUiSettings().setMapToolbarEnabled(true);
             myMap.getUiSettings().setIndoorLevelPickerEnabled(true);
 
+            // Zoom into the Sri Lanka
+            setMapBoundary();
+
 
             // Show current location
             getDeviceLocation();
@@ -286,6 +313,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
     }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -1066,7 +1094,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         public void onTextChanged(CharSequence s, int start, int before, int count) {
         }
     };
-
     private final TextWatcher filterTextWatcherForSourceLocationBar = new TextWatcher() {
         @Override
         public void afterTextChanged(Editable s) {
@@ -1101,7 +1128,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         public void onTextChanged(CharSequence s, int start, int before, int count) {
         }
     };
-
     private final TextWatcher filterTextWatcherForDestinationBar = new TextWatcher() {
         @Override
         public void afterTextChanged(Editable s) {
@@ -1320,6 +1346,24 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     // ------------- Show a location on map ------------- //
+
+    private void setMapBoundary() {
+        //Limit the visible region to Sri Lanka 's bounds
+        LatLngBounds sriLankaBounds = new LatLngBounds(
+                new LatLng(5.925, 79.650),  // Southwest corner of Sri Lanka
+                new LatLng(9.825, 81.850)   // Northeast corner of Sri Lanka
+        );
+
+        // Set the padding as needed
+        int padding = 100;
+
+        // Adjust the camera position to fit the bounded region with padding
+        myMap.moveCamera(CameraUpdateFactory.newLatLngBounds(sriLankaBounds, padding));
+
+        // Optionally, you can set a maximum zoom level to prevent the user from zooming out too far
+        // myMap.setMaxZoomPreference(15.0f);  // You can adjust the value as needed
+    }
+
     private void getDeviceLocation() {
 
         Log("getDeviceLocation", "getting the devices current location");
@@ -1343,9 +1387,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 CurrentLocationLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
                                 SourceLocationName = "Your current location";
                                 SourceLocationLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+
                                 // Did not use moveCamera method here since it will mark the current location by a marker
-                                myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()),
-                                        DEFAULT_ZOOM));
+                                //myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()),
+                                //       DEFAULT_ZOOM));
 
                             } else {
                                 Log("getDeviceLocation", "ERROR", "current location is null");
@@ -1385,7 +1430,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     // ------------- Draw directions on map ------------- //
-
     private void showDirections() {
 
         // TODO: 2023-12-07  SOURCE and DESTINATION LATLANG,NAMES should be passed in correct MVVM path
@@ -1429,7 +1473,45 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     // TODO: 2023-12-07  MAKE FONT STYLE instead of using bold etc
+    public BitmapDescriptor getBitmapDescriptorWithDrawable(Drawable drawable, int circleColor, int strokeWidth, int strokeColor, int size) {
+        int padding = 10; // Adjust the padding as needed
+        int diameter = Math.max(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight()) + strokeWidth * 2;
+        Bitmap bitmap = Bitmap.createBitmap(diameter, diameter, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
 
+        // Draw the circle with stroke
+        Paint paintCircle = new Paint();
+        paintCircle.setColor(circleColor);
+        paintCircle.setStyle(Paint.Style.FILL);
+        paintCircle.setAntiAlias(true);
+        canvas.drawCircle(diameter / 2, diameter / 2, diameter / 2 - strokeWidth, paintCircle);
+
+        Paint paintStroke = new Paint();
+        paintStroke.setColor(strokeColor); // Adjust stroke color as needed
+        paintStroke.setStyle(Paint.Style.STROKE);
+        paintStroke.setStrokeWidth(strokeWidth);
+        paintStroke.setAntiAlias(true);
+        canvas.drawCircle(diameter / 2, diameter / 2, diameter / 2 - strokeWidth, paintStroke);
+
+        // Apply color filter to the drawable
+        drawable.setColorFilter(strokeColor, PorterDuff.Mode.SRC_IN);
+
+        // Draw the drawable on top of the circle
+        int left = (diameter - drawable.getIntrinsicWidth()) / 2;
+        int top = (diameter - drawable.getIntrinsicHeight()) / 2;
+        int right = left + drawable.getIntrinsicWidth();
+        int bottom = top + drawable.getIntrinsicHeight();
+        drawable.setBounds(left, top, right, bottom);
+        drawable.draw(canvas);
+
+        // Resize the bitmap to the desired marker size
+        Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, size, size, false);
+
+        // Clear the color filter to avoid affecting other drawables
+        drawable.setColorFilter(null);
+
+        return BitmapDescriptorFactory.fromBitmap(resizedBitmap);
+    }
 
     private void direction(LatLng origin, LatLng destination) {
 
@@ -1448,7 +1530,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         MarkerOptions endOptions = new MarkerOptions().position(destination).title("Destination");
 
         // Customize the marker icon
-        BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.ic_directions_start);
+       // BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.ic_directions_start);
+        BitmapDescriptor icon = getBitmapDescriptorWithDrawable(getResources().getDrawable(R.drawable.ic_directions_start), Color.WHITE, 5, Color.BLUE, 100);
         if (icon != null) {
             startOptions.icon(icon);
         } else {
@@ -1459,12 +1542,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         myMap.addMarker(startOptions);
         myMap.addMarker(endOptions);
 
+        // Time to look for
+        // Get tomorrow's date
+        Calendar tomorrow = Calendar.getInstance();
+        tomorrow.add(Calendar.DAY_OF_YEAR, 1);
+
+        // Set the time to 12:00 noon
+        tomorrow.set(Calendar.HOUR_OF_DAY, 12);
+        tomorrow.set(Calendar.MINUTE, 0);
+        tomorrow.set(Calendar.SECOND, 0);
+        tomorrow.set(Calendar.MILLISECOND, 0);
+
+        // Convert the date to a Unix timestamp
+        long timestampInSeconds = tomorrow.getTimeInMillis() / 1000;
+
         // Construct the URL for the Google Directions API request
         String apiKey = "AIzaSyDDTamV9IieqbDXoWKxjEHmBo7jRcNuhFg"; // Replace with your actual API key
         String url = "https://maps.googleapis.com/maps/api/directions/json" +
                 "?origin=" + origin.latitude + "," + origin.longitude +
                 "&destination=" + destination.latitude + "," + destination.longitude +
                 "&mode=transit" +  // Specify transit mode (bus)
+                "&departure_time=" + timestampInSeconds +
                 "&key=" + apiKey;
 
         Log("Directions", "Markers", "Added");
@@ -1562,7 +1660,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                                                     // Display bus details as needed
                                                     Log("Bus Details", "Route Name: ", routeName);
-                                                    Log("Bus Details", "Bus Number: ", routeNumber);
+                                                    Log("Bus Details", "Route Number: ", routeNumber);
                                                     Log("Bus Details", "Number of Stops: ", numStops);
                                                     Log("Bus Details", "Arrival Stop: ", arrivalStop);
 
@@ -1744,6 +1842,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // TODO: 2023-12-07 CLEAR THIS MESS 
 
         clearDirectionRoute();
+        clearBusMapMarkers();
 
         EditText SourceLocation = findViewById(R.id.sourceLocationText);
         EditText DestinationLocation = findViewById(R.id.destinationLocationText);
@@ -1788,24 +1887,39 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Initialize ViewModel and Repository
         busLocationViewModel = new ViewModelProvider(this).get(BusLocationViewModel.class);
 
+        // Trigger the request to fetch bus locations
+        busLocationViewModel.getBusLocations(routeNumber);
 
         // Observe LiveData
-        busLocationViewModel.getBusLocationsLiveData().observe(this, busLocations -> {
-            Log("showBussesOnRoute", "Observe LiveData", busLocations.toString());
+        busLocationViewModel.getBusLocationsLiveData().observe(this, availableBusses -> {
+            Log("showBussesOnRoute", "Observe LiveData", availableBusses.toString());
             try {
-                if (busLocations != null && !busLocations.isEmpty()) {
-                    for (BusModel bus : busLocations) {
+                if (availableBusses != null && !availableBusses.isEmpty()) {
+                    for (BusModel bus : availableBusses) {
                         Log("showBussesOnRoute", "bus", bus.toString());
-                        if (bus.getLocation() != null){
-                            LatLng busLatLng = new LatLng(bus.getLocation().latitude, bus.getLocation().longitude);
-                            myMap.addMarker(new MarkerOptions()
-                                    .position(busLatLng)
-                                    .title(bus.getBusNumber())
-                                    .snippet("Route: " + bus.getRouteId())
-                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))); // Use busColor if needed
-                            Log("showBussesOnRoute", "bus location", "Marked");
+
+                        // Check if the bus ID is already added
+                        if (!busLocations.contains(bus.getBusId())) {
+                            Log("showBussesOnRoute","busLocations", busLocations.toString());
+                            Log("showBussesOnRoute", "bus is added to the list");
+                            // add new busses to the array
+                            busLocations.add(bus);
+                        } else {
+                            Log("showBussesOnRoute", "bus is already on the list");
                         }
-                          }
+
+
+//                         // To add a marker on the bus -------- this is not needed now
+//                        if (bus.getLocation() != null) {
+//                            LatLng busLatLng = new LatLng(bus.getLocation().latitude, bus.getLocation().longitude);
+//                            myMap.addMarker(new MarkerOptions()
+//                                    .position(busLatLng)
+//                                    .title(bus.getBusNumber())
+//                                    .snippet("Route: " + bus.getRouteId())
+//                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))); // Use busColor if needed
+//                            Log("showBussesOnRoute", "bus location", "Marked");
+//                        }
+                    }
                 } else {
                     Log("showBussesOnRoute", "No busses in the response");
                     // Handle the case when there are no bus locations or an error occurred
@@ -1813,12 +1927,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             } catch (Exception e) {
                 Log("showBussesOnRoute", "ERROR", e.getMessage());
-                throw new RuntimeException(e);
+                //throw new RuntimeException(e);
             }
 
 
             // Update UI with bus locations
             // e.g., update markers on the map
+            addMapMarkers();
         });
 
         busLocationViewModel.getErrorLiveData().observe(this, errorMessage -> {
@@ -1827,9 +1942,131 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Handle errors, e.g., display an error message
         });
 
-        // Trigger the request to fetch bus locations
-        busLocationViewModel.getBusLocations(routeNumber);
+//        // Trigger the request to fetch bus locations
+//        busLocationViewModel.getBusLocations(routeNumber);
 
+
+    }
+
+    private void addMapMarkers() {
+
+        Log("addMapMarkers", "Started");
+        if (myMap != null) {
+
+//            if (mClusterManager == null) {
+//                Log("addMapMarkers", "mClusterManager == null");
+//                mClusterManager = new ClusterManager<ClusterMarker>(this, myMap);
+//            }
+//            if (mClusterManagerRenderer == null) {
+//                Log("addMapMarkers", "mClusterManagerRenderer == null");
+//                mClusterManagerRenderer = new ClusterManagerRenderer(
+//                        this,
+//                        myMap,
+//                        mClusterManager
+//                );
+//                mClusterManager.setRenderer(mClusterManagerRenderer);
+//            }
+
+            Log("addMapMarkers", "busLocation", busLocations.toString());
+            for (BusModel busLocation : busLocations) {
+                if (busLocation.getLocation() != null) {
+                    Log("addMapMarkers", "location", busLocation.getLocation().toString());
+                    try {
+                        String snippet = "";
+                        if (busLocation.getBusNumber() == null || busLocation.getBusNumber().isEmpty()) {
+                            snippet = "This is you";
+                        } else {
+                            snippet = "Bus number " + busLocation.getBusNumber();
+                        }
+
+                        int avatar = R.drawable.bus_blue; // set the default avatar
+//                    try{
+//                      //  avatar = Integer.parseInt(busLocation.getUser().getAvatar());
+//                    }catch (NumberFormatException e){
+//                        Log( "addMapMarkers","no avatar for" + busLocation.getUser().getUsername() + ", setting default.");
+//                    }
+//                        ClusterMarker newClusterMarker = new ClusterMarker(
+//                                new LatLng(busLocation.getLocation().latitude, busLocation.getLocation().longitude),
+//                                busLocation.getBusNumber(),
+//                                snippet,
+//                                avatar
+//                                //, busLocation.getUser()
+//                        );
+//                        mClusterManager.addItem(newClusterMarker);
+//                        mClusterMarkers.add(newClusterMarker);
+
+
+                        MarkerOptions markerOptions = new MarkerOptions()
+                                .position(new LatLng(busLocation.getLocation().latitude, busLocation.getLocation().longitude))
+                                .title(busLocation.getBusNumber())
+                                .snippet(snippet);
+
+
+                        // Customize the marker icon
+                        int intColor;
+                        try {
+                           intColor = Color.parseColor(busLocation.getBusColor());
+                        } catch (Exception e) {
+                            Log("addMapMarkers", "ERROR","Parsing color "+e.getMessage());
+                            // assign BLACK
+                            intColor = -16777216;
+                        }
+
+
+                        // BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.ic_bus_marker);
+                        BitmapDescriptor icon = getBitmapDescriptorWithDrawable(getResources().getDrawable(R.drawable.ic_bus_marker), Color.WHITE, 5, intColor, 100);
+
+                        if (icon != null) {
+                            markerOptions.icon(icon);
+                        } else {
+                            Log("addMapMarkers", "ERROR: bus point marker", "Icon is null");
+                        }
+
+                        // Add marker to the location of the bus
+                        myMap.addMarker(markerOptions);
+
+
+                    } catch (NullPointerException e) {
+                        Log("addMapMarkers", "NullPointerException", e.getMessage());
+                    }
+                }
+
+            }
+            //  mClusterManager.cluster();
+
+            //    setCameraView();
+        }
+    }
+
+    private void setCameraView() {
+
+        // Set a boundary to start
+        double bottomBoundary = busLocation.getLocation().latitude - .1;
+        double leftBoundary = busLocation.getLocation().longitude - .1;
+        double topBoundary = busLocation.getLocation().latitude + .1;
+        double rightBoundary = busLocation.getLocation().longitude + .1;
+
+        mapBoundarySL = new LatLngBounds(
+                new LatLng(bottomBoundary, leftBoundary),
+                new LatLng(topBoundary, rightBoundary)
+        );
+
+        myMap.moveCamera(CameraUpdateFactory.newLatLngBounds(mapBoundarySL, 0));
+    }
+
+    private void clearBusMapMarkers(){
+        // Remove markers from the map
+        if (myMap != null) {
+            myMap.clear();
+        }
+
+        if (busLocations != null) {
+            // Clear the ArrayList
+            busLocations.clear();
+        }
+
+        // Reset data in the ViewModel and Repository
+        busLocationViewModel.resetData();
     }
 
     // ORIGINAL METHODS - CODE

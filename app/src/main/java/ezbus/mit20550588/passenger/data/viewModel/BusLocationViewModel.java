@@ -49,4 +49,8 @@ public class BusLocationViewModel extends ViewModel {
         busLocationRepository.getBusLocations(routeId);
     }
 
+    // Expose a method to reset data in the ViewModel
+    public void resetData() {
+        busLocationRepository.resetData();
+    }
 }
