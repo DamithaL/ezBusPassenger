@@ -2,11 +2,19 @@ package ezbus.mit20550588.passenger.data.remote;
 
 import java.util.List;
 
+import ezbus.mit20550588.passenger.data.model.BusLocationModel;
 import ezbus.mit20550588.passenger.data.model.BusModel;
+import ezbus.mit20550588.passenger.data.model.UserModel;
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.POST;
+import retrofit2.http.Path;
 
 public interface ApiServiceBus {
-    @GET("/bus-locations")
-    Call<List<BusModel>> getBusLocations();
+
+    // Base_URL is in RetrofitClient class
+    @GET("location/get-location/routeId/{routeId}")
+    Call<List<BusModel>> getBuses(@Path("routeId") String routeId);
+
 }

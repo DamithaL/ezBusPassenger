@@ -6,11 +6,14 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,7 +21,6 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -29,6 +31,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
@@ -38,7 +44,6 @@ import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -51,14 +56,18 @@ import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.Dot;
+import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PatternItem;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.StyleSpan;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.material.textfield.TextInputEditText;
@@ -70,29 +79,24 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import ezbus.mit20550588.passenger.data.model.RecentSearchModel;
-import ezbus.mit20550588.passenger.data.viewModel.RecentSearchViewModel;
-import ezbus.mit20550588.passenger.ui.adapters.PlacesAutoCompleteAdapter;
 import ezbus.mit20550588.passenger.R;
+import ezbus.mit20550588.passenger.data.model.BusLocationModel;
+import ezbus.mit20550588.passenger.data.model.BusModel;
+import ezbus.mit20550588.passenger.data.model.RecentSearchModel;
+import ezbus.mit20550588.passenger.data.viewModel.BusLocationViewModel;
+import ezbus.mit20550588.passenger.data.viewModel.RecentSearchViewModel;
 import ezbus.mit20550588.passenger.ui.Settings.Settings;
+import ezbus.mit20550588.passenger.ui.adapters.PlacesAutoCompleteAdapter;
 import ezbus.mit20550588.passenger.ui.adapters.RecentSearchAdapter;
-
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import android.text.Editable;
-import android.text.TextWatcher;
-
-import javax.xml.transform.Source;
 
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, PlacesAutoCompleteAdapter.ClickListener {
@@ -118,15 +122,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LatLng DestinationLocationLatLng;
     private String SourceLocationName = "Origin placeholder";
     private String DestinationLocationName = "Destination placeholder";
-
     private Polyline directionRoutePolyline;
     private RecentSearchViewModel recentSearchViewModel;
-
     private Button DirectionsButton;
-
     private Boolean locationMarked;
     private Integer after_LocatingByRecentSearch_Method;
     private Integer after_LocatingByAutocomplete_Method;
+    private ArrayList<BusLocationModel> busLocations = new ArrayList<>();
+    private BusLocationViewModel busLocationViewModel;
+    // Map to store bus markers, keyed by bus ID
+    private Map<String, Marker> busMarkers = new HashMap<>();
 
 
     // ------------------------------- LIFECYCLE METHODS ------------------------------- //
@@ -136,30 +141,31 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
 
+
         checkPermissions();
 
         uiInitializations();
 
-        // Assuming you are using a SupportMapFragment
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(new OnMapReadyCallback() {
-            @Override
-            public void onMapReady(GoogleMap map) {
-
-
-                // Set a click listener for the map
-                myMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-                    @Override
-                    public void onMapClick(com.google.android.gms.maps.model.LatLng latLng) {
-                        // Lose focus from the search bar
-                        TextInputLayout placeSearchLayout = findViewById(R.id.place_search_layout);
-                        placeSearchLayout.clearFocus();
-                        hideKeyboard(findViewById(R.id.map));
-                    }
-                });
-            }
-        });
+//        // Assuming you are using a SupportMapFragment
+//        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+//                .findFragmentById(R.id.map);
+//        mapFragment.getMapAsync(new OnMapReadyCallback() {
+//            @Override
+//            public void onMapReady(GoogleMap map) {
+//
+//
+//                // Set a click listener for the map
+//                myMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+//                    @Override
+//                    public void onMapClick(com.google.android.gms.maps.model.LatLng latLng) {
+//                        // Lose focus from the search bar
+//                        TextInputLayout placeSearchLayout = findViewById(R.id.place_search_layout);
+//                        placeSearchLayout.clearFocus();
+//                        hideKeyboard(findViewById(R.id.map));
+//                    }
+//                });
+//            }
+//        });
     }
 
     @Override
@@ -535,9 +541,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        RecentSearchAdapter recentSearchAdapter = new RecentSearchAdapter(recyclerViewForRecentSearches);
+        RecentSearchAdapter recentSearchAdapter = new RecentSearchAdapter();
 
         recyclerViewForRecentSearches.setAdapter(recentSearchAdapter);
+        recentSearchAdapter.setRecyclerView(recyclerViewForRecentSearches);
         recentSearchViewModel = new ViewModelProvider(this).get(RecentSearchViewModel.class);
         recentSearchViewModel.getRecentSearches().observe(this, new Observer<List<RecentSearchModel>>() {
             @Override
@@ -545,7 +552,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // update RecyclerView
                 Log("initRecentSearches", "onChanged Recent Searches");
 
-                recentSearchAdapter.setRecentSearches(recentSearchModels);
+                recentSearchAdapter.submitList(recentSearchModels);
+                recentSearchAdapter.scrollToTop();
             }
         });
 
@@ -1383,6 +1391,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // TODO: 2023-12-07  SOURCE and DESTINATION LATLANG,NAMES should be passed in correct MVVM path
 
         Log("showDirections", "started showing directions");
+        if (SourceLocationLatLng == null || SourceLocationName == null) {
+            Log("showDirections", "Source location is null", "getDeviceLocation called");
+            // Show current location
+            getDeviceLocation();
+
+        }
 
         if (SourceLocationLatLng != null
                 && DestinationLocationLatLng != null
@@ -1413,6 +1427,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
     }
+
+    // TODO: 2023-12-07  MAKE FONT STYLE instead of using bold etc
+
 
     private void direction(LatLng origin, LatLng destination) {
 
@@ -1447,35 +1464,141 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         String url = "https://maps.googleapis.com/maps/api/directions/json" +
                 "?origin=" + origin.latitude + "," + origin.longitude +
                 "&destination=" + destination.latitude + "," + destination.longitude +
+                "&mode=transit" +  // Specify transit mode (bus)
                 "&key=" + apiKey;
+
+        Log("Directions", "Markers", "Added");
 
         // Create a request to the Directions API
         JsonObjectRequest directionsRequest = new JsonObjectRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
+
+                        Log("Directions", "onResponse", "Started");
                         try {
                             // Parse the JSON response
                             JSONArray routes = response.getJSONArray("routes");
                             if (routes.length() > 0) {
+                                Log("Directions", "onResponse", "Route(s) found");
+
+                                // Get the first route ------ Can add alternative routes if wanted
                                 JSONObject route = routes.getJSONObject(0);
-                                JSONObject overviewPolyline = route.getJSONObject("overview_polyline");
-                                String encodedPolyline = overviewPolyline.getString("points");
+                                //Log("Directions", "route", route.toString(4));
 
-                                // Decode the polyline and add it to the map as a Polyline
-                                List<LatLng> decodedPolyline = decodePolyline(encodedPolyline);
-                                PolylineOptions polylineOptions = new PolylineOptions()
-                                        .addAll(decodedPolyline)
-                                        .width(15)
-                                        .color(ContextCompat.getColor(MainActivity.this, R.color.colorPrimary));
+                                // Get legs array
+                                JSONArray legs = route.getJSONArray("legs");
 
-                                directionRoutePolyline = myMap.addPolyline(polylineOptions);
+                                if (legs.length() > 0) {
+                                    // Get the first leg
+                                    JSONObject leg = legs.getJSONObject(0);
+                                    //Log("Directions", "legs", legs.toString());
+
+                                    // Get steps array
+                                    JSONArray steps = leg.getJSONArray("steps");
+                                    for (int j = 0; j < steps.length(); j++) {
+
+
+                                        // Get each step
+                                        JSONObject step = steps.getJSONObject(j);
+                                        //Log("Directions", "steps", step.toString(4));
+
+
+                                        // Extract the encoded polyline
+                                        JSONObject stepPolyline = step.getJSONObject("polyline");
+                                        String encodedPolyline = stepPolyline.getString("points");
+
+                                        // Get a random color for demonstration (replace with your logic)
+                                        int polylineColor = getRandomColor();
+
+                                        // Decode the polyline and add it to the map as a Polyline with the specific color
+                                        List<LatLng> decodedPolyline = decodePolyline(encodedPolyline);
+
+//                                        for (LatLng point : decodedPolyline) {
+//                                            MarkerOptions markerOptions = new MarkerOptions().position(point).icon(
+//                                                    BitmapDescriptorFactory.fromResource(R.drawable.ic_directions_start)
+//                                            );
+//                                            myMap.addMarker(markerOptions);
+//                                        }
+
+                                        List<PatternItem> pattern = Arrays.asList(
+                                                new Dot(),
+                                                //   new Gap(20),
+                                                //  new Dash(30),
+                                                new Gap(20));
+
+                                        PolylineOptions polylineOptions = new PolylineOptions()
+                                                .addAll(decodedPolyline)
+                                                // .pattern(pattern)
+
+                                                .width(25)
+                                                .clickable(true)
+                                                //  .jointType(JointType.ROUND)
+                                                .color(Color.BLACK);
+
+                                        // Check if the step has travel_mode
+                                        if (step.has("travel_mode")) {
+                                            String travelMode = step.getString("travel_mode");
+
+
+                                            // Call method1 for WALKING
+                                            if ("WALKING".equals(travelMode)) {
+                                                polylineOptions.pattern(pattern);
+                                                polylineOptions.color(Color.BLUE);
+                                            }
+                                            // Call method2 for TRANSIT
+                                            else if ("TRANSIT".equals(travelMode)) {
+
+
+                                                // Check if the step is a transit step
+                                                if (step.has("transit_details")) {
+                                                    Log("Directions", "transit details", "FOUND");
+                                                    // Extract transit details
+                                                    JSONObject transitDetails = step.getJSONObject("transit_details");
+                                                    String routeName = transitDetails.getJSONObject("line").getString("name");
+                                                    String routeNumber = transitDetails.getJSONObject("line").getString("short_name");
+                                                    String numStops = transitDetails.getString("num_stops");
+                                                    String arrivalStop = transitDetails.getJSONObject("arrival_stop").getString("name");
+
+                                                    // Display bus details as needed
+                                                    Log("Bus Details", "Route Name: ", routeName);
+                                                    Log("Bus Details", "Bus Number: ", routeNumber);
+                                                    Log("Bus Details", "Number of Stops: ", numStops);
+                                                    Log("Bus Details", "Arrival Stop: ", arrivalStop);
+
+                                                    // show available busses on the route
+                                                /* ------ these should added only if the busses arrive at the intersections
+                                                            after the person gets there.
+                                                   1. check route id
+                                                   2. check the direction
+                                                   3. check the arrival time to the bus stop
+                                                            but for now add them all.
+                                                */
+                                                    showBussesOnRoute(routeNumber);
+                                                    Log("direction", "onResponse", "showBussesOnRoute");
+                                                }
+
+
+                                                polylineOptions.addSpan(new StyleSpan(Color.RED))
+                                                        .addSpan(new StyleSpan(Color.GREEN));
+                                            }
+                                        }
+
+                                        myMap.addPolyline(polylineOptions);
+
+                                        directionRoutePolyline = myMap.addPolyline(polylineOptions);
+                                    }
+                                }
 
                                 Log("direction", "onResponse", "directionRoutePolyline done");
 
                                 locationMarked = false;
 
                                 // After adding the polyline, adjust the camera to fit the entire route
+                                JSONObject overviewPolyline = route.getJSONObject("overview_polyline");
+                                String encodedPolyline = overviewPolyline.getString("points");
+                                List<LatLng> decodedPolyline = decodePolyline(encodedPolyline);
+
                                 LatLngBounds.Builder builder = new LatLngBounds.Builder();
                                 for (LatLng point : decodedPolyline) {
                                     builder.include(point);
@@ -1487,14 +1610,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 // Animate the camera to fit the entire route with padding
                                 myMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
 
+                                // Hide waiting progress bar
+                                toggleItemVisibility(findViewById(R.id.loadingProgressBar), false);
+
                             } else {
+                                Log("Directions", "onResponse", "No routes found.");
                                 Toast.makeText(MainActivity.this, "No routes found.", Toast.LENGTH_SHORT).show();
-
+                                // Hide waiting progress bar
+                                toggleItemVisibility(findViewById(R.id.loadingProgressBar), false);
                             }
-
                         } catch (JSONException e) {
+                            // Handle the exception, log an error, or take appropriate action
+                            Log("Bus Details", "Error parsing JSON", e.getStackTrace().toString());
                             e.printStackTrace();
-                            Toast.makeText(MainActivity.this, "Error parsing directions.", Toast.LENGTH_SHORT).show();
+                            // Hide waiting progress bar
+                            toggleItemVisibility(findViewById(R.id.loadingProgressBar), false);
+                            throw new RuntimeException(e);
 
                         }
                     }
@@ -1502,9 +1633,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        error.printStackTrace();
+                        Log("Directions", "Volley ERROR");
+                        Log("Directions", "Volley ERROR - message", error.getMessage());
+                        Log("Directions", "Volley ERROR - Stack Trace", error.getStackTrace().toString());
+                        Log("Directions", "Volley ERROR - Cause", error.getCause().toString());
+
                         Toast.makeText(MainActivity.this, "Error fetching directions.", Toast.LENGTH_SHORT).show();
 
+                        // Hide waiting progress bar
+                        toggleItemVisibility(findViewById(R.id.loadingProgressBar), false);
                     }
                 });
 
@@ -1514,21 +1651,55 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
         );
+
+        Log("Directions", "directionsRequest", "retry policy");
         directionsRequest.setRetryPolicy(retryPolicy);
 
-        // Add the request to the Volley request queue
         RequestQueue queue = Volley.newRequestQueue(this);
         queue.add(directionsRequest);
 
-        // Hide waiting progress bar
-       toggleItemVisibility(findViewById(R.id.loadingProgressBar), false);
-
     }
 
-    // TODO: 2023-12-07  MAKE FONT STYLE instead of using bold etc
-
+    // Helper method to get a random color (replace with your logic)
+    private int getRandomColor() {
+        Random random = new Random();
+        return Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256));
+    }
 
     private List<LatLng> decodePolyline(String encoded) {
+        List<LatLng> points = new ArrayList<>();
+        int index = 0, len = encoded.length();
+        int lat = 0, lng = 0;
+
+        while (index < len) {
+            int b, shift = 0, result = 0;
+            do {
+                b = encoded.charAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+            lat += dlat;
+
+            shift = 0;
+            result = 0;
+            do {
+                b = encoded.charAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+            lng += dlng;
+
+            LatLng point = new LatLng(lat / 1E5, lng / 1E5);
+            points.add(point);
+        }
+
+        return points;
+    }
+
+    // Modify decodePolyline to return intermediate points
+    private List<LatLng> decodePolylineForWalking(String encoded) {
         List<LatLng> points = new ArrayList<>();
         int index = 0, len = encoded.length();
         int lat = 0, lng = 0;
@@ -1608,6 +1779,56 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
 
+
+    }
+
+    private void showBussesOnRoute(String routeNumber) {
+
+        Log("showBussesOnRoute", "Started");
+        // Initialize ViewModel and Repository
+        busLocationViewModel = new ViewModelProvider(this).get(BusLocationViewModel.class);
+
+
+        // Observe LiveData
+        busLocationViewModel.getBusLocationsLiveData().observe(this, busLocations -> {
+            Log("showBussesOnRoute", "Observe LiveData", busLocations.toString());
+            try {
+                if (busLocations != null && !busLocations.isEmpty()) {
+                    for (BusModel bus : busLocations) {
+                        Log("showBussesOnRoute", "bus", bus.toString());
+                        if (bus.getLocation() != null){
+                            LatLng busLatLng = new LatLng(bus.getLocation().latitude, bus.getLocation().longitude);
+                            myMap.addMarker(new MarkerOptions()
+                                    .position(busLatLng)
+                                    .title(bus.getBusNumber())
+                                    .snippet("Route: " + bus.getRouteId())
+                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))); // Use busColor if needed
+                            Log("showBussesOnRoute", "bus location", "Marked");
+                        }
+                          }
+                } else {
+                    Log("showBussesOnRoute", "No busses in the response");
+                    // Handle the case when there are no bus locations or an error occurred
+                    // You can show a message, log, or take appropriate action based on your use case
+                }
+            } catch (Exception e) {
+                Log("showBussesOnRoute", "ERROR", e.getMessage());
+                throw new RuntimeException(e);
+            }
+
+
+            // Update UI with bus locations
+            // e.g., update markers on the map
+        });
+
+        busLocationViewModel.getErrorLiveData().observe(this, errorMessage -> {
+            Log("showBussesOnRoute", "Handle errors", errorMessage);
+
+            // Handle errors, e.g., display an error message
+        });
+
+        // Trigger the request to fetch bus locations
+        busLocationViewModel.getBusLocations(routeNumber);
 
     }
 

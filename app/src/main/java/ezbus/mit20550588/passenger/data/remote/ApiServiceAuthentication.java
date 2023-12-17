@@ -10,6 +10,8 @@ import retrofit2.http.POST;
 
 public interface ApiServiceAuthentication {
 
+    // Base_URL is in RetrofitClient class
+
     @POST("/auth/login")
     Call<UserModel> loginUser(@Body LoginRequest loginRequest);
 

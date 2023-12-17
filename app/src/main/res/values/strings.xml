@@ -24,6 +24,7 @@
 
     <!-- Map screen   -->
     <string name="MAPS_API_KEY">AIzaSyDDTamV9IieqbDXoWKxjEHmBo7jRcNuhFg</string>
+    <string name="directions_URL">https://maps.googleapis.com/maps/api/directions/json</string>
     <string name="mapSearch_text">Your destination…?</string>
     <string name="auto_complete_recycler_heading_text">Your recent searches</string>
     <string name="current_location_heading_text">Your current location</string>
