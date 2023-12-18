@@ -1892,87 +1892,51 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void getBussesOnRoute(String routeNumber) {
+
         Log("getBussesOnRoute", "Started");
+
         // Trigger the request to fetch bus locations
-        List<BusModel> availableBusses = busLocationViewModel.getBusLocations(routeNumber);
+        busLocationViewModel.getBusLocations(routeNumber);
 
-        try {
-            if (!availableBusses.isEmpty()) {
-                for (BusModel bus : availableBusses) {
-                    Log("getBussesOnRoute", "bus", bus.toString());
+        // Observe LiveData
+        busLocationViewModel.getBusLocationsLiveData().observe(this, availableBusses -> {
+            Log("getBussesOnRoute", "Observe LiveData", availableBusses.toString());
+            try {
+                if (!availableBusses.isEmpty()) {
+                    for (BusModel bus : availableBusses) {
+                        Log("getBussesOnRoute", "bus", bus.toString());
 
-                    // Check if the bus ID is already added
-                    if (!availableBusIds.contains(bus.getBusId())) {
-                        Log("getBussesOnRoute", "busLocations", availableBusList.toString());
-                        Log("getBussesOnRoute", "bus is added to the list");
+                        // Check if the bus ID is already added
+                        if (!availableBusIds.contains(bus.getBusId())) {
+                            Log("getBussesOnRoute", "busLocations", availableBusList.toString());
+                            Log("getBussesOnRoute", "bus is added to the list");
 
-                        // Add new buses to the arrays
-                        availableBusList.add(bus);
-                        availableBusIds.add(bus.getBusId());
-                    } else {
-                        Log("getBussesOnRoute", "bus is already on the list");
+                            // Add new buses to the arrays
+                            availableBusList.add(bus);
+                            availableBusIds.add(bus.getBusId());
+                        } else {
+                            Log("getBussesOnRoute", "bus is already on the list");
+                        }
                     }
+                } else {
+                    Log("getBussesOnRoute", "No busses in the response");
                 }
-            } else {
-                Log("getBussesOnRoute", "No busses in the response");
+            } catch (Exception e) {
+                Log("getBussesOnRoute", "ERROR", e.getMessage());
+                //throw new RuntimeException(e);
             }
-        } catch (Exception e) {
-            Log("getBussesOnRoute", "ERROR", e.getMessage());
-            // Handle exceptions appropriately
-        }
 
-        // Update UI with bus locations
-        addMapMarkers();
-        updateBusMarkers();
+            // Update UI with bus locations --- if these called in the getBusLocationsLiveData, it will go in a feedback cycle
+            addMapMarkers();
+            updateBusMarkers();
+        });
+
+
+
+        busLocationViewModel.getErrorLiveData().observe(this, errorMessage -> {
+            Log("getBussesOnRoute", "Handle errors", errorMessage);
+        });
     }
-
-
-//    private void getBussesOnRoute(String routeNumber) {
-//
-//        Log("getBussesOnRoute", "Started");
-//
-//        // Trigger the request to fetch bus locations
-//        busLocationViewModel.getBusLocations(routeNumber);
-//
-//        // Observe LiveData
-//        busLocationViewModel.getBusLocationsLiveData().observe(this, availableBusses -> {
-//            Log("getBussesOnRoute", "Observe LiveData", availableBusses.toString());
-//            try {
-//                if (!availableBusses.isEmpty()) {
-//                    for (BusModel bus : availableBusses) {
-//                        Log("getBussesOnRoute", "bus", bus.toString());
-//
-//                        // Check if the bus ID is already added
-//                        if (!availableBusIds.contains(bus.getBusId())) {
-//                            Log("getBussesOnRoute", "busLocations", availableBusList.toString());
-//                            Log("getBussesOnRoute", "bus is added to the list");
-//
-//                            // Add new buses to the arrays
-//                            availableBusList.add(bus);
-//                            availableBusIds.add(bus.getBusId());
-//                        } else {
-//                            Log("getBussesOnRoute", "bus is already on the list");
-//                        }
-//                    }
-//                } else {
-//                    Log("getBussesOnRoute", "No busses in the response");
-//                }
-//            } catch (Exception e) {
-//                Log("getBussesOnRoute", "ERROR", e.getMessage());
-//                //throw new RuntimeException(e);
-//            }
-//
-//            // Update UI with bus locations --- if these called in the getBusLocationsLiveData, it will go in a feedback cycle
-//            addMapMarkers();
-//            updateBusMarkers();
-//        });
-//
-//
-//
-//        busLocationViewModel.getErrorLiveData().observe(this, errorMessage -> {
-//            Log("getBussesOnRoute", "Handle errors", errorMessage);
-//        });
-//    }
 
     private void addMapMarkers() {
 
@@ -2033,16 +1997,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void updateBusMarkers() {
-        // Method to get updated bus locations and update markers every 5 seconds
+        // Method to  get updated bus locations and update markers every 5 seconds
         Log("updateBusLocationsAndMarkers", "Started");
-
         // Check if availableBusIds set is not empty
         if (!availableBusIds.isEmpty()) {
             // Call the ViewModel method to update bus locations for the available busIds
             Log("updateBusLocationsAndMarkers", "updateBusLocations called", availableBusIds.toString());
+            busLocationViewModel.updateBusLocations(availableBusIds);
 
             // Observe LiveData to get updated bus locations
-            busLocationViewModel.updateBusLocations(availableBusIds).observe(this, updatedBusLocations -> {
+            busLocationViewModel.getUpdatedBusLocationsLiveData().observe(this, updatedBusLocations -> {
                 // Update markers on the map with the new bus locations
                 Log("updateBusLocationsAndMarkers", "observing bus location live data");
                 updateMarkerPositions(updatedBusLocations);
@@ -2057,32 +2021,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Log("updateBusMarkers", "Available bus IDs set is empty");
         }
     }
-
-//    private void updateBusMarkers() {
-//        // Method to  get updated bus locations and update markers every 5 seconds
-//        Log("updateBusLocationsAndMarkers", "Started");
-//        // Check if availableBusIds set is not empty
-//        if (!availableBusIds.isEmpty()) {
-//            // Call the ViewModel method to update bus locations for the available busIds
-//            Log("updateBusLocationsAndMarkers", "updateBusLocations called", availableBusIds.toString());
-//            busLocationViewModel.updateBusLocations(availableBusIds);
-//
-//            // Observe LiveData to get updated bus locations
-//            busLocationViewModel.getBusLocationsLiveData().observe(this, updatedBusLocations -> {
-//                // Update markers on the map with the new bus locations
-//                Log("updateBusLocationsAndMarkers", "observing bus location live data");
-//                updateMarkerPositions(updatedBusLocations);
-//            });
-//
-//            // Observe LiveData for errors
-//            busLocationViewModel.getErrorLiveData().observe(this, errorMessage -> {
-//                // Handle errors, e.g., display an error message
-//                Log("updateBusMarkers", "Error: ", errorMessage);
-//            });
-//        } else {
-//            Log("updateBusMarkers", "Available bus IDs set is empty");
-//        }
-//    }
 
     private void updateMarkerPositions(List<BusModel> updatedBusLocations) {
         try {
@@ -2139,8 +2077,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void clearBusMapMarkers() {
         // Stop updating bus locations by removing the observer
         if (busLocationViewModel != null) {
-         //   busLocationViewModel.getBusLocationsLiveData().removeObservers(this);
-            busLocationViewModel.getUpdatedBusLocationsLiveData().removeObservers(this);
+            busLocationViewModel.getBusLocationsLiveData().removeObservers(this);
             // Reset data in the ViewModel and Repository
             busLocationViewModel.resetData();
         }

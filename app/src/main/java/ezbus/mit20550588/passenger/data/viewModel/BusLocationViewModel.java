@@ -22,6 +22,7 @@ public class BusLocationViewModel extends ViewModel {
 
     private BusLocationRepository busLocationRepository;
     private LiveData<List<BusModel>> busLocationsLiveData;
+    private LiveData<List<BusModel>> updatedBusLocationsLiveData;
     private LiveData<String> errorLiveData;
 
 
@@ -29,6 +30,7 @@ public class BusLocationViewModel extends ViewModel {
     public BusLocationViewModel() {
         this.busLocationRepository = new BusLocationRepository(new RetrofitClient().getClient().create(ApiServiceBus.class));
         this.busLocationsLiveData = busLocationRepository.getBusLocationsLiveData();
+        this.updatedBusLocationsLiveData = busLocationRepository.getUpdatedBusLocationsLiveData();
         this.errorLiveData = busLocationRepository.getErrorLiveData();
     }
 
@@ -36,11 +38,15 @@ public class BusLocationViewModel extends ViewModel {
     public BusLocationViewModel(BusLocationRepository busLocationRepository) {
         this.busLocationRepository = busLocationRepository;
         this.busLocationsLiveData = busLocationRepository.getBusLocationsLiveData();
+        this.updatedBusLocationsLiveData = busLocationRepository.getUpdatedBusLocationsLiveData();
         this.errorLiveData = busLocationRepository.getErrorLiveData();
     }
 
     public LiveData<List<BusModel>> getBusLocationsLiveData() {
         return busLocationsLiveData;
+    }
+    public LiveData<List<BusModel>> getUpdatedBusLocationsLiveData() {
+        return updatedBusLocationsLiveData;
     }
 
     public LiveData<String> getErrorLiveData() {
