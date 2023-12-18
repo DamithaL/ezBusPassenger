@@ -16,6 +16,7 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -89,9 +90,12 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -111,45 +115,46 @@ import ezbus.mit20550588.passenger.util.ClusterManagerRenderer;
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, PlacesAutoCompleteAdapter.ClickListener {
 
     // ------------------------------- DECLARING VARIABLES ------------------------------- //
-    // widgets
+
+    // -------------- widgets -------------- //
     private GoogleMap myMap;
 
-    // constants
+    // -------------- constants -------------- //
     private static final String FINE_LOCATION = android.Manifest.permission.ACCESS_COARSE_LOCATION;
     private static final String COURSE_LOCATION = android.Manifest.permission.ACCESS_COARSE_LOCATION;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1234;
     private static final float DEFAULT_ZOOM = 15f;
     private static final int ERROR_DIALOG_REQUEST = 9001;
 
-    // variables
+    // -------------- variables -------------- //
+
+    // ---- permissions ---- //
     private Boolean mLocationPermissionsGranted = false;
+
+    // ---- searches ---- //
     private PlacesAutoCompleteAdapter mAutoCompleteAdapter;
     private RecyclerView recyclerViewForAutocomplete;
     private RelativeLayout recentSearchLayout;
+    private RecentSearchViewModel recentSearchViewModel;
+    private Integer after_LocatingByRecentSearch_Method;
+    private Integer after_LocatingByAutocomplete_Method;
+
+    // ---- directions ---- //
+    private LatLngBounds mapBoundarySL;
     private LatLng CurrentLocationLatLng;
     private LatLng SourceLocationLatLng;
     private LatLng DestinationLocationLatLng;
     private String SourceLocationName = "Origin placeholder";
     private String DestinationLocationName = "Destination placeholder";
     private Polyline directionRoutePolyline;
-    private RecentSearchViewModel recentSearchViewModel;
     private Button DirectionsButton;
     private Boolean locationMarked;
-    private Integer after_LocatingByRecentSearch_Method;
-    private Integer after_LocatingByAutocomplete_Method;
 
-    private ArrayList<BusModel> availableBusses = new ArrayList<>();
-
-    private ArrayList<BusModel> busLocations = new ArrayList<>();
-
+    // ---- bus locations ---- //
     private BusLocationViewModel busLocationViewModel;
-    // Map to store bus markers, keyed by bus ID
+    private Set<String> availableBusIds = new HashSet<>();
+    private ArrayList<BusModel> availableBusList = new ArrayList<>();
     private Map<String, Marker> busMarkers = new HashMap<>();
-    private LatLngBounds mapBoundarySL;
-    private ClusterManager mClusterManager;
-    private ClusterManagerRenderer mClusterManagerRenderer;
-    private ArrayList<ClusterMarker> mClusterMarkers = new ArrayList<>();
-    private BusModel busLocation;
 
 
     // ------------------------------- LIFECYCLE METHODS ------------------------------- //
@@ -220,9 +225,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Stop any operations that should not continue when the activity is not visible.
         // Example: If your app is streaming audio or video, you might pause or stop the streaming process in the onStop method. This prevents unnecessary resource usage when the user is not actively using the app.
 
-        // Remove any existing markers
         clearBusMapMarkers();
-
 
         Log("onStop", "MainActivity stopped");
 
@@ -234,7 +237,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Release resources, unregister listeners, etc. before the activity is destroyed
         // Example: If your app is using any resources or services that need to be released explicitly, such as stopping a location tracking service, you might do so in the onDestroy method.
         // Remove any existing markers
+
         clearBusMapMarkers();
+
         Log("onDestroy", "MainActivity destroyed");
     }
 
@@ -415,6 +420,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         initSettingsButton();
         initCurrentLocationButton();
         initDirectionsButton();
+        initBusLocationView();
         initSourceLocationBar();
         initDestinationBar();
         initBackButton();
@@ -643,6 +649,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log("initDirectionsButton", "initialized");
     }
 
+    private void initBusLocationView() {
+        // Initialize ViewModel and Repository
+        busLocationViewModel = new ViewModelProvider(this).get(BusLocationViewModel.class);
+    }
+
     private void initSourceLocationBar() {
 
         Log("initSourceLocationBar", "initialized");
@@ -801,6 +812,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
     }
+
 
     private void initCurrentLocationOption(String SourceOrDestination) {
         Log("initCurrentLocationOption", "Started");
@@ -1472,7 +1484,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    // TODO: 2023-12-07  MAKE FONT STYLE instead of using bold etc
     public BitmapDescriptor getBitmapDescriptorWithDrawable(Drawable drawable, int circleColor, int strokeWidth, int strokeColor, int size) {
         int padding = 10; // Adjust the padding as needed
         int diameter = Math.max(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight()) + strokeWidth * 2;
@@ -1530,7 +1541,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         MarkerOptions endOptions = new MarkerOptions().position(destination).title("Destination");
 
         // Customize the marker icon
-       // BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.ic_directions_start);
+        // BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.ic_directions_start);
         BitmapDescriptor icon = getBitmapDescriptorWithDrawable(getResources().getDrawable(R.drawable.ic_directions_start), Color.WHITE, 5, Color.BLUE, 100);
         if (icon != null) {
             startOptions.icon(icon);
@@ -1672,13 +1683,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                                    3. check the arrival time to the bus stop
                                                             but for now add them all.
                                                 */
-                                                    showBussesOnRoute(routeNumber);
+                                                    getBussesOnRoute(routeNumber);
                                                     Log("direction", "onResponse", "showBussesOnRoute");
                                                 }
 
 
                                                 polylineOptions.addSpan(new StyleSpan(Color.RED))
-                                                        .addSpan(new StyleSpan(Color.GREEN));
+                                                        .addSpan(new StyleSpan(Color.rgb(3, 161, 14)));
                                             }
                                         }
 
@@ -1758,7 +1769,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    // Helper method to get a random color (replace with your logic)
     private int getRandomColor() {
         Random random = new Random();
         return Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256));
@@ -1796,7 +1806,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return points;
     }
 
-    // Modify decodePolyline to return intermediate points
     private List<LatLng> decodePolylineForWalking(String encoded) {
         List<LatLng> points = new ArrayList<>();
         int index = 0, len = encoded.length();
@@ -1842,6 +1851,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // TODO: 2023-12-07 CLEAR THIS MESS 
 
         clearDirectionRoute();
+        //clearBusMapMarkers();
         clearBusMapMarkers();
 
         EditText SourceLocation = findViewById(R.id.sourceLocationText);
@@ -1881,137 +1891,121 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    private void showBussesOnRoute(String routeNumber) {
-
-        Log("showBussesOnRoute", "Started");
-        // Initialize ViewModel and Repository
-        busLocationViewModel = new ViewModelProvider(this).get(BusLocationViewModel.class);
-
+    private void getBussesOnRoute(String routeNumber) {
+        Log("getBussesOnRoute", "Started");
         // Trigger the request to fetch bus locations
-        busLocationViewModel.getBusLocations(routeNumber);
+        List<BusModel> availableBusses = busLocationViewModel.getBusLocations(routeNumber);
 
-        // Observe LiveData
-        busLocationViewModel.getBusLocationsLiveData().observe(this, availableBusses -> {
-            Log("showBussesOnRoute", "Observe LiveData", availableBusses.toString());
-            try {
-                if (availableBusses != null && !availableBusses.isEmpty()) {
-                    for (BusModel bus : availableBusses) {
-                        Log("showBussesOnRoute", "bus", bus.toString());
+        try {
+            if (!availableBusses.isEmpty()) {
+                for (BusModel bus : availableBusses) {
+                    Log("getBussesOnRoute", "bus", bus.toString());
 
-                        // Check if the bus ID is already added
-                        if (!busLocations.contains(bus.getBusId())) {
-                            Log("showBussesOnRoute","busLocations", busLocations.toString());
-                            Log("showBussesOnRoute", "bus is added to the list");
-                            // add new busses to the array
-                            busLocations.add(bus);
-                        } else {
-                            Log("showBussesOnRoute", "bus is already on the list");
-                        }
+                    // Check if the bus ID is already added
+                    if (!availableBusIds.contains(bus.getBusId())) {
+                        Log("getBussesOnRoute", "busLocations", availableBusList.toString());
+                        Log("getBussesOnRoute", "bus is added to the list");
 
-
-//                         // To add a marker on the bus -------- this is not needed now
-//                        if (bus.getLocation() != null) {
-//                            LatLng busLatLng = new LatLng(bus.getLocation().latitude, bus.getLocation().longitude);
-//                            myMap.addMarker(new MarkerOptions()
-//                                    .position(busLatLng)
-//                                    .title(bus.getBusNumber())
-//                                    .snippet("Route: " + bus.getRouteId())
-//                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))); // Use busColor if needed
-//                            Log("showBussesOnRoute", "bus location", "Marked");
-//                        }
+                        // Add new buses to the arrays
+                        availableBusList.add(bus);
+                        availableBusIds.add(bus.getBusId());
+                    } else {
+                        Log("getBussesOnRoute", "bus is already on the list");
                     }
-                } else {
-                    Log("showBussesOnRoute", "No busses in the response");
-                    // Handle the case when there are no bus locations or an error occurred
-                    // You can show a message, log, or take appropriate action based on your use case
                 }
-            } catch (Exception e) {
-                Log("showBussesOnRoute", "ERROR", e.getMessage());
-                //throw new RuntimeException(e);
+            } else {
+                Log("getBussesOnRoute", "No busses in the response");
             }
+        } catch (Exception e) {
+            Log("getBussesOnRoute", "ERROR", e.getMessage());
+            // Handle exceptions appropriately
+        }
+
+        // Update UI with bus locations
+        addMapMarkers();
+        updateBusMarkers();
+    }
 
 
-            // Update UI with bus locations
-            // e.g., update markers on the map
-            addMapMarkers();
-        });
-
-        busLocationViewModel.getErrorLiveData().observe(this, errorMessage -> {
-            Log("showBussesOnRoute", "Handle errors", errorMessage);
-
-            // Handle errors, e.g., display an error message
-        });
-
+//    private void getBussesOnRoute(String routeNumber) {
+//
+//        Log("getBussesOnRoute", "Started");
+//
 //        // Trigger the request to fetch bus locations
 //        busLocationViewModel.getBusLocations(routeNumber);
-
-
-    }
+//
+//        // Observe LiveData
+//        busLocationViewModel.getBusLocationsLiveData().observe(this, availableBusses -> {
+//            Log("getBussesOnRoute", "Observe LiveData", availableBusses.toString());
+//            try {
+//                if (!availableBusses.isEmpty()) {
+//                    for (BusModel bus : availableBusses) {
+//                        Log("getBussesOnRoute", "bus", bus.toString());
+//
+//                        // Check if the bus ID is already added
+//                        if (!availableBusIds.contains(bus.getBusId())) {
+//                            Log("getBussesOnRoute", "busLocations", availableBusList.toString());
+//                            Log("getBussesOnRoute", "bus is added to the list");
+//
+//                            // Add new buses to the arrays
+//                            availableBusList.add(bus);
+//                            availableBusIds.add(bus.getBusId());
+//                        } else {
+//                            Log("getBussesOnRoute", "bus is already on the list");
+//                        }
+//                    }
+//                } else {
+//                    Log("getBussesOnRoute", "No busses in the response");
+//                }
+//            } catch (Exception e) {
+//                Log("getBussesOnRoute", "ERROR", e.getMessage());
+//                //throw new RuntimeException(e);
+//            }
+//
+//            // Update UI with bus locations --- if these called in the getBusLocationsLiveData, it will go in a feedback cycle
+//            addMapMarkers();
+//            updateBusMarkers();
+//        });
+//
+//
+//
+//        busLocationViewModel.getErrorLiveData().observe(this, errorMessage -> {
+//            Log("getBussesOnRoute", "Handle errors", errorMessage);
+//        });
+//    }
 
     private void addMapMarkers() {
 
         Log("addMapMarkers", "Started");
         if (myMap != null) {
 
-//            if (mClusterManager == null) {
-//                Log("addMapMarkers", "mClusterManager == null");
-//                mClusterManager = new ClusterManager<ClusterMarker>(this, myMap);
-//            }
-//            if (mClusterManagerRenderer == null) {
-//                Log("addMapMarkers", "mClusterManagerRenderer == null");
-//                mClusterManagerRenderer = new ClusterManagerRenderer(
-//                        this,
-//                        myMap,
-//                        mClusterManager
-//                );
-//                mClusterManager.setRenderer(mClusterManagerRenderer);
-//            }
-
-            Log("addMapMarkers", "busLocation", busLocations.toString());
-            for (BusModel busLocation : busLocations) {
+            // Loop through the bus locations
+            Log("addMapMarkers", "busLocation", availableBusList.toString());
+            for (BusModel busLocation : availableBusList) {
                 if (busLocation.getLocation() != null) {
                     Log("addMapMarkers", "location", busLocation.getLocation().toString());
                     try {
                         String snippet = "";
                         if (busLocation.getBusNumber() == null || busLocation.getBusNumber().isEmpty()) {
-                            snippet = "This is you";
+                            snippet = "Bus number: error";
                         } else {
                             snippet = "Bus number " + busLocation.getBusNumber();
                         }
-
-                        int avatar = R.drawable.bus_blue; // set the default avatar
-//                    try{
-//                      //  avatar = Integer.parseInt(busLocation.getUser().getAvatar());
-//                    }catch (NumberFormatException e){
-//                        Log( "addMapMarkers","no avatar for" + busLocation.getUser().getUsername() + ", setting default.");
-//                    }
-//                        ClusterMarker newClusterMarker = new ClusterMarker(
-//                                new LatLng(busLocation.getLocation().latitude, busLocation.getLocation().longitude),
-//                                busLocation.getBusNumber(),
-//                                snippet,
-//                                avatar
-//                                //, busLocation.getUser()
-//                        );
-//                        mClusterManager.addItem(newClusterMarker);
-//                        mClusterMarkers.add(newClusterMarker);
-
 
                         MarkerOptions markerOptions = new MarkerOptions()
                                 .position(new LatLng(busLocation.getLocation().latitude, busLocation.getLocation().longitude))
                                 .title(busLocation.getBusNumber())
                                 .snippet(snippet);
 
-
                         // Customize the marker icon
                         int intColor;
                         try {
-                           intColor = Color.parseColor(busLocation.getBusColor());
+                            intColor = Color.parseColor(busLocation.getBusColor());
                         } catch (Exception e) {
-                            Log("addMapMarkers", "ERROR","Parsing color "+e.getMessage());
+                            Log("addMapMarkers", "ERROR", "Parsing color " + e.getMessage());
                             // assign BLACK
                             intColor = -16777216;
                         }
-
 
                         // BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.ic_bus_marker);
                         BitmapDescriptor icon = getBitmapDescriptorWithDrawable(getResources().getDrawable(R.drawable.ic_bus_marker), Color.WHITE, 5, intColor, 100);
@@ -2022,8 +2016,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             Log("addMapMarkers", "ERROR: bus point marker", "Icon is null");
                         }
 
-                        // Add marker to the location of the bus
-                        myMap.addMarker(markerOptions);
+                        // Add marker to the map and update the busMarkers map
+                        Marker newMarker = myMap.addMarker(markerOptions);
+                        busMarkers.put(busLocation.getBusId(), newMarker);
+                        Log("addNewBusMarker", "marker added");
 
 
                     } catch (NullPointerException e) {
@@ -2032,41 +2028,145 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
 
             }
-            //  mClusterManager.cluster();
-
             //    setCameraView();
         }
     }
 
-    private void setCameraView() {
+    private void updateBusMarkers() {
+        // Method to get updated bus locations and update markers every 5 seconds
+        Log("updateBusLocationsAndMarkers", "Started");
 
-        // Set a boundary to start
-        double bottomBoundary = busLocation.getLocation().latitude - .1;
-        double leftBoundary = busLocation.getLocation().longitude - .1;
-        double topBoundary = busLocation.getLocation().latitude + .1;
-        double rightBoundary = busLocation.getLocation().longitude + .1;
+        // Check if availableBusIds set is not empty
+        if (!availableBusIds.isEmpty()) {
+            // Call the ViewModel method to update bus locations for the available busIds
+            Log("updateBusLocationsAndMarkers", "updateBusLocations called", availableBusIds.toString());
 
-        mapBoundarySL = new LatLngBounds(
-                new LatLng(bottomBoundary, leftBoundary),
-                new LatLng(topBoundary, rightBoundary)
-        );
+            // Observe LiveData to get updated bus locations
+            busLocationViewModel.updateBusLocations(availableBusIds).observe(this, updatedBusLocations -> {
+                // Update markers on the map with the new bus locations
+                Log("updateBusLocationsAndMarkers", "observing bus location live data");
+                updateMarkerPositions(updatedBusLocations);
+            });
 
-        myMap.moveCamera(CameraUpdateFactory.newLatLngBounds(mapBoundarySL, 0));
+            // Observe LiveData for errors
+            busLocationViewModel.getErrorLiveData().observe(this, errorMessage -> {
+                // Handle errors, e.g., display an error message
+                Log("updateBusMarkers", "Error: ", errorMessage);
+            });
+        } else {
+            Log("updateBusMarkers", "Available bus IDs set is empty");
+        }
     }
 
-    private void clearBusMapMarkers(){
-        // Remove markers from the map
+//    private void updateBusMarkers() {
+//        // Method to  get updated bus locations and update markers every 5 seconds
+//        Log("updateBusLocationsAndMarkers", "Started");
+//        // Check if availableBusIds set is not empty
+//        if (!availableBusIds.isEmpty()) {
+//            // Call the ViewModel method to update bus locations for the available busIds
+//            Log("updateBusLocationsAndMarkers", "updateBusLocations called", availableBusIds.toString());
+//            busLocationViewModel.updateBusLocations(availableBusIds);
+//
+//            // Observe LiveData to get updated bus locations
+//            busLocationViewModel.getBusLocationsLiveData().observe(this, updatedBusLocations -> {
+//                // Update markers on the map with the new bus locations
+//                Log("updateBusLocationsAndMarkers", "observing bus location live data");
+//                updateMarkerPositions(updatedBusLocations);
+//            });
+//
+//            // Observe LiveData for errors
+//            busLocationViewModel.getErrorLiveData().observe(this, errorMessage -> {
+//                // Handle errors, e.g., display an error message
+//                Log("updateBusMarkers", "Error: ", errorMessage);
+//            });
+//        } else {
+//            Log("updateBusMarkers", "Available bus IDs set is empty");
+//        }
+//    }
+
+    private void updateMarkerPositions(List<BusModel> updatedBusLocations) {
+        try {
+            Log("updateMarkerPositions", "Started");
+
+            // Check if the availableBusIds set is not empty
+            if (availableBusIds.isEmpty()) {
+                Log("updateMarkerPositions", "Available bus IDs set is empty");
+                return; // No need to proceed if the set is empty
+            }
+
+            // Iterate through the list of updated bus locations
+            for (BusModel updatedBus : updatedBusLocations) {
+                // Check if the updatedBus is in the availableBusIds set
+                if (availableBusIds.contains(updatedBus.getBusId())) {
+                    // Check if the bus marker is already on the map
+                    if (busMarkers.containsKey(updatedBus.getBusId())) {
+                        Marker marker = busMarkers.get(updatedBus.getBusId());
+                        if (marker != null) {
+                            // Update the marker position on the map
+                            LatLng newLatLng = new LatLng(updatedBus.getLocation().latitude, updatedBus.getLocation().longitude);
+                            marker.setPosition(newLatLng);
+                        }
+                    } else {
+                        // Handle the case where the bus marker is not on the map
+                        Log("updateMarkerPositions", " Bus marker not found on the map for bus ID " + updatedBus.getBusId());
+                    }
+                } else {
+                    Log("updateMarkerPositions", "Bus ID" + updatedBus.getBusId() + " not in available bus IDs set");
+                }
+            }
+        } catch (Exception e) {
+            Log("updateMarkerPositions", "Error", e.getMessage());
+        }
+    }
+
+
+//    private void setCameraView() {
+//
+//        // Set a boundary to start
+//        double bottomBoundary = busLocation.getLocation().latitude - .1;
+//        double leftBoundary = busLocation.getLocation().longitude - .1;
+//        double topBoundary = busLocation.getLocation().latitude + .1;
+//        double rightBoundary = busLocation.getLocation().longitude + .1;
+//
+//        mapBoundarySL = new LatLngBounds(
+//                new LatLng(bottomBoundary, leftBoundary),
+//                new LatLng(topBoundary, rightBoundary)
+//        );
+//
+//        myMap.moveCamera(CameraUpdateFactory.newLatLngBounds(mapBoundarySL, 0));
+//    }
+
+    private void clearBusMapMarkers() {
+        // Stop updating bus locations by removing the observer
+        if (busLocationViewModel != null) {
+         //   busLocationViewModel.getBusLocationsLiveData().removeObservers(this);
+            busLocationViewModel.getUpdatedBusLocationsLiveData().removeObservers(this);
+            // Reset data in the ViewModel and Repository
+            busLocationViewModel.resetData();
+        }
+
+        // Clear the bus locations list
+        if (availableBusList != null) {
+            availableBusList.clear();
+        }
+
+        if (availableBusIds != null) {
+            availableBusIds.clear();
+        }
+
+        // myMap.clear(); will remove all the objects on the map, including markers, polylines, and other overlays from the map
         if (myMap != null) {
-            myMap.clear();
+            for (Marker marker : busMarkers.values()) {
+                marker.remove();
+            }
+            busMarkers.clear();
         }
 
-        if (busLocations != null) {
-            // Clear the ArrayList
-            busLocations.clear();
+        if (busMarkers != null) {
+            busMarkers.clear();
         }
 
-        // Reset data in the ViewModel and Repository
-        busLocationViewModel.resetData();
+        Log("stopWatchingDirections", "bus location observation stopped");
     }
 
     // ORIGINAL METHODS - CODE
@@ -2134,3 +2234,4 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 }
 
 
+// TODO: 2023-12-07  MAKE FONT STYLE instead of using bold etc

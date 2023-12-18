@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;
 
 import java.util.List;
+import java.util.Set;
 
 import ezbus.mit20550588.passenger.data.model.BusLocationModel;
 import ezbus.mit20550588.passenger.data.model.BusModel;
@@ -22,6 +23,7 @@ public class BusLocationViewModel extends ViewModel {
     private BusLocationRepository busLocationRepository;
     private LiveData<List<BusModel>> busLocationsLiveData;
     private LiveData<String> errorLiveData;
+
 
     // Constructor to initialize the repository
     public BusLocationViewModel() {
@@ -47,6 +49,10 @@ public class BusLocationViewModel extends ViewModel {
 
     public void getBusLocations(String routeId) {
         busLocationRepository.getBusLocations(routeId);
+    }
+
+    public void updateBusLocations(Set<String> busIds) {
+        busLocationRepository.startBusLocationUpdate(busIds);
     }
 
     // Expose a method to reset data in the ViewModel
