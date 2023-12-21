@@ -1,5 +1,7 @@
 package ezbus.mit20550588.passenger.data.repository;
 
+import static ezbus.mit20550588.passenger.util.Constants.LOCATION_UPDATE_INTERVAL;
+
 import android.os.Handler;
 
 import androidx.lifecycle.LiveData;
@@ -10,14 +12,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import ezbus.mit20550588.passenger.data.model.BusLocationModel;
 import ezbus.mit20550588.passenger.data.model.BusModel;
-import ezbus.mit20550588.passenger.data.model.UserModel;
-import ezbus.mit20550588.passenger.data.remote.ApiServiceAuthentication;
 import ezbus.mit20550588.passenger.data.remote.ApiServiceBus;
-import ezbus.mit20550588.passenger.data.remote.LoginRequest;
-import ezbus.mit20550588.passenger.data.remote.RegistrationRequest;
-import ezbus.mit20550588.passenger.data.viewModel.AuthResult;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -132,7 +128,6 @@ public class BusLocationRepository {
 //    }
 
 
-
     public LiveData<List<BusModel>> getBusLocationsLiveData() {
         return busLocationsLiveData;
     }
@@ -189,7 +184,7 @@ public class BusLocationRepository {
             public void run() {
                 fetchAndPostUpdatedBusLocations(busIds);
                 // Schedule the next update after 5 seconds
-                handler.postDelayed(this, 5000);
+                handler.postDelayed(this, LOCATION_UPDATE_INTERVAL);
             }
         };
 

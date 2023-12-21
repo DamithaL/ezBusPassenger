@@ -17,13 +17,13 @@ public class virtualTicket extends AppCompatActivity {
         setContentView(R.layout.activity_virtual_ticket);
 
 // Remove the title (text) from the action bar
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
+      //  getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         // calling the action bar
-        ActionBar actionBar = getSupportActionBar();
+        //ActionBar actionBar = getSupportActionBar();
 
         // showing the back button in action bar
-        actionBar.setDisplayHomeAsUpEnabled(true);
+        //actionBar.setDisplayHomeAsUpEnabled(true);
     }
 
     // function to the button on press

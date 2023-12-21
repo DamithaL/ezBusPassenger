@@ -35,6 +35,7 @@
     <!-- ToolTip Texts   -->
     <string name="tooltip_text_close_button">Close</string>
     <string name="tooltip_text_gps_button">My Location</string>
+    <string name="tooltip_text_full_screen_map_button">Full screen map</string>
     <string name="tooltip_text_settings_button">Settings</string>
     <string name="tooltip_text_search_bar">Search</string>
 

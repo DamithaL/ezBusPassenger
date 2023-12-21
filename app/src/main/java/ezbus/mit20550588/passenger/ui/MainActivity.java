@@ -2,6 +2,11 @@ package ezbus.mit20550588.passenger.ui;
 
 import static ezbus.mit20550588.passenger.util.Constants.Log;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -16,13 +21,17 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewAnimationUtils;
+import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -69,6 +78,8 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PatternItem;
+import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.StyleSpan;
@@ -78,7 +89,6 @@ import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.maps.android.clustering.ClusterManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -91,7 +101,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -100,24 +109,27 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import ezbus.mit20550588.passenger.R;
-import ezbus.mit20550588.passenger.data.model.BusLocationModel;
 import ezbus.mit20550588.passenger.data.model.BusModel;
-import ezbus.mit20550588.passenger.data.model.ClusterMarker;
 import ezbus.mit20550588.passenger.data.model.RecentSearchModel;
 import ezbus.mit20550588.passenger.data.viewModel.BusLocationViewModel;
 import ezbus.mit20550588.passenger.data.viewModel.RecentSearchViewModel;
 import ezbus.mit20550588.passenger.ui.Settings.Settings;
 import ezbus.mit20550588.passenger.ui.adapters.PlacesAutoCompleteAdapter;
 import ezbus.mit20550588.passenger.ui.adapters.RecentSearchAdapter;
-import ezbus.mit20550588.passenger.util.ClusterManagerRenderer;
+import ezbus.mit20550588.passenger.util.ViewWeightAnimationWrapper;
 
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, PlacesAutoCompleteAdapter.ClickListener {
+public class MainActivity
+        extends AppCompatActivity
+        implements OnMapReadyCallback, PlacesAutoCompleteAdapter.ClickListener,
+        GoogleMap.OnMarkerClickListener, GoogleMap.InfoWindowAdapter {
 
     // ------------------------------- DECLARING VARIABLES ------------------------------- //
 
     // -------------- widgets -------------- //
     private GoogleMap myMap;
+    //private RelativeLayout directionBar;
+    //private RelativeLayout mapAndSearchBarContainer;
 
     // -------------- constants -------------- //
     private static final String FINE_LOCATION = android.Manifest.permission.ACCESS_COARSE_LOCATION;
@@ -140,7 +152,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Integer after_LocatingByAutocomplete_Method;
 
     // ---- directions ---- //
-    private LatLngBounds mapBoundarySL;
     private LatLng CurrentLocationLatLng;
     private LatLng SourceLocationLatLng;
     private LatLng DestinationLocationLatLng;
@@ -156,6 +167,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ArrayList<BusModel> availableBusList = new ArrayList<>();
     private Map<String, Marker> busMarkers = new HashMap<>();
 
+    private static final int MAP_LAYOUT_STATE_CONTRACTED = 0;
+    private static final int MAP_LAYOUT_STATE_EXPANDED = 1;
+    private int mMapLayoutState = 0;
+    private boolean isMapExpanded = false;
+
+    private int initialDirectionBarHeight;
+    private int initialMapAndSearchBarHeight;
+
+    private int targetHeight;
 
     // ------------------------------- LIFECYCLE METHODS ------------------------------- //
     @Override
@@ -245,6 +265,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     // ------------------------------- CALLBACK METHODS ------------------------------- //
+    @SuppressLint("PotentialBehaviorOverride")
     @Override
     public void onMapReady(GoogleMap googleMap) {
 
@@ -260,6 +281,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // Hide other items when the map is clicked
 
                 Log("onMapReady", "onMapClick", "Clicked");
+
                 /////------- ITEMS VISIBILITY  -------/////
                 Map<View, Boolean> visibilityMap = new HashMap<>();
 
@@ -271,9 +293,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 hideKeyboard(getCurrentFocus());
             }
         });
-
-
-        ////////// PLACES API TASK //////////////  added according to YT CodeWithMitch
 
         if (mLocationPermissionsGranted) {
 
@@ -294,6 +313,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             myMap.getUiSettings().setZoomControlsEnabled(true);
             //  myMap.getUiSettings().setMyLocationButtonEnabled(false);
             myMap.getUiSettings().setAllGesturesEnabled(true);
+            myMap.getUiSettings().setMyLocationButtonEnabled(false);
 
 //            // Setting Max Zoom level
 //            float maxZoom = 15.0f;
@@ -315,7 +335,55 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             toggleItemVisibility(findViewById(R.id.loadingProgressBar), false);
 
 
+            // Set the marker click listener
+            myMap.setOnMarkerClickListener(this);
+
+            // Set the info window adapter
+            myMap.setInfoWindowAdapter(this);
+
+            // Set info window click listener to handle the entire info window click
+            myMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+                @Override
+                public void onInfoWindowClick(Marker marker) {
+                    // Handle the entire info window click here
+                    String startingStop = "Bus Stop A";
+                    String endingStop = "Bus Stop B";
+
+                    Intent intent = new Intent(MainActivity.this, virtualTicket.class);
+                    intent.putExtra("startingStop", startingStop);
+                    intent.putExtra("endingStop", endingStop);
+                    startActivity(intent);
+                }
+            });
+
+            // Set marker click listener
+            myMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                @Override
+                public boolean onMarkerClick(Marker marker) {
+                    if (marker != null) {
+                        String markerTitle = marker.getTitle();
+                        LatLng markerPosition = marker.getPosition();
+                        String markerId = marker.getId();
+                        // Retrieve the tag set for the marker
+                        Object tag = marker.getTag();
+
+                        if (tag instanceof String) {
+                            // The tag is a String, so you can cast it and use it
+                            String busId = (String) tag;
+                            // Find the corresponding Bus in the availableBusList
+                            BusModel correspondingBus = findBusById(busId);
+                            if (correspondingBus != null) {
+                                Log("Marker Clicked", "Corresponding Bus: " + correspondingBus);
+                                showBusDetails(correspondingBus);
+                            }
+                        }
+                    }
+                    return true; // Return true to consume the click event
+                }
+            });
+
         }
+
 
     }
 
@@ -419,6 +487,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         initSearchBar();
         initSettingsButton();
         initCurrentLocationButton();
+        initFullScreenMapButton();
         initDirectionsButton();
         initBusLocationView();
         initSourceLocationBar();
@@ -630,6 +699,107 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         Log("initCurrentLocationButton", "initialized");
     }
+
+    private void initFullScreenMapButton() {
+        Log("initFullScreenMapButton", "started");
+
+        RelativeLayout directionBar = findViewById(R.id.directionBar);
+        RelativeLayout mapAndSearchContainer = findViewById(R.id.mapAndSearchContainer);
+
+
+        mapAndSearchContainer.measure(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        targetHeight = mapAndSearchContainer.getMeasuredHeight();
+
+        // Get the initial height of 'directionBar'
+        initialDirectionBarHeight = directionBar.getHeight();
+        initialMapAndSearchBarHeight = directionBar.getHeight();
+
+
+        ImageView fullScreenButton = findViewById(R.id.full_screen_button);
+        fullScreenButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                //clearBusMapMarkers();
+
+                Log("initFullScreenMapButton", "clicked");
+                if (isMapExpanded) {
+                    // collapseView();
+                    toggleItemVisibility(directionBar, true);
+                } else {
+                    //expandView();
+                    toggleItemVisibility(directionBar, false);
+                }
+                isMapExpanded = !isMapExpanded;
+                Log("initFullScreenMapButton", "ended");
+            }
+        });
+
+        Log("initFullScreenMapButton", "ended");
+    }
+//
+//    private int getTargetHeight() {
+//        // Measure the view with unspecified height to get the "wrap_content" height
+//        RelativeLayout mapAndSearchContainer = findViewById(R.id.mapAndSearchContainer);
+//        mapAndSearchContainer.measure(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+//        return mapAndSearchContainer.getMeasuredHeight();
+//    }
+//
+//    private void expandView() {
+//        Log("expandView", "initialized");
+//        RelativeLayout directionBar = findViewById(R.id.directionBar);
+//        RelativeLayout mapAndSearchContainer = findViewById(R.id.mapAndSearchContainer);
+//
+//
+//
+//        if (directionBar == null || mapAndSearchContainer == null) {
+//            // Handle the case where views are not found
+//            return;
+//        }
+//
+//        // Expand the map to full screen
+//        ViewWeightAnimationWrapper mapAnimationWrapper = new ViewWeightAnimationWrapper(mapAndSearchContainer);
+//        startHeightAnimation(mapAnimationWrapper, initialMapAndSearchBarHeight, targetHeight);
+//
+//        // Hide the 'directionBar' by setting its height to 0
+//        ViewWeightAnimationWrapper recyclerAnimationWrapper = new ViewWeightAnimationWrapper(directionBar);
+//        startHeightAnimation(recyclerAnimationWrapper, initialDirectionBarHeight, 0);
+//
+//        Log("expandView", "ended");
+//    }
+//
+//    private void collapseView() {
+//        Log("collapseView", "initialized");
+//        RelativeLayout directionBar = findViewById(R.id.directionBar);
+//        RelativeLayout mapAndSearchContainer = findViewById(R.id.mapAndSearchContainer);
+//
+//        if (directionBar == null || mapAndSearchContainer == null) {
+//            // Handle the case where views are not found
+//            return;
+//        }
+//
+//        // Contract the map to half of the screen
+//        ViewWeightAnimationWrapper mapAnimationWrapper = new ViewWeightAnimationWrapper(mapAndSearchContainer);
+//        startHeightAnimation(mapAnimationWrapper, targetHeight, initialMapAndSearchBarHeight);
+//
+//        // Show the 'directionBar' by setting its height to its initial height
+//        ViewWeightAnimationWrapper recyclerAnimationWrapper = new ViewWeightAnimationWrapper(directionBar);
+//        startHeightAnimation(recyclerAnimationWrapper, 0, initialDirectionBarHeight);
+//        Log("collapseView", "ended");
+//    }
+//
+//    private void startHeightAnimation(ViewWeightAnimationWrapper wrapper, int startHeight, int endHeight) {
+//        Log("startHeightAnimation", "initialized");
+//        ValueAnimator animator = ValueAnimator.ofInt(startHeight, endHeight);
+//        animator.setDuration(800);
+//        animator.addUpdateListener(animation -> {
+//            int value = (int) animation.getAnimatedValue();
+//            wrapper.setHeight(value);
+//        });
+//        animator.start();
+//        Log("startHeightAnimation", "ended");
+//    }
+
 
     private void initDirectionsButton() {
         try {
@@ -1360,20 +1530,59 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // ------------- Show a location on map ------------- //
 
     private void setMapBoundary() {
-        //Limit the visible region to Sri Lanka 's bounds
-        LatLngBounds sriLankaBounds = new LatLngBounds(
-                new LatLng(5.925, 79.650),  // Southwest corner of Sri Lanka
-                new LatLng(9.825, 81.850)   // Northeast corner of Sri Lanka
-        );
-
-        // Set the padding as needed
-        int padding = 100;
-
-        // Adjust the camera position to fit the bounded region with padding
-        myMap.moveCamera(CameraUpdateFactory.newLatLngBounds(sriLankaBounds, padding));
+//        //Limit the visible region to Sri Lanka 's bounds
+//        LatLngBounds sriLankaBounds = new LatLngBounds(
+//                new LatLng(5.925, 79.650),  // Southwest corner of Sri Lanka
+//                new LatLng(9.825, 81.850)   // Northeast corner of Sri Lanka
+//        );
+//
+//        // Set the padding as needed
+//        int padding = 100;
+//
+//        // Adjust the camera position to fit the bounded region with padding
+//        myMap.moveCamera(CameraUpdateFactory.newLatLngBounds(sriLankaBounds, padding));
 
         // Optionally, you can set a maximum zoom level to prevent the user from zooming out too far
         // myMap.setMaxZoomPreference(15.0f);  // You can adjust the value as needed
+
+
+        // Move the camera to a specific location
+
+                // Set a boundary to start
+        double bottomBoundary = 6.716442;
+        double leftBoundary = 79.812097;
+        double topBoundary = 6.980218;
+        double rightBoundary =80.224367;
+
+        LatLngBounds colomboBoundary = new LatLngBounds(
+                new LatLng(bottomBoundary, leftBoundary),
+                new LatLng(topBoundary, rightBoundary)
+        );
+
+        myMap.moveCamera(CameraUpdateFactory.newLatLngBounds(colomboBoundary, 100));
+
+
+        // Create the main polygon (outer boundary)
+        PolygonOptions polygonOptions = new PolygonOptions()
+                .add(new LatLng(9.849550, 79.530713),
+                        new LatLng(5.648529, 79.530713),
+                        new LatLng(5.648529, 82.079541),
+                        new LatLng(9.849550, 82.079541))
+                .strokeColor(Color.argb(100, 128, 128, 228))  // Border color
+                .fillColor(Color.argb(75, 128, 128, 128));  // Fill color
+
+        // Create a hole within the main polygon
+        List<LatLng> hole = new ArrayList<>();
+        hole.add(new LatLng(6.980218, 80.224367));  // North-East corner
+        hole.add(new LatLng(6.716442, 80.224367));    // South-East corner
+        hole.add(new LatLng(6.716442, 79.812097));     // South-West corner
+        hole.add(new LatLng(6.980218, 79.812097));  // North-West corner
+
+
+        polygonOptions.addHole(hole);
+
+        // Add the polygon to the map
+        Polygon polygon = myMap.addPolygon(polygonOptions);
     }
 
     private void getDeviceLocation() {
@@ -1749,6 +1958,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                         Toast.makeText(MainActivity.this, "Error fetching directions.", Toast.LENGTH_SHORT).show();
 
+                        // show the directions button again
+                        toggleItemVisibility(findViewById(R.id.directionsButton), true);
                         // Hide waiting progress bar
                         toggleItemVisibility(findViewById(R.id.loadingProgressBar), false);
                     }
@@ -1923,6 +2134,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             } catch (Exception e) {
                 Log("getBussesOnRoute", "ERROR", e.getMessage());
+                Toast.makeText(this, "Network error: Unable to connect to the server.", Toast.LENGTH_SHORT).show();
                 //throw new RuntimeException(e);
             }
 
@@ -1930,7 +2142,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             addMapMarkers();
             updateBusMarkers();
         });
-
 
 
         busLocationViewModel.getErrorLiveData().observe(this, errorMessage -> {
@@ -1949,16 +2160,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 if (busLocation.getLocation() != null) {
                     Log("addMapMarkers", "location", busLocation.getLocation().toString());
                     try {
+                        String title = "";
+                        if (busLocation.getBusNumber() == null || busLocation.getBusNumber().isEmpty()) {
+                            title = "Bus number: error";
+                        } else {
+                            title = "Bus number: " + busLocation.getBusNumber();
+                        }
+
                         String snippet = "";
                         if (busLocation.getBusNumber() == null || busLocation.getBusNumber().isEmpty()) {
-                            snippet = "Bus number: error";
+                            snippet = "Route: error";
                         } else {
-                            snippet = "Bus number " + busLocation.getBusNumber();
+                            // TODO: 2023-12-20 add Estimated arrival:
+                            snippet = "Route: " + busLocation.getRouteId();
                         }
+
 
                         MarkerOptions markerOptions = new MarkerOptions()
                                 .position(new LatLng(busLocation.getLocation().latitude, busLocation.getLocation().longitude))
-                                .title(busLocation.getBusNumber())
+                                .title(title)
                                 .snippet(snippet);
 
                         // Customize the marker icon
@@ -1982,6 +2202,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                         // Add marker to the map and update the busMarkers map
                         Marker newMarker = myMap.addMarker(markerOptions);
+                        String markerId = busLocation.getBusId();
+                        if (newMarker != null) {
+                            newMarker.setTag(markerId);
+                        }
+
                         busMarkers.put(busLocation.getBusId(), newMarker);
                         Log("addNewBusMarker", "marker added");
 
@@ -2057,6 +2282,39 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    private BusModel findBusById(String busId) {
+        for (BusModel busModel : availableBusList) {
+            if (busModel.getBusId().equals(busId)) {
+                return busModel;
+            }
+        }
+        return null; // Not found
+    }
+
+    private void showBusDetails(BusModel bus) {
+        RelativeLayout busDetails_RelativeLayout = findViewById(R.id.busDetails_RelativeLayout);
+        ImageView busDetails_Image = findViewById(R.id.busDetails_Image);
+        TextView busDetails_route = findViewById(R.id.busDetails_Route);
+        TextView busDetails_VehicleNumber = findViewById(R.id.busDetails_VehicleNumber);
+        TextView busDetails_GetOnPlace = findViewById(R.id.busDetails_GetOnPlace);
+        TextView busDetails_GetOnTime = findViewById(R.id.busDetails_GetOnTime);
+        TextView busDetails_GetDownPlace = findViewById(R.id.busDetails_GetDownPlace);
+        TextView busDetails_GetDownTime = findViewById(R.id.busDetails_GetDownTime);
+        ImageButton busDetails_CloseButton = findViewById(R.id.busDetails_CloseButton);
+        Button busDetails_purchaseTicketButton = findViewById(R.id.purchaseTicketButton);
+
+        busDetails_route.setText(bus.getRouteId());
+        busDetails_VehicleNumber.setText(bus.getBusNumber());
+
+        busDetails_CloseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                toggleItemVisibility(busDetails_RelativeLayout, false);
+            }
+        });
+
+        toggleItemVisibility(busDetails_RelativeLayout, true);
+    }
 
 //    private void setCameraView() {
 //
@@ -2078,6 +2336,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Stop updating bus locations by removing the observer
         if (busLocationViewModel != null) {
             busLocationViewModel.getBusLocationsLiveData().removeObservers(this);
+            busLocationViewModel.getUpdatedBusLocationsLiveData().removeObservers(this);
             // Reset data in the ViewModel and Repository
             busLocationViewModel.resetData();
         }
@@ -2103,7 +2362,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             busMarkers.clear();
         }
 
-        Log("stopWatchingDirections", "bus location observation stopped");
+
+        toggleItemVisibility(findViewById(R.id.busDetails_RelativeLayout), false);
+
+        Log("clearBusMapMarkers", "bus location observation stopped");
     }
 
     // ORIGINAL METHODS - CODE
@@ -2136,6 +2398,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+//    private void expandView(RelativeLayout relativeLayout2) {
+//    }
+//
+//    private void collapseView(RelativeLayout relativeLayout1) {
+//    }
 
     // ------------------------------- DRAFTS ------------------------------- //
     private void virtualTicket() {
@@ -2165,6 +2432,50 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         circle.setTag("Your circle's tag"); // Optional: You can set a tag to identify the circle
 
         return circle;
+    }
+
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        Log("onMarkerClick", "Marker called");
+        marker.showInfoWindow();
+        return true;
+    }
+
+    @Override
+    public View getInfoWindow(Marker marker) {
+        Log("getInfoWindow", "getInfoWindow called");
+        return null; // Use default info window
+    }
+
+    @Override
+    public View getInfoContents(Marker marker) {
+        Log("getInfoContents", "getInfoContents called");
+        View view = LayoutInflater.from(this).inflate(R.layout.custom_info_window, null);
+
+        TextView titleTextView = view.findViewById(R.id.vehicleNumberTextView);
+        TextView snippetTextView = view.findViewById(R.id.routeInfoTextView);
+
+        titleTextView.setText(marker.getTitle());
+        snippetTextView.setText(marker.getSnippet());
+
+        Button purchaseTicketButton = view.findViewById(R.id.purchaseTicketButton);
+        purchaseTicketButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Retrieve starting and ending bus stops (replace with your data)
+                String startingStop = "Bus Stop A";
+                String endingStop = "Bus Stop B";
+                Log("getInfoContents", "purchaseTicketButton clicked");
+                // Create an intent to start the PurchaseTicketActivity
+                Intent intent = new Intent(MainActivity.this, virtualTicket.class);
+                intent.putExtra("startingStop", startingStop);
+                intent.putExtra("endingStop", endingStop);
+                startActivity(intent);
+            }
+        });
+
+        return view;
     }
 
 

@@ -138,7 +138,6 @@ public class PlacesAutoCompleteAdapter extends RecyclerView.Adapter<PlacesAutoCo
             FindAutocompletePredictionsResponse findAutocompletePredictionsResponse = autocompletePredictions.getResult();
             if (findAutocompletePredictionsResponse != null)
                 for (AutocompletePrediction prediction : findAutocompletePredictionsResponse.getAutocompletePredictions()) {
-                    Log.d(TAG, prediction.getPlaceId());
                     resultList.add(new PlaceAutocomplete(prediction.getPlaceId(), prediction.getPrimaryText(STYLE_NORMAL).toString()
                            // , prediction.getFullText(STYLE_BOLD).toString()
                     ));

@@ -16,4 +16,6 @@ public class Constants {
     public static void Log(String method, String action) {
         Log.d(TAG, "[DEV LOGS] " + method + ": " + action);
     }
+
+    public static final int LOCATION_UPDATE_INTERVAL = 3000;
 }
