@@ -1,6 +1,7 @@
 package ezbus.mit20550588.passenger.ui;
 
 import static ezbus.mit20550588.passenger.util.Constants.Log;
+import static ezbus.mit20550588.passenger.util.Converters.timestampToFormattedTime;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -109,9 +110,12 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import ezbus.mit20550588.passenger.R;
+import ezbus.mit20550588.passenger.data.model.BusLocationModel;
 import ezbus.mit20550588.passenger.data.model.BusModel;
 import ezbus.mit20550588.passenger.data.model.RecentSearchModel;
+import ezbus.mit20550588.passenger.data.model.TicketModel;
 import ezbus.mit20550588.passenger.data.viewModel.BusLocationViewModel;
+import ezbus.mit20550588.passenger.data.viewModel.PaymentViewModel;
 import ezbus.mit20550588.passenger.data.viewModel.RecentSearchViewModel;
 import ezbus.mit20550588.passenger.ui.Settings.Settings;
 import ezbus.mit20550588.passenger.ui.adapters.PlacesAutoCompleteAdapter;
@@ -164,8 +168,17 @@ public class MainActivity
     // ---- bus locations ---- //
     private BusLocationViewModel busLocationViewModel;
     private Set<String> availableBusIds = new HashSet<>();
-    private ArrayList<BusModel> availableBusList = new ArrayList<>();
+
+//    private ArrayList<BusModel> availableBusList = new ArrayList<>();
+
+    private ArrayList<BusLocationModel> availableBusList = new ArrayList<>();
     private Map<String, Marker> busMarkers = new HashMap<>();
+
+    // ---- bus fare ---- //
+    private PaymentViewModel paymentViewModel;
+    private ArrayList<TicketModel> ticketList = new ArrayList<>();
+
+    private Double ticketFare;
 
     private static final int MAP_LAYOUT_STATE_CONTRACTED = 0;
     private static final int MAP_LAYOUT_STATE_EXPANDED = 1;
@@ -287,6 +300,8 @@ public class MainActivity
 
                 visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
                 visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                visibilityMap.put(findViewById(R.id.busDetails_RelativeLayout), false); // Bus details banner
+                visibilityMap.put(findViewById(R.id.current_location_layout), false);
 
                 allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
                 // sourceSearchEditText.clearFocus(); // Clear the focus from search bar
@@ -357,6 +372,31 @@ public class MainActivity
             });
 
             // Set marker click listener
+//            myMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+//                @Override
+//                public boolean onMarkerClick(Marker marker) {
+//                    if (marker != null) {
+//                        String markerTitle = marker.getTitle();
+//                        LatLng markerPosition = marker.getPosition();
+//                        String markerId = marker.getId();
+//                        // Retrieve the tag set for the marker
+//                        Object tag = marker.getTag();
+//
+//                        if (tag instanceof String) {
+//                            // The tag is a String, so you can cast it and use it
+//                            String busId = (String) tag;
+//                            // Find the corresponding Bus in the availableBusList
+//                            BusModel correspondingBus = findBusById(busId);
+//                            if (correspondingBus != null) {
+//                                Log("Marker Clicked", "Corresponding Bus: " + correspondingBus);
+//                                showBusDetails(correspondingBus);
+//                            }
+//                        }
+//                    }
+//                    return true; // Return true to consume the click event
+//                }
+//            });
+
             myMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
                 @Override
                 public boolean onMarkerClick(Marker marker) {
@@ -371,7 +411,7 @@ public class MainActivity
                             // The tag is a String, so you can cast it and use it
                             String busId = (String) tag;
                             // Find the corresponding Bus in the availableBusList
-                            BusModel correspondingBus = findBusById(busId);
+                            BusLocationModel correspondingBus = findBusById(busId);
                             if (correspondingBus != null) {
                                 Log("Marker Clicked", "Corresponding Bus: " + correspondingBus);
                                 showBusDetails(correspondingBus);
@@ -490,6 +530,7 @@ public class MainActivity
         initFullScreenMapButton();
         initDirectionsButton();
         initBusLocationView();
+        initPaymentView();
         initSourceLocationBar();
         initDestinationBar();
         initBackButton();
@@ -822,6 +863,11 @@ public class MainActivity
     private void initBusLocationView() {
         // Initialize ViewModel and Repository
         busLocationViewModel = new ViewModelProvider(this).get(BusLocationViewModel.class);
+    }
+
+    private void initPaymentView() {
+        // Initialize ViewModel and Repository
+        paymentViewModel = new ViewModelProvider(this).get(PaymentViewModel.class);
     }
 
     private void initSourceLocationBar() {
@@ -1548,11 +1594,11 @@ public class MainActivity
 
         // Move the camera to a specific location
 
-                // Set a boundary to start
+        // Set a boundary to start
         double bottomBoundary = 6.716442;
         double leftBoundary = 79.812097;
         double topBoundary = 6.980218;
-        double rightBoundary =80.224367;
+        double rightBoundary = 80.224367;
 
         LatLngBounds colomboBoundary = new LatLngBounds(
                 new LatLng(bottomBoundary, leftBoundary),
@@ -1762,6 +1808,8 @@ public class MainActivity
         myMap.addMarker(startOptions);
         myMap.addMarker(endOptions);
 
+        //  getMostAvailableRoute(origin, destination);
+
         // Time to look for
         // Get tomorrow's date
         Calendar tomorrow = Calendar.getInstance();
@@ -1783,6 +1831,7 @@ public class MainActivity
                 "&destination=" + destination.latitude + "," + destination.longitude +
                 "&mode=transit" +  // Specify transit mode (bus)
                 "&departure_time=" + timestampInSeconds +
+                "&alternatives=true" +
                 "&key=" + apiKey;
 
         Log("Directions", "Markers", "Added");
@@ -1876,13 +1925,25 @@ public class MainActivity
                                                     String routeName = transitDetails.getJSONObject("line").getString("name");
                                                     String routeNumber = transitDetails.getJSONObject("line").getString("short_name");
                                                     String numStops = transitDetails.getString("num_stops");
-                                                    String arrivalStop = transitDetails.getJSONObject("arrival_stop").getString("name");
+                                                    String arrivalStopName = transitDetails.getJSONObject("arrival_stop").getString("name");
+                                                    String departureStopName = transitDetails.getJSONObject("departure_stop").getString("name");
+                                                    String arrivalStopTime = transitDetails.getJSONObject("arrival_time").getString("value");
+                                                    String departureStopTime = transitDetails.getJSONObject("departure_time").getString("value");
 
                                                     // Display bus details as needed
-                                                    Log("Bus Details", "Route Name: ", routeName);
-                                                    Log("Bus Details", "Route Number: ", routeNumber);
-                                                    Log("Bus Details", "Number of Stops: ", numStops);
-                                                    Log("Bus Details", "Arrival Stop: ", arrivalStop);
+//                                                    Log("Bus Details", "Route Name: ", routeName);
+//                                                    Log("Bus Details", "Route Number: ", routeNumber);
+//                                                    Log("Bus Details", "Number of Stops: ", numStops);
+//                                                    Log("Bus Details", "Arrival Stop Name: ", arrivalStopName);
+//                                                    Log("Bus Details", "Arrival Stop Time: ", arrivalStopTime);
+//                                                    Log("Bus Details", "Departure Stop Name: ", departureStopName);
+//                                                    Log("Bus Details", "Departure Stop Time: ", departureStopTime);
+
+                                                    TicketModel newTicket = new TicketModel(routeName, routeNumber, arrivalStopName, arrivalStopTime, departureStopName, departureStopTime);
+
+                                                    Log("Bus Details", "New Ticket Created: ", newTicket.toString());
+
+                                                    ticketList.add(newTicket);
 
                                                     // show available busses on the route
                                                 /* ------ these should added only if the busses arrive at the intersections
@@ -1979,6 +2040,209 @@ public class MainActivity
         queue.add(directionsRequest);
 
     }
+
+    // getMostAvailableRoute
+//    private void getMostAvailableRoute(LatLng origin, LatLng destination) {
+//        // Time to look for
+//        // Get tomorrow's date
+//        Calendar tomorrow = Calendar.getInstance();
+//        tomorrow.add(Calendar.DAY_OF_YEAR, 1);
+//
+//        // Set the time to 12:00 noon
+//        tomorrow.set(Calendar.HOUR_OF_DAY, 12);
+//        tomorrow.set(Calendar.MINUTE, 0);
+//        tomorrow.set(Calendar.SECOND, 0);
+//        tomorrow.set(Calendar.MILLISECOND, 0);
+//
+//        // Convert the date to a Unix timestamp
+//        long timestampInSeconds = tomorrow.getTimeInMillis() / 1000;
+//
+//        // Construct the URL for the Google Directions API request
+//        String apiKey = "AIzaSyDDTamV9IieqbDXoWKxjEHmBo7jRcNuhFg"; // Replace with your actual API key
+//        String url = "https://maps.googleapis.com/maps/api/directions/json" +
+//                "?origin=" + origin.latitude + "," + origin.longitude +
+//                "&destination=" + destination.latitude + "," + destination.longitude +
+//                "&mode=transit" +  // Specify transit mode (bus)
+//                "&departure_time=" + timestampInSeconds +
+//            //    "&alternatives=true" +
+//                "&key=" + apiKey;
+//
+//        Log("Directions", "Markers", "Added");
+//
+//        // Create a request to the Directions API
+//        JsonObjectRequest directionsRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+//                new Response.Listener<JSONObject>() {
+//                    @Override
+//                    public void onResponse(JSONObject response) {
+//
+//                        Log("Directions", "onResponse", "Started");
+//                        try {
+//                            // Parse the JSON response
+//                            JSONArray routes = response.getJSONArray("routes");
+//                            if (routes.length() > 0) {
+//                                Log("Directions", "onResponse", "Route(s) found");
+//
+//                                // Process each route
+//                                for (int j = 0; j < routes.length(); j++) {
+//                                    JSONObject route = routes.getJSONObject(j);
+//
+//                                    JSONArray legs = route.getJSONArray("legs");
+//                                    if (legs.length() > 0) {
+//                                        JSONObject leg = legs.getJSONObject(0);
+//                                        JSONArray steps = leg.getJSONArray("steps");
+//
+//                                        // Process each step
+//                                        for (int k = 0; k < steps.length(); k++) {
+//                                            JSONObject step = steps.getJSONObject(k);
+//
+//
+//                                            // Extract the encoded polyline
+//                                            JSONObject stepPolyline = step.getJSONObject("polyline");
+//                                            String encodedPolyline = stepPolyline.getString("points");
+//
+//                                            // Decode the polyline and add it to the map as a Polyline with the specific color
+//                                            List<LatLng> decodedPolyline = decodePolyline(encodedPolyline);
+//
+//                                            List<PatternItem> pattern = Arrays.asList(
+//                                                    new Dot(),
+//                                                    //   new Gap(20),
+//                                                    //  new Dash(30),
+//                                                    new Gap(20));
+//
+//                                            PolylineOptions polylineOptions = new PolylineOptions()
+//                                                    .addAll(decodedPolyline)
+//                                                    // .pattern(pattern)
+//
+//                                                    .width(25)
+//                                                    .clickable(true)
+//                                                    //  .jointType(JointType.ROUND)
+//                                                    .color(Color.BLACK);
+//
+//                                            // Check if the step has travel_mode
+//                                            if (step.has("travel_mode")) {
+//                                                String travelMode = step.getString("travel_mode");
+//
+//
+//                                                // Call method1 for WALKING
+//                                                if ("WALKING".equals(travelMode)) {
+//                                                    polylineOptions.pattern(pattern);
+//                                                    polylineOptions.color(Color.BLUE);
+//                                                }
+//                                                // Call method2 for TRANSIT
+//                                                else if ("TRANSIT".equals(travelMode)) {
+//
+//
+//                                                    // Check if the step is a transit step
+//                                                    if (step.has("transit_details")) {
+//                                                        Log("Directions", "transit details", "FOUND");
+//                                                        // Extract transit details
+//                                                        JSONObject transitDetails = step.getJSONObject("transit_details");
+//                                                        String routeName = transitDetails.getJSONObject("line").getString("name");
+//                                                        String routeNumber = transitDetails.getJSONObject("line").getString("short_name");
+//                                                        String numStops = transitDetails.getString("num_stops");
+//                                                        String arrivalStop = transitDetails.getJSONObject("arrival_stop").getString("name");
+//
+//                                                        // Display bus details as needed
+//                                                        Log("Bus Details", "Route Name: ", routeName);
+//                                                        Log("Bus Details", "Route Number: ", routeNumber);
+//                                                        Log("Bus Details", "Number of Stops: ", numStops);
+//                                                        Log("Bus Details", "Arrival Stop: ", arrivalStop);
+//
+//                                                        // show available busses on the route
+//                                                /* ------ these should added only if the busses arrive at the intersections
+//                                                            after the person gets there.
+//                                                   1. check route id
+//                                                   2. check the direction
+//                                                   3. check the arrival time to the bus stop
+//                                                            but for now add them all.
+//                                                */
+//                                                        getBussesOnRoute(routeNumber);
+//                                                        Log("direction", "onResponse", "showBussesOnRoute");
+//                                                    }
+//
+//
+//                                                    polylineOptions.addSpan(new StyleSpan(Color.RED))
+//                                                            .addSpan(new StyleSpan(Color.rgb(3, 161, 14)));
+//                                                }
+//                                            }
+//
+//                                            myMap.addPolyline(polylineOptions);
+//
+//                                            directionRoutePolyline = myMap.addPolyline(polylineOptions);
+//                                        }
+//                                    }
+//
+//                                    Log("direction", "onResponse", "directionRoutePolyline done");
+//
+//                                    locationMarked = false;
+//
+//                                    // After adding the polyline, adjust the camera to fit the entire route
+//                                    JSONObject overviewPolyline = route.getJSONObject("overview_polyline");
+//                                    String encodedPolyline = overviewPolyline.getString("points");
+//                                    List<LatLng> decodedPolyline = decodePolyline(encodedPolyline);
+//
+//                                    LatLngBounds.Builder builder = new LatLngBounds.Builder();
+//                                    for (LatLng point : decodedPolyline) {
+//                                        builder.include(point);
+//                                    }
+//
+//                                    LatLngBounds bounds = builder.build();
+//                                    int padding = 100; // Adjust this padding as needed
+//
+//                                    // Animate the camera to fit the entire route with padding
+//                                    myMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+//
+//                                    // Hide waiting progress bar
+//                                    toggleItemVisibility(findViewById(R.id.loadingProgressBar), false);
+//                                }
+//
+//                            } else {
+//                                Log("Directions", "onResponse", "No routes found.");
+//                                Toast.makeText(MainActivity.this, "No routes found.", Toast.LENGTH_SHORT).show();
+//                                // Hide waiting progress bar
+//                                toggleItemVisibility(findViewById(R.id.loadingProgressBar), false);
+//                            }
+//                        } catch (JSONException e) {
+//                            // Handle the exception, log an error, or take appropriate action
+//                            Log("Bus Details", "Error parsing JSON", e.getStackTrace().toString());
+//                            e.printStackTrace();
+//                            // Hide waiting progress bar
+//                            toggleItemVisibility(findViewById(R.id.loadingProgressBar), false);
+//                            throw new RuntimeException(e);
+//
+//                        }
+//                    }
+//                },
+//                new Response.ErrorListener() {
+//                    @Override
+//                    public void onErrorResponse(VolleyError error) {
+//                        Log("Directions", "Volley ERROR");
+//                        Log("Directions", "Volley ERROR - message", error.getMessage());
+//                        Log("Directions", "Volley ERROR - Stack Trace", error.getStackTrace().toString());
+//                        Log("Directions", "Volley ERROR - Cause", error.getCause().toString());
+//
+//                        Toast.makeText(MainActivity.this, "Error fetching directions.", Toast.LENGTH_SHORT).show();
+//
+//                        // show the directions button again
+//                        toggleItemVisibility(findViewById(R.id.directionsButton), true);
+//                        // Hide waiting progress bar
+//                        toggleItemVisibility(findViewById(R.id.loadingProgressBar), false);
+//                    }
+//                });
+//
+//        // Set a retry policy for the request
+//        RetryPolicy retryPolicy = new DefaultRetryPolicy(
+//                0,
+//                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+//                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+//        );
+//
+//        Log("Directions", "directionsRequest", "retry policy");
+//        directionsRequest.setRetryPolicy(retryPolicy);
+//
+//        RequestQueue queue = Volley.newRequestQueue(this);
+//        queue.add(directionsRequest);
+//    }
 
     private int getRandomColor() {
         Random random = new Random();
@@ -2102,6 +2366,61 @@ public class MainActivity
 
     }
 
+//    private void getBussesOnRoute(String routeNumber) {
+//
+//        Log("getBussesOnRoute", "Started");
+//
+//        // Trigger the request to fetch bus locations
+//        busLocationViewModel.getBusLocations(routeNumber);
+//
+//        // Observe LiveData
+//        busLocationViewModel.getBusLocationsLiveData().observe(this, availableBusses -> {
+//            Log("getBussesOnRoute", "Observe LiveData", availableBusses.toString());
+//            try {
+//                if (!availableBusses.isEmpty()) {
+//                    for (BusModel bus : availableBusses) {
+//                        Log("getBussesOnRoute", "bus", bus.toString());
+//
+//                        // Check if the bus ID is already added
+//                        if (!availableBusIds.contains(bus.getBusId())) {
+//                            Log("getBussesOnRoute", "busLocations", availableBusList.toString());
+//                            Log("getBussesOnRoute", "bus is added to the list");
+//
+//                           // getFarePrice(routeNumber, String startBusStop, String endBusStop)
+//
+//
+//                            // Add new buses to the arrays
+//                            availableBusListDetails.add(bus);
+//                            availableBusList.add(bus);
+//                            availableBusIds.add(bus.getBusId());
+//                        } else {
+//                            Log("getBussesOnRoute", "bus is already on the list");
+//                        }
+//                    }
+//                } else {
+//                    Log("getBussesOnRoute", "No busses in the response");
+//                }
+//            } catch (Exception e) {
+//                Log("getBussesOnRoute", "ERROR", e.getMessage());
+//                Toast.makeText(this, "Network error: Unable to connect to the server.", Toast.LENGTH_SHORT).show();
+//                //throw new RuntimeException(e);
+//            }
+//
+//            // Update UI with bus locations --- if these called in the getBusLocationsLiveData, it will go in a feedback cycle
+//            if (availableBusIds != null){
+//                addMapMarkers();
+//                updateBusMarkers();
+//            }
+//
+//
+//        });
+//
+//
+//        busLocationViewModel.getErrorLiveData().observe(this, errorMessage -> {
+//            Log("getBussesOnRoute", "Handle errors", errorMessage);
+//        });
+//    }
+
     private void getBussesOnRoute(String routeNumber) {
 
         Log("getBussesOnRoute", "Started");
@@ -2114,17 +2433,21 @@ public class MainActivity
             Log("getBussesOnRoute", "Observe LiveData", availableBusses.toString());
             try {
                 if (!availableBusses.isEmpty()) {
-                    for (BusModel bus : availableBusses) {
+                    for (BusLocationModel bus : availableBusses) {
                         Log("getBussesOnRoute", "bus", bus.toString());
 
                         // Check if the bus ID is already added
-                        if (!availableBusIds.contains(bus.getBusId())) {
+                        if (!availableBusIds.contains(bus.getBus().getBusId())) {
                             Log("getBussesOnRoute", "busLocations", availableBusList.toString());
                             Log("getBussesOnRoute", "bus is added to the list");
 
+                            // getFarePrice(routeNumber, String startBusStop, String endBusStop)
+
+
                             // Add new buses to the arrays
+                            // availableBusListDetails.add(bus);
                             availableBusList.add(bus);
-                            availableBusIds.add(bus.getBusId());
+                            availableBusIds.add(bus.getBus().getBusId());
                         } else {
                             Log("getBussesOnRoute", "bus is already on the list");
                         }
@@ -2139,8 +2462,12 @@ public class MainActivity
             }
 
             // Update UI with bus locations --- if these called in the getBusLocationsLiveData, it will go in a feedback cycle
-            addMapMarkers();
-            updateBusMarkers();
+            if (availableBusIds != null) {
+                addMapMarkers();
+                updateBusMarkers();
+            }
+
+
         });
 
 
@@ -2149,6 +2476,153 @@ public class MainActivity
         });
     }
 
+    private void getFarePrice(String routeId, String startBusStop, String endBusStop) {
+
+        Log("getFarePrice", "Started");
+
+        // Trigger the request to fetch bus locations
+        paymentViewModel.getFarePrice(routeId, startBusStop, endBusStop);
+
+        // Observe LiveData
+        paymentViewModel.getFarePriceLiveData().observe(this, fare -> {
+            Log("getFarePrice", "Observe LiveData", String.valueOf(fare));
+            try {
+                Log("getFarePrice", "fare price received");
+
+            } catch (Exception e) {
+                Log("getFarePrice", "Could not get the fare price", e.getMessage());
+            }
+        });
+
+        paymentViewModel.getErrorLiveData().observe(this, errorMessage -> {
+            Log("getFarePrice", "Handle errors", errorMessage);
+        });
+    }
+
+
+//    private void hasBusPassedBusStop(String routeNumber) {
+//
+//        Log("getBussesOnRoute", "Started");
+//
+//        // Trigger the request to fetch bus locations
+//        busLocationViewModel.getBusLocations(routeNumber);
+//
+//        // Observe LiveData
+//        busLocationViewModel.getBusLocationsLiveData().observe(this, availableBusses -> {
+//            Log("getBussesOnRoute", "Observe LiveData", availableBusses.toString());
+//            try {
+//                if (!availableBusses.isEmpty()) {
+//                    for (BusModel bus : availableBusses) {
+//                        Log("getBussesOnRoute", "bus", bus.toString());
+//
+//                        // Check if the bus ID is already added
+//                        if (!availableBusIds.contains(bus.getBusId())) {
+//                            Log("getBussesOnRoute", "busLocations", availableBusList.toString());
+//                            Log("getBussesOnRoute", "bus is added to the list");
+//
+//                            // Add new buses to the arrays
+//                            availableBusList.add(bus);
+//                            availableBusIds.add(bus.getBusId());
+//                        } else {
+//                            Log("getBussesOnRoute", "bus is already on the list");
+//                        }
+//                    }
+//                } else {
+//                    Log("getBussesOnRoute", "No busses in the response");
+//                }
+//            } catch (Exception e) {
+//                Log("getBussesOnRoute", "ERROR", e.getMessage());
+//                Toast.makeText(this, "Network error: Unable to connect to the server.", Toast.LENGTH_SHORT).show();
+//                //throw new RuntimeException(e);
+//            }
+//
+//            // Update UI with bus locations --- if these called in the getBusLocationsLiveData, it will go in a feedback cycle
+//            if (availableBusIds != null){
+//                addMapMarkers();
+//                updateBusMarkers();
+//            }
+//
+//
+//        });
+//
+//
+//        busLocationViewModel.getErrorLiveData().observe(this, errorMessage -> {
+//            Log("getBussesOnRoute", "Handle errors", errorMessage);
+//        });
+//    }
+
+//    private void addMapMarkers() {
+//
+//        Log("addMapMarkers", "Started");
+//        if (myMap != null) {
+//
+//            // Loop through the bus locations
+//            Log("addMapMarkers", "busLocation", availableBusList.toString());
+//            for (BusModel busLocation : availableBusList) {
+//                if (busLocation.getLocation() != null) {
+//                    Log("addMapMarkers", "location", busLocation.getLocation().toString());
+//                    try {
+//                        String title = "";
+//                        if (busLocation.getBusNumber() == null || busLocation.getBusNumber().isEmpty()) {
+//                            title = "Bus number: error";
+//                        } else {
+//                            title = "Bus number: " + busLocation.getBusNumber();
+//                        }
+//
+//                        String snippet = "";
+//                        if (busLocation.getBusNumber() == null || busLocation.getBusNumber().isEmpty()) {
+//                            snippet = "Route: error";
+//                        } else {
+//                            // TODO: 2023-12-20 add Estimated arrival:
+//                            snippet = "Route: " + busLocation.getRouteId();
+//                        }
+//
+//
+//                        MarkerOptions markerOptions = new MarkerOptions()
+//                                .position(new LatLng(busLocation.getLocation().latitude, busLocation.getLocation().longitude))
+//                                .title(title)
+//                                .snippet(snippet);
+//
+//                        // Customize the marker icon
+//                        int intColor;
+//                        try {
+//                            intColor = Color.parseColor(busLocation.getBusColor());
+//                        } catch (Exception e) {
+//                            Log("addMapMarkers", "ERROR", "Parsing color " + e.getMessage());
+//                            // assign BLACK
+//                            intColor = -16777216;
+//                        }
+//
+//                        // BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.drawable.ic_bus_marker);
+//                        BitmapDescriptor icon = getBitmapDescriptorWithDrawable(getResources().getDrawable(R.drawable.ic_bus_marker), Color.WHITE, 5, intColor, 100);
+//
+//                        if (icon != null) {
+//                            markerOptions.icon(icon);
+//                        } else {
+//                            Log("addMapMarkers", "ERROR: bus point marker", "Icon is null");
+//                        }
+//
+//                        // Add marker to the map and update the busMarkers map
+//                        Marker newMarker = myMap.addMarker(markerOptions);
+//                        String markerId = busLocation.getBusId();
+//                        if (newMarker != null) {
+//                            newMarker.setTag(markerId);
+//                        }
+//
+//                        busMarkers.put(busLocation.getBusId(), newMarker);
+//                        Log("addNewBusMarker", "marker added");
+//
+//
+//                    } catch (NullPointerException e) {
+//                        Log("addMapMarkers", "NullPointerException", e.getMessage());
+//                    }
+//                }
+//
+//            }
+//            //    setCameraView();
+//        }
+//    }
+
     private void addMapMarkers() {
 
         Log("addMapMarkers", "Started");
@@ -2156,23 +2630,23 @@ public class MainActivity
 
             // Loop through the bus locations
             Log("addMapMarkers", "busLocation", availableBusList.toString());
-            for (BusModel busLocation : availableBusList) {
+            for (BusLocationModel busLocation : availableBusList) {
                 if (busLocation.getLocation() != null) {
                     Log("addMapMarkers", "location", busLocation.getLocation().toString());
                     try {
                         String title = "";
-                        if (busLocation.getBusNumber() == null || busLocation.getBusNumber().isEmpty()) {
+                        if (busLocation.getBus().getBusNumber() == null || busLocation.getBus().getBusNumber().isEmpty()) {
                             title = "Bus number: error";
                         } else {
-                            title = "Bus number: " + busLocation.getBusNumber();
+                            title = "Bus number: " + busLocation.getBus().getBusNumber();
                         }
 
                         String snippet = "";
-                        if (busLocation.getBusNumber() == null || busLocation.getBusNumber().isEmpty()) {
+                        if (busLocation.getBus().getBusNumber() == null || busLocation.getBus().getBusNumber().isEmpty()) {
                             snippet = "Route: error";
                         } else {
                             // TODO: 2023-12-20 add Estimated arrival:
-                            snippet = "Route: " + busLocation.getRouteId();
+                            snippet = "Route: " + busLocation.getBus().getRouteId();
                         }
 
 
@@ -2184,7 +2658,7 @@ public class MainActivity
                         // Customize the marker icon
                         int intColor;
                         try {
-                            intColor = Color.parseColor(busLocation.getBusColor());
+                            intColor = Color.parseColor(busLocation.getBus().getBusColor());
                         } catch (Exception e) {
                             Log("addMapMarkers", "ERROR", "Parsing color " + e.getMessage());
                             // assign BLACK
@@ -2202,12 +2676,12 @@ public class MainActivity
 
                         // Add marker to the map and update the busMarkers map
                         Marker newMarker = myMap.addMarker(markerOptions);
-                        String markerId = busLocation.getBusId();
+                        String markerId = busLocation.getBus().getBusId();
                         if (newMarker != null) {
                             newMarker.setTag(markerId);
                         }
 
-                        busMarkers.put(busLocation.getBusId(), newMarker);
+                        busMarkers.put(busLocation.getBus().getBusId(), newMarker);
                         Log("addNewBusMarker", "marker added");
 
 
@@ -2228,7 +2702,12 @@ public class MainActivity
         if (!availableBusIds.isEmpty()) {
             // Call the ViewModel method to update bus locations for the available busIds
             Log("updateBusLocationsAndMarkers", "updateBusLocations called", availableBusIds.toString());
-            busLocationViewModel.updateBusLocations(availableBusIds);
+
+            // TO GET THE ROUTE ID AND BUSSTOP ID FOR THE HASBUSPASSED FUNCTION
+
+            busLocationViewModel.updateBusLocations(availableBusIds
+                    //   , routeId, busStopId
+            );
 
             // Observe LiveData to get updated bus locations
             busLocationViewModel.getUpdatedBusLocationsLiveData().observe(this, updatedBusLocations -> {
@@ -2247,7 +2726,42 @@ public class MainActivity
         }
     }
 
-    private void updateMarkerPositions(List<BusModel> updatedBusLocations) {
+//    private void updateMarkerPositions(List<BusModel> updatedBusLocations) {
+//        try {
+//            Log("updateMarkerPositions", "Started");
+//
+//            // Check if the availableBusIds set is not empty
+//            if (availableBusIds.isEmpty()) {
+//                Log("updateMarkerPositions", "Available bus IDs set is empty");
+//                return; // No need to proceed if the set is empty
+//            }
+//
+//            // Iterate through the list of updated bus locations
+//            for (BusModel updatedBus : updatedBusLocations) {
+//                // Check if the updatedBus is in the availableBusIds set
+//                if (availableBusIds.contains(updatedBus.getBusId())) {
+//                    // Check if the bus marker is already on the map
+//                    if (busMarkers.containsKey(updatedBus.getBusId())) {
+//                        Marker marker = busMarkers.get(updatedBus.getBusId());
+//                        if (marker != null) {
+//                            // Update the marker position on the map
+//                            LatLng newLatLng = new LatLng(updatedBus.getLocation().latitude, updatedBus.getLocation().longitude);
+//                            marker.setPosition(newLatLng);
+//                        }
+//                    } else {
+//                        // Handle the case where the bus marker is not on the map
+//                        Log("updateMarkerPositions", " Bus marker not found on the map for bus ID " + updatedBus.getBusId());
+//                    }
+//                } else {
+//                    Log("updateMarkerPositions", "Bus ID" + updatedBus.getBusId() + " not in available bus IDs set");
+//                }
+//            }
+//        } catch (Exception e) {
+//            Log("updateMarkerPositions", "Error", e.getMessage());
+//        }
+//    }
+
+    private void updateMarkerPositions(List<BusLocationModel> updatedBusLocations) {
         try {
             Log("updateMarkerPositions", "Started");
 
@@ -2258,12 +2772,12 @@ public class MainActivity
             }
 
             // Iterate through the list of updated bus locations
-            for (BusModel updatedBus : updatedBusLocations) {
+            for (BusLocationModel updatedBus : updatedBusLocations) {
                 // Check if the updatedBus is in the availableBusIds set
-                if (availableBusIds.contains(updatedBus.getBusId())) {
+                if (availableBusIds.contains(updatedBus.getBus().getBusId())) {
                     // Check if the bus marker is already on the map
-                    if (busMarkers.containsKey(updatedBus.getBusId())) {
-                        Marker marker = busMarkers.get(updatedBus.getBusId());
+                    if (busMarkers.containsKey(updatedBus.getBus().getBusId())) {
+                        Marker marker = busMarkers.get(updatedBus.getBus().getBusId());
                         if (marker != null) {
                             // Update the marker position on the map
                             LatLng newLatLng = new LatLng(updatedBus.getLocation().latitude, updatedBus.getLocation().longitude);
@@ -2271,10 +2785,10 @@ public class MainActivity
                         }
                     } else {
                         // Handle the case where the bus marker is not on the map
-                        Log("updateMarkerPositions", " Bus marker not found on the map for bus ID " + updatedBus.getBusId());
+                        Log("updateMarkerPositions", " Bus marker not found on the map for bus ID " + updatedBus.getBus().getBusId());
                     }
                 } else {
-                    Log("updateMarkerPositions", "Bus ID" + updatedBus.getBusId() + " not in available bus IDs set");
+                    Log("updateMarkerPositions", "Bus ID" + updatedBus.getBus().getBusId() + " not in available bus IDs set");
                 }
             }
         } catch (Exception e) {
@@ -2282,16 +2796,61 @@ public class MainActivity
         }
     }
 
-    private BusModel findBusById(String busId) {
-        for (BusModel busModel : availableBusList) {
-            if (busModel.getBusId().equals(busId)) {
-                return busModel;
+//    private BusModel findBusById(String busId) {
+//        for (BusModel busModel : availableBusList) {
+//            if (busModel.getBusId().equals(busId)) {
+//                return busModel;
+//            }
+//        }
+//        return null; // Not found
+//    }
+
+    private BusLocationModel findBusById(String busId) {
+        for (BusLocationModel bus : availableBusList) {
+            if (bus.getBus().getBusId().equals(busId)) {
+                return bus;
             }
         }
         return null; // Not found
     }
 
-    private void showBusDetails(BusModel bus) {
+    private TicketModel findTicketByRouteNumber(String routeNumber) {
+        for (TicketModel ticket : ticketList) {
+            if (ticket.getRouteNumber().equals(routeNumber)) {
+                return ticket;
+            }
+        }
+        return null; // Not found
+    }
+
+//    private void showBusDetails(BusModel bus) {
+//        RelativeLayout busDetails_RelativeLayout = findViewById(R.id.busDetails_RelativeLayout);
+//        ImageView busDetails_Image = findViewById(R.id.busDetails_Image);
+//        TextView busDetails_route = findViewById(R.id.busDetails_Route);
+//        TextView busDetails_VehicleNumber = findViewById(R.id.busDetails_VehicleNumber);
+//        TextView busDetails_GetOnPlace = findViewById(R.id.busDetails_GetOnPlace);
+//        TextView busDetails_GetOnTime = findViewById(R.id.busDetails_GetOnTime);
+//        TextView busDetails_GetDownPlace = findViewById(R.id.busDetails_GetDownPlace);
+//        TextView busDetails_GetDownTime = findViewById(R.id.busDetails_GetDownTime);
+//        ImageButton busDetails_CloseButton = findViewById(R.id.busDetails_CloseButton);
+//        Button busDetails_purchaseTicketButton = findViewById(R.id.purchaseTicketButton);
+//
+//        busDetails_route.setText(bus.getRouteId());
+//        busDetails_VehicleNumber.setText(bus.getBusNumber());
+//
+//        busDetails_CloseButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                toggleItemVisibility(busDetails_RelativeLayout, false);
+//            }
+//        });
+//
+//        toggleItemVisibility(busDetails_RelativeLayout, true);
+//    }
+
+    private void showBusDetails(BusLocationModel bus) {
+
+        // Initiate the views
         RelativeLayout busDetails_RelativeLayout = findViewById(R.id.busDetails_RelativeLayout);
         ImageView busDetails_Image = findViewById(R.id.busDetails_Image);
         TextView busDetails_route = findViewById(R.id.busDetails_Route);
@@ -2300,20 +2859,64 @@ public class MainActivity
         TextView busDetails_GetOnTime = findViewById(R.id.busDetails_GetOnTime);
         TextView busDetails_GetDownPlace = findViewById(R.id.busDetails_GetDownPlace);
         TextView busDetails_GetDownTime = findViewById(R.id.busDetails_GetDownTime);
+        TextView busDetails_TicketPrice = findViewById(R.id.busDetails_TicketPrice);
         ImageButton busDetails_CloseButton = findViewById(R.id.busDetails_CloseButton);
         Button busDetails_purchaseTicketButton = findViewById(R.id.purchaseTicketButton);
 
-        busDetails_route.setText(bus.getRouteId());
-        busDetails_VehicleNumber.setText(bus.getBusNumber());
+        // Get the Ticket details
+        TicketModel ticket = findTicketByRouteNumber(bus.getBus().getRouteId());
+        if (ticket != null) {
+            Log("showBusDetails", "A valid ticket found");
 
-        busDetails_CloseButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                toggleItemVisibility(busDetails_RelativeLayout, false);
-            }
-        });
+            // Assign the details to views
+            busDetails_route.setText(ticket.getRouteNumber() + " | " + ticket.getRouteName());
+            busDetails_VehicleNumber.setText(bus.getBus().getBusNumber());
+            busDetails_GetOnPlace.setText(ticket.getArrivalStopName());
+            busDetails_GetDownPlace.setText(ticket.getDepartureStopName());
 
-        toggleItemVisibility(busDetails_RelativeLayout, true);
+            // TODO: 2023-12-23 THESE NEEDS TO BE CHANGED TO REAL TIME THAT A BUS WILL COME
+            long arrivalTimeInMillis = Long.parseLong(ticket.getArrivalStopTime()) * 1000L;
+            busDetails_GetOnTime.setText(timestampToFormattedTime(arrivalTimeInMillis));
+            long departureTimeInMillis = Long.parseLong(ticket.getDepartureStopTime()) * 1000L;
+            busDetails_GetDownTime.setText(timestampToFormattedTime(departureTimeInMillis));
+
+            // Trigger the request to fetch fare price
+            paymentViewModel.getFarePrice(ticket.getRouteNumber(), ticket.getArrivalStopName(), ticket.getDepartureStopName());
+
+            // Observe LiveData for fare price
+            paymentViewModel.getFarePriceLiveData().observe(this, fare -> {
+                try {
+                    if (fare != null) {
+
+                        // Format the double with 2 decimal places
+                        String formattedFare = String.format("%.2f", fare);
+                        
+                        busDetails_TicketPrice.setText("Rs." + formattedFare);
+                        // TODO: Activate the purchase button
+                    } else {
+                        busDetails_TicketPrice.setText("(Calculating...)");
+                        // TODO: Make the purchase button inactive
+                    }
+                } catch (Exception e) {
+                    Log("showBusDetails", "Could not update the fare price", e.getMessage());
+                }
+            });
+
+            busDetails_CloseButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    toggleItemVisibility(busDetails_RelativeLayout, false);
+                }
+            });
+
+            toggleItemVisibility(busDetails_RelativeLayout, true);
+        } else {
+            Toast.makeText(this, "Sorry! Bus details not found", Toast.LENGTH_SHORT).show();
+            Log("showBusDetails", "ERROR", "Cannot find the ticket");
+
+        }
+
+
     }
 
 //    private void setCameraView() {

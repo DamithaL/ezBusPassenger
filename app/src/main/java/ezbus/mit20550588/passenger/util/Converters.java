@@ -4,7 +4,9 @@ import androidx.room.TypeConverter;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 public class Converters {
     @TypeConverter
@@ -36,5 +38,43 @@ public class Converters {
     @TypeConverter
     public static Long toTimestamp(Date date) {
         return date == null ? null : date.getTime();
+    }
+
+    @TypeConverter
+    public static String timestampToFormattedTime(Long timestamp) {
+        if (timestamp == null) {
+            return null;
+        }
+
+        // Create a SimpleDateFormat object
+        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+
+        // Convert timestamp to Date
+        Date date = new Date(timestamp);
+
+        // Format the Date as a string
+        return sdf.format(date);
+    }
+
+    @TypeConverter
+    public static Long formattedTimeToTimestamp(String formattedTime) {
+        if (formattedTime == null) {
+            return null;
+        }
+
+        // Create a SimpleDateFormat object
+        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+
+        try {
+            // Parse the formatted time string to obtain a Date
+            Date date = sdf.parse(formattedTime);
+
+            // Return the timestamp
+            return date.getTime();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }

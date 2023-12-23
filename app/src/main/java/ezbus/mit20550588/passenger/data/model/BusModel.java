@@ -2,6 +2,8 @@ package ezbus.mit20550588.passenger.data.model;
 
 import android.graphics.Color;
 
+import androidx.annotation.NonNull;
+
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.Date;
@@ -14,14 +16,17 @@ public class BusModel {
     private String routeId;
     private String busColor;
 
+    private boolean hasBusPassedBusStop;
+
     private Date lastUpdatedTime;
 
-    public BusModel(String busId, String busNumber, double latitude, double longitude, String routeId, String busColor, LatLng location) {
+    public BusModel(String busId, String busNumber, double latitude, double longitude, String routeId, String busColor, LatLng location, boolean hasBusPassedBusStop) {
         this.busId = busId;
         this.busNumber = busNumber;
         this.routeId = routeId;
         this.busColor = busColor;
         this.location = location;
+        this.hasBusPassedBusStop = hasBusPassedBusStop;
        
     }
 
@@ -49,6 +54,10 @@ public class BusModel {
         return location;
     }
 
+    public boolean hasBusPassedBusStop() {
+        return hasBusPassedBusStop;
+    }
+
     @Override
     public String toString() {
         return "BusModel{" +
@@ -57,6 +66,7 @@ public class BusModel {
                 ", busNumber='" + busNumber + '\'' +
                 ", routeId='" + routeId + '\'' +
                 ", busColor='" + busColor + '\'' +
+                ", hasBusPassedBusStop=" + hasBusPassedBusStop +
                 ", lastUpdatedTime=" + lastUpdatedTime +
                 '}';
     }

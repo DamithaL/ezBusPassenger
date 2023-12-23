@@ -1,3 +1,6 @@
+// THIS HAS BEEN TEMPORARY DEACTIVATED AND BUS LOCATION ALSO DEFINED IN BUS MODEL
+
+
 package ezbus.mit20550588.passenger.data.model;
 
 import androidx.annotation.NonNull;
@@ -11,10 +14,18 @@ public class BusLocationModel {
     private LatLng location;
     private Date timeStamp;
 
-    public BusLocationModel(BusModel bus, LatLng location, Date timeStamp) {
+   // private Double farePrice;
+   // private boolean hasBusPassedBusStop;
+
+    public BusLocationModel(BusModel bus, LatLng location, Date timeStamp
+         //  , boolean hasBusPassedBusStop,Double farePrice
+    ) {
         this.bus = bus;
         this.location = location;
         this.timeStamp = timeStamp;
+      //  this.hasBusPassedBusStop = hasBusPassedBusStop;
+      //  this.farePrice = farePrice;
+
     }
 
     public BusLocationModel(){
@@ -45,13 +56,26 @@ public class BusLocationModel {
         this.timeStamp = timeStamp;
     }
 
-    @NonNull
+//    public boolean isBusPassedBusStop() {
+//        return hasBusPassedBusStop;
+//    }
+
+//    public Double getBusFarePrice() {
+//        return farePrice;
+//    }
+
+//    public void setBusFarePrice(Double farePrice) {
+//        this.farePrice = farePrice;
+//    }
+
     @Override
     public String toString() {
         return "BusLocationModel{" +
                 "bus=" + bus +
                 ", location=" + location +
                 ", timeStamp=" + timeStamp +
+             //   ", farePrice=" + farePrice +
+              //  ", hasBusPassedBusStop=" + hasBusPassedBusStop +
                 '}';
     }
 }

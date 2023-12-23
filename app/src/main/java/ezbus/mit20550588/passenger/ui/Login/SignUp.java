@@ -46,7 +46,7 @@ public class SignUp extends AppCompatActivity {
         // Instantiate retrofit interface
         apiServiceAuthentication = retrofit.create(ApiServiceAuthentication.class);
 
-        // Listening to the Login Button
+        // Listening to the Signup Button
         findViewById(R.id.SignUpButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
