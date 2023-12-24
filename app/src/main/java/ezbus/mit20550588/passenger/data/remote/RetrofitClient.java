@@ -1,12 +1,12 @@
 package ezbus.mit20550588.passenger.data.remote;
 
+import static ezbus.mit20550588.passenger.util.Constants.BASE_URL;
+
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 // RetrofitClient.java
 public class RetrofitClient {
-    private static final String BASE_URL = "http://10.0.2.2:3000/";
-
     private static Retrofit retrofit;
 
     public static Retrofit getClient() {

@@ -2,13 +2,16 @@ package ezbus.mit20550588.passenger.data.model;
 
 import androidx.annotation.NonNull;
 
-public class TicketModel {
+import java.io.Serializable;
+
+public class TicketModel implements Serializable {
     private String routeName;
     private String routeNumber;
     private String arrivalStopName;
     private String arrivalStopTime;
     private String departureStopName;
     private String departureStopTime;
+    private Double farePrice;
 
     public TicketModel(String routeName, String routeNumber, String arrivalStopName, String arrivalStopTime, String departureStopName, String departureStopTime) {
         this.routeName = routeName;
@@ -17,6 +20,7 @@ public class TicketModel {
         this.arrivalStopTime = arrivalStopTime;
         this.departureStopName = departureStopName;
         this.departureStopTime = departureStopTime;
+      //  this.farePrice = farePrice;
     }
 
     public String getRouteName() {
@@ -65,6 +69,14 @@ public class TicketModel {
 
     public void setDepartureStopTime(String departureStopTime) {
         this.departureStopTime = departureStopTime;
+    }
+
+    public Double getFarePrice() {
+        return farePrice;
+    }
+
+    public void setFarePrice(Double farePrice) {
+        this.farePrice = farePrice;
     }
 
     @NonNull
