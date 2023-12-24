@@ -3,14 +3,9 @@ package ezbus.mit20550588.passenger.data.repository;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.google.gson.JsonElement;
-
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
 
-import ezbus.mit20550588.passenger.data.model.BusModel;
-import ezbus.mit20550588.passenger.data.remote.ApiServiceBus;
+import ezbus.mit20550588.passenger.data.network.ApiServiceBus;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;

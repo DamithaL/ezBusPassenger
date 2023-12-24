@@ -3,8 +3,8 @@ package ezbus.mit20550588.passenger.data.viewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;
 
-import ezbus.mit20550588.passenger.data.remote.ApiServiceBus;
-import ezbus.mit20550588.passenger.data.remote.RetrofitClient;
+import ezbus.mit20550588.passenger.data.network.ApiServiceBus;
+import ezbus.mit20550588.passenger.data.network.RetrofitClient;
 import ezbus.mit20550588.passenger.data.repository.PaymentRepository;
 
 public class PaymentViewModel extends ViewModel {

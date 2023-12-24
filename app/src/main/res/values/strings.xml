@@ -3,6 +3,8 @@
     <!-- Application  -->
     <string name="main_app_name">EZBus</string>
     <string name="sub_app_name">Passenger</string>
+    <string name="splash_screen_logo_description">App logo - an image of a bus</string>
+    <string name="splash_screen_loading_text">Loading EZBus Passenger...</string>
 
     <!-- Login screens  -->
     <string name="app_name">ezBusPassengerApplication</string>
@@ -21,6 +23,14 @@
     <!-- Login successful screen   -->
     <string name="login_results_welcome_text_1">Great to see you again!</string>
     <string name="login_results_welcome_text_2">You\'ve logged in successfully.</string>
+
+    <!-- Sign up screen  -->
+    <string name="sign_up_text_input_hint_name">Please enter your name</string>
+    <string name="sign_up_text_input_hint_email">Please enter your email</string>
+    <string name="sign_up_text_input_hint_password">Please enter your password</string>
+    <string name="sign_up_text_input_hint_password_confirm">Please confirm your password</string>
+    <string name="signup_results_welcome_text_1">Welcome to our community!</string>
+    <string name="signup_results_welcome_text_2">You\'ve signed up successfully.</string>
 
     <!-- Map screen   -->
     <string name="MAPS_API_KEY">AIzaSyDDTamV9IieqbDXoWKxjEHmBo7jRcNuhFg</string>

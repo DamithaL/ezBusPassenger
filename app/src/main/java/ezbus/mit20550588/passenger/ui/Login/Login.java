@@ -1,44 +1,51 @@
 package ezbus.mit20550588.passenger.ui.Login;
 
-import static androidx.constraintlayout.widget.Constraints.TAG;
+import static ezbus.mit20550588.passenger.util.Constants.Log;
+import static ezbus.mit20550588.passenger.util.Constants.AUTH_SUCCESS_DIALOG_DURATION;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Editable;
 import android.text.Html;
+import android.text.InputType;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.TextWatcher;
 import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
-import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
+
 import java.util.HashMap;
+import java.util.Map;
 
 import ezbus.mit20550588.passenger.R;
-import ezbus.mit20550588.passenger.data.model.UserModel;
-import ezbus.mit20550588.passenger.data.remote.ApiServiceAuthentication;
 import ezbus.mit20550588.passenger.data.viewModel.AuthResult;
 import ezbus.mit20550588.passenger.data.viewModel.AuthViewModel;
 import ezbus.mit20550588.passenger.ui.ForgotPassword.ForgotPassword;
 import ezbus.mit20550588.passenger.ui.MainActivity;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+import ezbus.mit20550588.passenger.util.UserStateManager;
+import ezbus.mit20550588.passenger.util.Validator;
 
 public class Login extends AppCompatActivity {
+
 
     private AuthViewModel authViewModel;
 
@@ -50,10 +57,6 @@ public class Login extends AppCompatActivity {
         initializeViewModel();
         initializeUI();
         setupClickListeners();
-
-//        authViewModel = new ViewModelProvider(this, new ViewModelFactory(userRepository)).get(AuthViewModel.class);
-
-
     }
 
     private void initializeViewModel() {
@@ -63,6 +66,16 @@ public class Login extends AppCompatActivity {
         authViewModel.getAuthResultLiveData().observe(this, authResult -> {
             if (authResult != null) {
                 handleAuthResult(authResult);
+            }
+        });
+
+        // Observe the error message LiveData
+        authViewModel.getErrorMessageLiveData().observe(this, errorMessage -> {
+            if (errorMessage != null) {
+                // Update your UI to display the error message (e.g., show a Toast or update a TextView)
+                TextView errorTextView = findViewById(R.id.errorMessageTextView);
+                errorTextView.setText(errorMessage);
+                //  showToast(errorMessage);
             }
         });
     }
@@ -77,6 +90,7 @@ public class Login extends AppCompatActivity {
             }
         });
     }
+
 
     private void initializeUI() {
         // EZBus Passenger app main text
@@ -141,64 +155,60 @@ public class Login extends AppCompatActivity {
     }
 
     private void LoginSubmit() {
-        EditText emailText = findViewById(R.id.editTextEmailAddress);
-        EditText passwordText = findViewById(R.id.editTextPassword);
+        TextInputEditText emailText = findViewById(R.id.editTextEmailAddress);
+        TextInputEditText passwordText = findViewById(R.id.editTextPassword);
+        TextInputLayout passwordTextInputLayout = findViewById(R.id.editTextPasswordInputLayout);
 
         String email = emailText.getText().toString();
         String password = passwordText.getText().toString();
 
         // Trigger login operation in ViewModel
-        authViewModel.loginUser(email, password);
+        authViewModel.loginUser(email, password, emailText, passwordText, passwordTextInputLayout);
 
-//        authViewModel.loginUser(email, password).observe(this, userModel -> {
-//            if (userModel != null) {
-//                handleLoginSuccess(userModel.getName());
-//            } else {
-//                handleLoginFailure();
-//            }
-//        });
-
-
-        Log.d(TAG, "Login button clicked");
+        Log("LoginSubmit", "Login button clicked");
 
 
     }
-
 
     private void handleAuthResult(AuthResult authResult) {
         if (authResult.getStatus() == AuthResult.Status.SUCCESS) {
-            // Authentication successful
-           // UserModel user = authResult.getUser();
-            handleLoginSuccess(authResult);
+            Log("handleAuthResult", "Login successful");
+
+            // Update the user login status
+            UserStateManager userManager = UserStateManager.getInstance(getApplicationContext());
+            userManager.setUserLoggedIn(true);
+
+            showLoginSuccessDialog(authResult.getUser().getName());
+
         } else {
             // Authentication failed, show an error message
-            String errorMessage = authResult.getErrorMessage();
-            handleLoginFailure(authResult);
+            showToast(authResult.getErrorMessage().toString());
+            Log("handleAuthResult", "Login failed with code: " + authResult.getErrorMessage());
         }
     }
 
-    private void handleLoginSuccess(AuthResult result) {
-        showLoginSuccessDialog(result.getUser().getName());
-        Log.d(TAG, "Login successful");
-
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                navigateToMainActivity();
-            }
-        }, 3000);
-    }
-
     private void showLoginSuccessDialog(String name) {
-        // Create a Dialog object
+
         Dialog dialog = new Dialog(Login.this);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
         dialog.setContentView(R.layout.rounded_alert_dialog);
 
-        TextView titleTextView = dialog.findViewById(R.id.titleTextView);
-        titleTextView.setText(getString(R.string.login_results_welcome_text_1) + " " + name);
-//                    TextView messageTextView = dialog.findViewById(R.id.messageTextView);
-//                    messageTextView.setText(result.getEmail());
+        TextView userNameText = dialog.findViewById(R.id.userNameText);
+        userNameText.setText(name);
+
+        // Get the root view of the activity
+        ViewGroup rootView = getWindow().getDecorView().findViewById(android.R.id.content);
+
+        // Show a semi-transparent overlay
+        View overlay = new View(Login.this);
+        overlay.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+        overlay.setBackgroundColor(Color.parseColor("#BF000000")); // #80 for 50% alpha
+
+        // Add the overlay to the root view
+        rootView.addView(overlay);
 
         dialog.show();
 
@@ -209,29 +219,9 @@ public class Login extends AppCompatActivity {
                 dialog.dismiss();
                 navigateToMainActivity();
             }
-        }, 3000); // 5000 milliseconds = 5 seconds
+        }, AUTH_SUCCESS_DIALOG_DURATION); // 5000 milliseconds = 5 seconds
 
 
-    }
-
-    private void handleLoginFailure(AuthResult error) {
-        showToast(error.getErrorMessage().toString());
-
-
-        Log.d(TAG, "Login failed with code: " + error.getErrorMessage());
-//        showToast(error.getErrorMessage().toString());
-
-//        if (responseCode == 401) {
-//            showToast("Invalid email or password");
-//        } else {
-//            showToast("Login failed with code: " + responseCode);
-//        }
-//        Log.d(TAG, "Login failed with code: " + responseCode);
-    }
-
-    private void handleNetworkFailure(String errorMessage) {
-        showToast("Connection failed: " + errorMessage);
-        Log.d(TAG, "Connection failed: " + errorMessage);
     }
 
     private void showToast(String message) {

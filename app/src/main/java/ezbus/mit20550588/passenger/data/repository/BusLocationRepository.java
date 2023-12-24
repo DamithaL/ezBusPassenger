@@ -13,8 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 import ezbus.mit20550588.passenger.data.model.BusLocationModel;
-import ezbus.mit20550588.passenger.data.model.BusModel;
-import ezbus.mit20550588.passenger.data.remote.ApiServiceBus;
+import ezbus.mit20550588.passenger.data.network.ApiServiceBus;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;

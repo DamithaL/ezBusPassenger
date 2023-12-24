@@ -7,6 +7,7 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -26,6 +27,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -109,11 +111,13 @@ import ezbus.mit20550588.passenger.data.model.TicketModel;
 import ezbus.mit20550588.passenger.data.viewModel.BusLocationViewModel;
 import ezbus.mit20550588.passenger.data.viewModel.PaymentViewModel;
 import ezbus.mit20550588.passenger.data.viewModel.RecentSearchViewModel;
+import ezbus.mit20550588.passenger.ui.Login.Login;
 import ezbus.mit20550588.passenger.ui.PurchaseTicket.CheckoutActivity;
 import ezbus.mit20550588.passenger.ui.PurchaseTicket.PurchaseTicket;
 import ezbus.mit20550588.passenger.ui.Settings.Settings;
 import ezbus.mit20550588.passenger.ui.adapters.PlacesAutoCompleteAdapter;
 import ezbus.mit20550588.passenger.ui.adapters.RecentSearchAdapter;
+import ezbus.mit20550588.passenger.util.UserStateManager;
 
 
 public class MainActivity
@@ -136,6 +140,7 @@ public class MainActivity
     // -------------- variables -------------- //
 
     // ---- permissions ---- //
+    private SharedPreferences preferences;
     private Boolean mLocationPermissionsGranted = false;
 
     // ---- searches ---- //
@@ -178,6 +183,8 @@ public class MainActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
+
+        authentication();
 
         checkPermissions();
 
@@ -452,6 +459,52 @@ public class MainActivity
 
 
     // ------------------------------- INITIALIZATION METHODS ------------------------------- //
+    private void authentication(){
+
+        UserStateManager userManager = UserStateManager.getInstance(getApplicationContext());
+
+        // Set up an OnPreDrawListener to the root view.
+        final View content = findViewById(android.R.id.content);
+        content.getViewTreeObserver().addOnPreDrawListener(
+                new ViewTreeObserver.OnPreDrawListener() {
+                    @Override
+                    public boolean onPreDraw() {
+                        // Check whether the initial data is ready.
+//                        if (mViewModel.isReady()) {
+                        // Check if the user is authenticated
+
+                        if (userManager.isUserLoggedIn()) {
+                            // User is authenticated, proceed to the main part of the app
+                            // The content is ready. Start drawing.
+                            content.getViewTreeObserver().removeOnPreDrawListener(this);
+                            return true;
+                        } else {
+                            // User is not authenticated, start the authentication flow
+                            Intent authIntent = new Intent(MainActivity.this, Login.class);
+                            startActivity(authIntent);
+                            // Finish the MainActivity to prevent it from being shown to the user
+                            finish();
+                            // Return false to suspend drawing until the authentication flow completes
+                            return false;
+                        }
+
+//                        } else {
+//                            // The content isn't ready. Suspend.
+//                            return false;
+//                        }
+                    }
+                });
+    }
+
+    private boolean isUserAuthenticated() {
+        // Retrieve the authentication token from SharedPreferences
+        SharedPreferences preferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
+        String authToken = preferences.getString("authToken", "");
+
+        // Check if the token exists and is not empty
+        return !TextUtils.isEmpty(authToken);
+    }
+
     private void uiInitializations() {
         initSearchAutoComplete();
         initRecentSearches();
@@ -649,8 +702,8 @@ public class MainActivity
             @Override
             public void onClick(View v) {
                 // Open the SettingsActivity when the fab is clicked
-               // Intent intent = new Intent(MainActivity.this, Settings.class);
-                Intent intent = new Intent(MainActivity.this, CheckoutActivity.class);
+               Intent intent = new Intent(MainActivity.this, Settings.class);
+               // Intent intent = new Intent(MainActivity.this, CheckoutActivity.class);
                 startActivity(intent);
             }
         });

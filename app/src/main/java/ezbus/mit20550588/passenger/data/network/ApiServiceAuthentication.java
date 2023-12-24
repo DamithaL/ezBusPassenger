@@ -1,6 +1,4 @@
-package ezbus.mit20550588.passenger.data.remote;
-
-import java.util.HashMap;
+package ezbus.mit20550588.passenger.data.network;
 
 import ezbus.mit20550588.passenger.data.model.UserModel;
 

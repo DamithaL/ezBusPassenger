@@ -1,4 +1,4 @@
-package ezbus.mit20550588.passenger.data.remote;
+package ezbus.mit20550588.passenger.data.network;
 
 import static ezbus.mit20550588.passenger.util.Constants.BASE_URL;
 

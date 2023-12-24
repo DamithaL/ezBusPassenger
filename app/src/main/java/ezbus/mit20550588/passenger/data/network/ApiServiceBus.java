@@ -1,12 +1,10 @@
-package ezbus.mit20550588.passenger.data.remote;
+package ezbus.mit20550588.passenger.data.network;
 
 import java.util.List;
 import java.util.Set;
 
 
 import ezbus.mit20550588.passenger.data.model.BusLocationModel;
-import ezbus.mit20550588.passenger.data.model.BusModel;
-import ezbus.mit20550588.passenger.data.model.UserModel;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;

@@ -1,61 +1,83 @@
 package ezbus.mit20550588.passenger.ui.Login;
 
-import androidx.appcompat.app.AppCompatActivity;
+import static ezbus.mit20550588.passenger.util.Constants.Log;
+import static ezbus.mit20550588.passenger.util.Constants.AUTH_SUCCESS_DIALOG_DURATION;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+
+import android.app.Dialog;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
-import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.HashMap;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import ezbus.mit20550588.passenger.R;
-import ezbus.mit20550588.passenger.data.remote.ApiServiceAuthentication;
+import ezbus.mit20550588.passenger.data.network.ApiServiceAuthentication;
+import ezbus.mit20550588.passenger.data.viewModel.AuthResult;
+import ezbus.mit20550588.passenger.data.viewModel.AuthViewModel;
 import ezbus.mit20550588.passenger.ui.MainActivity;
 import ezbus.mit20550588.passenger.ui.Settings.PrivacyPolicyActivity;
 import ezbus.mit20550588.passenger.ui.Settings.TermConditions;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import ezbus.mit20550588.passenger.util.UserStateManager;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class SignUp extends AppCompatActivity {
-    private static final String TAG = MainActivity.class.getSimpleName();
-    private Retrofit retrofit;
-    private ApiServiceAuthentication apiServiceAuthentication;
-    private String BASE_URL = "http://10.0.2.2:3000";
+
+    private AuthViewModel authViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
 
-        // For Authentication methods with Server
-        retrofit = new Retrofit.Builder().baseUrl(BASE_URL).addConverterFactory(GsonConverterFactory.create()).build();
+        initializeViewModel();
+        initializeUI();
+        setupClickListeners();
 
-        // Instantiate retrofit interface
-        apiServiceAuthentication = retrofit.create(ApiServiceAuthentication.class);
+    }
 
-        // Listening to the Signup Button
-        findViewById(R.id.SignUpButton).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
 
-//                SignupSubmit();
+
+    private void initializeViewModel() {
+        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+
+        // Observe authentication result
+        authViewModel.getAuthResultLiveData().observe(this, authResult -> {
+            if (authResult != null) {
+                handleAuthResult(authResult);
             }
         });
 
+        // Observe the error message LiveData
+        authViewModel.getErrorMessageLiveData().observe(this, errorMessage -> {
+            if (errorMessage != null) {
+                // Update your UI to display the error message (e.g., show a Toast or update a TextView)
+                TextView errorTextView = findViewById(R.id.errorMessageTextView);
+                errorTextView.setText(errorMessage);
+                //  showToast(errorMessage);
+            }
+        });
+    }
 
+    private void initializeUI() {
 
         // EZBus Passenger app main text
         TextView textView0 = findViewById(R.id.main_app_name);
@@ -73,8 +95,8 @@ public class SignUp extends AppCompatActivity {
         ClickableSpan clickableSpanTOS = new ClickableSpan() {
             @Override
             public void onClick(View view) {
-                     Intent intent = new Intent(getApplicationContext(),
-                             TermConditions.class);
+                Intent intent = new Intent(getApplicationContext(),
+                        TermConditions.class);
                 startActivity(intent);
             }
         };
@@ -154,57 +176,113 @@ public class SignUp extends AppCompatActivity {
         // Make the TextView clickable
         loginTextView.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
 
-
-
-        // Verify email address
-//        Button SignUpButton = (Button) this.findViewById(R.id.SignUpButton);
-//        SignUpButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Intent intent = new Intent(getApplicationContext(),
-//                        SignUpEmailVerification.class);
-//                startActivity(intent);
-//            }
-//        });
     }
 
-//    private void SignupSubmit() {
-//        final EditText nameText = findViewById(R.id.editTextName);
-//        final EditText emailText = findViewById(R.id.editTextEmailAddress);
-//        final EditText passwordText = findViewById(R.id.editTextPassword);
-//
-//        HashMap<String, String> map = new HashMap<>();
-//
-//        map.put("name", nameText.getText().toString());
-//        map.put("email", emailText.getText().toString());
-//        map.put("password", passwordText.getText().toString());
-//
-//        Call<Void> call = apiServiceAuthentication.executeSignup(map);
-//
-//        Log.d(TAG, "Submit button clicked");
-//        Log.d(TAG, "map: "+ map);
-//
-//        call.enqueue(new Callback<Void>() {
-//            @Override
-//            public void onResponse(Call<Void> call, Response<Void> response) {
-//                if (response.code() == 201) {
-//                    Toast.makeText(SignUp.this, "Signed up successfully", Toast.LENGTH_LONG).show();
-//                } else if (response.code() == 208) {
-//                    Toast.makeText(SignUp.this, "Already registered", Toast.LENGTH_LONG).show();
-//                }
-//                else if (response.code() == 500) {
-//                    Toast.makeText(SignUp.this, "Error", Toast.LENGTH_LONG).show();
-//                }
-//
-//            }
-//
-//            @Override
-//            public void onFailure(Call<Void> call, Throwable t) {
-//                Toast.makeText(SignUp.this, t.getMessage(), Toast.LENGTH_LONG).show();
-//            }
-//        });
-//
-//
-//
-//    }
+    private void setupClickListeners() {
+        // Listening to the Signup Button
+        findViewById(R.id.SignUpButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                SignupSubmit();
+            }
+        });
+    }
+
+
+
+    private void SignupSubmit() {
+        TextInputEditText nameText = findViewById(R.id.editTextName);
+        TextInputEditText emailText = findViewById(R.id.editTextEmailAddress);
+        TextInputEditText passwordText = findViewById(R.id.editTextPassword);
+        TextInputEditText confirmPasswordText = findViewById(R.id.editTextConfirmPassword);
+
+        TextInputLayout passwordTextInputLayout = findViewById(R.id.editTextPasswordInputLayout);
+        TextInputLayout confirmPasswordTextInputLayout = findViewById(R.id.editTextConfirmPasswordInputLayout);
+
+        String name = nameText.getText().toString();
+        String email = emailText.getText().toString();
+        String password = passwordText.getText().toString();
+        String confirmPassword = confirmPasswordText.getText().toString();
+
+        // Trigger login operation in ViewModel
+        authViewModel.registerUser(name, email, password,confirmPassword, nameText, emailText,passwordText, confirmPasswordText, passwordTextInputLayout, confirmPasswordTextInputLayout);
+
+        Log("SignupSubmit", "SignUp button clicked");
+
+    }
+
+
+    private void handleAuthResult(AuthResult authResult) {
+        if (authResult.getStatus() == AuthResult.Status.SUCCESS) {
+            Log("handleAuthResult", "Login successful");
+
+            // Update the user login status
+            UserStateManager userManager = UserStateManager.getInstance(getApplicationContext());
+            userManager.setUserLoggedIn(true);
+
+            showLoginSuccessDialog(authResult.getUser().getName());
+
+        } else {
+            // Authentication failed, show an error message
+            showToast(authResult.getErrorMessage().toString());
+            Log("handleAuthResult", "Login failed with code: " + authResult.getErrorMessage());
+        }
+    }
+
+    private void showLoginSuccessDialog(String name) {
+        Dialog dialog = new Dialog(SignUp.this);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        dialog.setContentView(R.layout.rounded_alert_dialog);
+
+        TextView welcomeText = dialog.findViewById(R.id.welcomeText);
+        welcomeText.setText(getString(R.string.signup_results_welcome_text_1));
+        TextView messageText = dialog.findViewById(R.id.messageTextView);
+        messageText.setText(getString(R.string.signup_results_welcome_text_2));
+        TextView userNameText = dialog.findViewById(R.id.userNameText);
+        userNameText.setText(name);
+
+        // Get the root view of the activity
+        ViewGroup rootView = getWindow().getDecorView().findViewById(android.R.id.content);
+
+        // Show a semi-transparent overlay
+        View overlay = new View(SignUp.this);
+        overlay.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+        overlay.setBackgroundColor(Color.parseColor("#BF000000")); // #80 for 50% alpha
+
+        // Add the overlay to the root view
+        rootView.addView(overlay);
+
+        dialog.show();
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                dialog.dismiss();
+                navigateToMainActivity();
+            }
+        }, AUTH_SUCCESS_DIALOG_DURATION); // 5000 milliseconds = 5 seconds
+
+
+    }
+
+    private void showToast(String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(SignUp.this, message, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void navigateToMainActivity() {
+        Intent intent = new Intent(SignUp.this, MainActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+
 }

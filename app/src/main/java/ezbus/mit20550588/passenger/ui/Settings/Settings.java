@@ -14,8 +14,12 @@ import com.google.android.material.button.MaterialButton;
 
 import ezbus.mit20550588.passenger.R;
 import ezbus.mit20550588.passenger.ui.Login.Login;
+import ezbus.mit20550588.passenger.util.UserStateManager;
 
 public class Settings extends AppCompatActivity {
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,14 +125,17 @@ public class Settings extends AppCompatActivity {
 
         // Log out button clicked
         Button logOutButton = findViewById(R.id.logoutButton);
-
+        UserStateManager userManager = UserStateManager.getInstance(getApplicationContext());
         logOutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO Auto-generated method stub
-                Intent intent = new Intent(getApplicationContext(),
-                        Login.class);
-                startActivity(intent);
+                // Update the user login status
+                userManager.setUserLoggedIn(false);
+
+                // Navigate to the login activity
+                Intent loginIntent = new Intent(getApplicationContext(), Login.class);
+                startActivity(loginIntent);
+                finish(); // Optionally, finish the current activity
             }
         });
 

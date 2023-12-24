@@ -1,4 +1,4 @@
-package ezbus.mit20550588.passenger.data.remote;
+package ezbus.mit20550588.passenger.data.network;
 
 public interface FareCallback {
     void onFareReceived(double fare);

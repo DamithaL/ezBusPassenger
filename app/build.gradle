@@ -82,6 +82,7 @@ dependencies {
     // Stripe Android SDK
     implementation 'com.stripe:stripe-android:20.36.0'
 
+    implementation 'at.favre.lib:bcrypt:0.7.0'
 
 
 }

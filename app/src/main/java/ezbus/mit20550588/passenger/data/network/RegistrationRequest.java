@@ -1,4 +1,4 @@
-package ezbus.mit20550588.passenger.data.remote;
+package ezbus.mit20550588.passenger.data.network;
 
 public class RegistrationRequest {
     private String name;

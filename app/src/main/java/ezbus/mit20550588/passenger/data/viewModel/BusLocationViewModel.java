@@ -1,8 +1,5 @@
 package ezbus.mit20550588.passenger.data.viewModel;
 
-import android.app.Application;
-
-import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;
 
@@ -11,14 +8,9 @@ import java.util.Set;
 
 
 import ezbus.mit20550588.passenger.data.model.BusLocationModel;
-import ezbus.mit20550588.passenger.data.model.BusModel;
-import ezbus.mit20550588.passenger.data.model.BusStopModel;
-import ezbus.mit20550588.passenger.data.remote.ApiServiceAuthentication;
-import ezbus.mit20550588.passenger.data.remote.ApiServiceBus;
-import ezbus.mit20550588.passenger.data.remote.RetrofitClient;
+import ezbus.mit20550588.passenger.data.network.ApiServiceBus;
+import ezbus.mit20550588.passenger.data.network.RetrofitClient;
 import ezbus.mit20550588.passenger.data.repository.BusLocationRepository;
-import ezbus.mit20550588.passenger.data.repository.RecentSearchRepository;
-import ezbus.mit20550588.passenger.data.repository.UserRepository;
 
 public class BusLocationViewModel extends ViewModel {
 //
