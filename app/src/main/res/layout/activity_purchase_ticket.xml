@@ -169,7 +169,23 @@
                 app:rippleColor="@color/quantum_vanillagreen300" />
 
 
+
         </LinearLayout>
+
+        <!-- Error Message text  -->
+        <TextView
+            android:id="@+id/errorMessageTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="20dp"
+            android:gravity="center"
+            android:textSize="14sp"
+            android:textColor="@color/color_red"
+            android:textStyle="bold"
+            android:text="" />
+
+
 
 
     </LinearLayout>

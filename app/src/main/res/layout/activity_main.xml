@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -451,9 +452,10 @@
         android:layout_alignParentBottom="true"
         android:layout_margin="10dp"
         android:background="@drawable/rounded_cards_bg"
-        android:elevation="10dp"
+        android:elevation="20dp"
         android:padding="20dp"
-        android:visibility="gone">
+        android:visibility="gone"
+        >
 
 
         <!-- Close button -->

@@ -74,7 +74,9 @@ public class UserRepository {
             public void onResponse(Call<UserModel> call, Response<UserModel> response) {
                 if (response.isSuccessful()) {
                     if (response.code() == 201){
-                        authResultLiveData.setValue(new AuthResult(AuthResult.Status.SUCCESS, response.body(), null));
+
+                        UserModel user = new UserModel(name, email, password, response.body().getToken());
+                        authResultLiveData.setValue(new AuthResult(AuthResult.Status.SUCCESS, user, null));
                     }
                     if (response.code() == 208){
                         String errorMessage = "The email is already registered. Forgot your password? Reset it or sign in.";

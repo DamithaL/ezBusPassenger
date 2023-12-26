@@ -175,10 +175,16 @@ public class Login extends AppCompatActivity {
             Log("handleAuthResult", "Login successful");
 
             // Update the user login status
-            UserStateManager userManager = UserStateManager.getInstance(getApplicationContext());
+            UserStateManager userManager = UserStateManager.getInstance();
+
             userManager.setUserLoggedIn(true);
+            userManager.setUser(authResult.getUser());
+
+            Log("Signed up","NEW USER", userManager.getUser().toString());
 
             showLoginSuccessDialog(authResult.getUser().getName());
+            Log("handleAuthResult", "USER", authResult.getUser().toString());
+            Log("handleAuthResult", "HASHED PASSWORD", authResult.getUser().getHashedPassword());
 
         } else {
             // Authentication failed, show an error message

@@ -18,12 +18,15 @@ import java.util.Date;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import ezbus.mit20550588.passenger.data.dao.PurchasedTicketDao;
 import ezbus.mit20550588.passenger.data.dao.RecentSearchDao;
+import ezbus.mit20550588.passenger.data.model.PurchasedTicketModel;
 import ezbus.mit20550588.passenger.data.model.RecentSearchModel;
+import ezbus.mit20550588.passenger.data.model.TicketModel;
 import ezbus.mit20550588.passenger.data.repository.RecentSearchRepository;
 import ezbus.mit20550588.passenger.util.Converters;
 
-@Database(entities = {RecentSearchModel.class}, version = 1, exportSchema = false)
+@Database(entities = {RecentSearchModel.class, PurchasedTicketModel.class}, version = 1, exportSchema = false)
 @TypeConverters(Converters.class)
 public abstract class AppDatabase extends RoomDatabase {
 
@@ -31,13 +34,15 @@ public abstract class AppDatabase extends RoomDatabase {
 
     public abstract RecentSearchDao recentSearchDao();
 
+    public abstract PurchasedTicketDao purchasedTicketDao();
+
     public static synchronized AppDatabase getInstance(Context context) {
         if (instance == null) {
             instance = Room.databaseBuilder(
-                    context.getApplicationContext(),
-                    AppDatabase.class,
-                    "app_database"
-            ).fallbackToDestructiveMigration()
+                            context.getApplicationContext(),
+                            AppDatabase.class,
+                            "app_database"
+                    ).fallbackToDestructiveMigration()
                     .addCallback(roomCallback).build();
         }
         return instance;
@@ -57,11 +62,13 @@ public abstract class AppDatabase extends RoomDatabase {
     private static class PlaceHolderDataAsyncTask {
         private Executor executor = Executors.newSingleThreadExecutor();
         private RecentSearchDao recentSearchDao;
+        private PurchasedTicketDao purchasedTicketDao;
         private static final int MAX_RECENT_SEARCHES = 30;
 
 
         public PlaceHolderDataAsyncTask(AppDatabase db) {
             recentSearchDao = db.recentSearchDao();
+            purchasedTicketDao = db.purchasedTicketDao();
         }
 
         public void performBackgroundTask() {
@@ -76,10 +83,11 @@ public abstract class AppDatabase extends RoomDatabase {
                 @Override
                 public void run() {
                     recentSearchDao.insertRecentSearch(new RecentSearchModel("Your recent search", sampleLatLng, sampleSearchDate));
-
-                }
+                                    }
             });
         }
+
+
 
     }
 

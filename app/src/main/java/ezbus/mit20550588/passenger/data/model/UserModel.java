@@ -8,26 +8,33 @@ import java.io.Serializable;
 
 public class UserModel implements Serializable {
 
-    private final String userId;
     private final String name;
     private final String email;
-    private final String hashedPassword;  // Store the hashed password
+    private String hashedPassword;  // Store the hashed password
+    private String token;
 
-    public UserModel(String userId, String name, String email, String password) {
+    public UserModel(String name, String email, String password) {
 
         // Validate inputs here
-        if (userId == null || name == null || email == null || password == null) {
+        if (name == null || email == null || password == null) {
             throw new IllegalArgumentException("All fields must be provided");
         }
 
-        this.userId = userId;
         this.name = name;
         this.email = email;
         this.hashedPassword = hashPassword(password);  // Hash and store the password
     }
 
-    public String getUserId() {
-        return userId;
+    // to get the user details from server
+    public UserModel(String name, String email, String password, String token) {
+        this.name = name;
+        this.email = email;
+        this.hashedPassword = hashPassword(password);
+        this.token = token;
+    }
+
+    public String getToken() {
+        return token;
     }
 
     public String getName() {
@@ -50,5 +57,14 @@ public class UserModel implements Serializable {
     public boolean checkPassword(String candidatePassword) {
         // Check if the entered password matches the hashed password
         return BCrypt.checkpw(candidatePassword, hashedPassword);
+    }
+
+    @Override
+    public String toString() {
+        return "UserModel{" +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", hashedPassword='" + hashedPassword + '\'' +
+                '}';
     }
 }

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--  Valid Ticket card -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:layout_marginStart="20dp"
+    android:layout_marginEnd="20dp"
+    android:layout_marginBottom="20dp"
+    android:background="@drawable/rounded_edittext_bg"
+    android:backgroundTint="#ABFADA"
+    android:elevation="20dp"
+    android:orientation="vertical"
+    android:paddingTop="25dp"
+    android:paddingHorizontal="25dp"
+    android:paddingBottom="20dp">
+
+
+    <TextView
+        android:id="@+id/routeNameNumberTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="120 | Maharagama - Colombo New Road"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/fromTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="From: Maharagama bus stand"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/toTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="To: Colombo campus"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/purchasedDateTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="Purchased on: 26.12.2023"
+        android:textSize="14sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="100"
+        android:orientation="horizontal">
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_weight="50">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/redeemButton"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:paddingStart="35dp"
+                android:paddingEnd="35dp"
+                android:text="REDEEM"
+                android:textAllCaps="false"
+                app:cornerRadius="30dp"
+                android:backgroundTint="#CA5454"
+                app:rippleColor="@color/quantum_vanillagreen300" />
+        </RelativeLayout>
+
+
+        <TextView
+            android:id="@+id/ticketPriceTextView"
+            android:layout_weight="50"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:ellipsize="end"
+            android:gravity="end"
+            android:maxLines="1"
+            android:text="Rs. 20.00"
+            android:textStyle="bold"
+            android:textSize="22sp" />
+
+
+    </LinearLayout>
+
+
+
+</LinearLayout>

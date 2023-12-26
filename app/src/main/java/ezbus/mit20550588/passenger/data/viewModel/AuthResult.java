@@ -2,8 +2,8 @@ package ezbus.mit20550588.passenger.data.viewModel;
 
 import ezbus.mit20550588.passenger.data.model.UserModel;
 
-public class AuthResult {public enum Status { SUCCESS, ERROR }
-
+public class AuthResult {
+    public enum Status {SUCCESS, ERROR}
     private final Status status;
     private final UserModel user;
     private final String errorMessage;
@@ -25,4 +25,7 @@ public class AuthResult {public enum Status { SUCCESS, ERROR }
     public String getErrorMessage() {
         return errorMessage;
     }
+
+
 }
+

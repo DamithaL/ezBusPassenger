@@ -8,6 +8,8 @@ public class MyApp extends Application {
     public void onCreate() {
         super.onCreate();
 
+        UserStateManager.init(getApplicationContext());
+
         // Initialize the Stripe SDK
         PaymentConfiguration.init(
                 getApplicationContext(),

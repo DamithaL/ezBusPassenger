@@ -3,10 +3,13 @@ package ezbus.mit20550588.passenger.util;
 import androidx.room.TypeConverter;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.gson.Gson;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+
+import ezbus.mit20550588.passenger.data.model.TicketModel;
 
 public class Converters {
     @TypeConverter
@@ -76,5 +79,17 @@ public class Converters {
         }
 
         return null;
+    }
+
+    @TypeConverter
+    public static TicketModel fromJsonString(String value) {
+        // Convert JSON string to TicketModel
+        return new Gson().fromJson(value, TicketModel.class);
+    }
+
+    @TypeConverter
+    public static String toJsonString(TicketModel ticket) {
+        // Convert TicketModel to JSON string
+        return new Gson().toJson(ticket);
     }
 }

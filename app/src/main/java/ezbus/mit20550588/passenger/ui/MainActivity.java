@@ -6,6 +6,7 @@ import static ezbus.mit20550588.passenger.util.Converters.timestampToFormattedTi
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -14,6 +15,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Geocoder;
@@ -22,12 +24,14 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -109,14 +113,16 @@ import ezbus.mit20550588.passenger.data.model.BusLocationModel;
 import ezbus.mit20550588.passenger.data.model.RecentSearchModel;
 import ezbus.mit20550588.passenger.data.model.TicketModel;
 import ezbus.mit20550588.passenger.data.viewModel.BusLocationViewModel;
-import ezbus.mit20550588.passenger.data.viewModel.PaymentViewModel;
+
 import ezbus.mit20550588.passenger.data.viewModel.RecentSearchViewModel;
+import ezbus.mit20550588.passenger.data.viewModel.TicketViewModel;
 import ezbus.mit20550588.passenger.ui.Login.Login;
-import ezbus.mit20550588.passenger.ui.PurchaseTicket.CheckoutActivity;
 import ezbus.mit20550588.passenger.ui.PurchaseTicket.PurchaseTicket;
 import ezbus.mit20550588.passenger.ui.Settings.Settings;
 import ezbus.mit20550588.passenger.ui.adapters.PlacesAutoCompleteAdapter;
 import ezbus.mit20550588.passenger.ui.adapters.RecentSearchAdapter;
+import ezbus.mit20550588.passenger.util.DateUtils;
+import ezbus.mit20550588.passenger.util.FullWidthDialog;
 import ezbus.mit20550588.passenger.util.UserStateManager;
 
 
@@ -168,7 +174,7 @@ public class MainActivity
     private Map<String, Marker> busMarkers = new HashMap<>();
 
     // ---- bus fare ---- //
-    private PaymentViewModel paymentViewModel;
+    private TicketViewModel ticketViewModel;
     private ArrayList<TicketModel> ticketList = new ArrayList<>();
 
     // ---- map full screen ---- //
@@ -461,7 +467,7 @@ public class MainActivity
     // ------------------------------- INITIALIZATION METHODS ------------------------------- //
     private void authentication(){
 
-        UserStateManager userManager = UserStateManager.getInstance(getApplicationContext());
+        UserStateManager userManager = UserStateManager.getInstance();
 
         // Set up an OnPreDrawListener to the root view.
         final View content = findViewById(android.R.id.content);
@@ -514,7 +520,7 @@ public class MainActivity
         initFullScreenMapButton();
         initDirectionsButton();
         initBusLocationView();
-        initPaymentView();
+        initTicketView();
         initSourceLocationBar();
         initDestinationBar();
         initBackButton();
@@ -719,6 +725,11 @@ public class MainActivity
 
                 Log("initCurrentLocationButton", "clicked gps icon");
                 getDeviceLocation();
+                if (CurrentLocationLatLng != null ){
+                    myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(CurrentLocationLatLng,
+                            DEFAULT_ZOOM));
+                }
+
             }
         });
 
@@ -846,9 +857,9 @@ public class MainActivity
         busLocationViewModel = new ViewModelProvider(this).get(BusLocationViewModel.class);
     }
 
-    private void initPaymentView() {
+    private void initTicketView() {
         // Initialize ViewModel and Repository
-        paymentViewModel = new ViewModelProvider(this).get(PaymentViewModel.class);
+        ticketViewModel = new ViewModelProvider(this).get(TicketViewModel.class);
     }
 
     private void initSourceLocationBar() {
@@ -1793,19 +1804,21 @@ public class MainActivity
 
         //  getMostAvailableRoute(origin, destination);
 
-        // Time to look for
-        // Get tomorrow's date
-        Calendar tomorrow = Calendar.getInstance();
-        tomorrow.add(Calendar.DAY_OF_YEAR, 1);
+//        // Time to look for
+//        // Get tomorrow's date
+//        Calendar tomorrow = Calendar.getInstance();
+//        tomorrow.add(Calendar.DAY_OF_YEAR, 1);
+//
+//        // Set the time to 12:00 noon
+//        tomorrow.set(Calendar.HOUR_OF_DAY, 12);
+//        tomorrow.set(Calendar.MINUTE, 0);
+//        tomorrow.set(Calendar.SECOND, 0);
+//        tomorrow.set(Calendar.MILLISECOND, 0);
+//
+//        // Convert the date to a Unix timestamp
+//        long timestampInSeconds = tomorrow.getTimeInMillis() / 1000;
 
-        // Set the time to 12:00 noon
-        tomorrow.set(Calendar.HOUR_OF_DAY, 12);
-        tomorrow.set(Calendar.MINUTE, 0);
-        tomorrow.set(Calendar.SECOND, 0);
-        tomorrow.set(Calendar.MILLISECOND, 0);
-
-        // Convert the date to a Unix timestamp
-        long timestampInSeconds = tomorrow.getTimeInMillis() / 1000;
+        long timestampInSeconds = DateUtils.getTomorrowNoonTimestamp();
 
         // Construct the URL for the Google Directions API request
         String apiKey = "AIzaSyDDTamV9IieqbDXoWKxjEHmBo7jRcNuhFg"; // Replace with your actual API key
@@ -2409,10 +2422,10 @@ public class MainActivity
         Log("getFarePrice", "Started");
 
         // Trigger the request to fetch bus locations
-        paymentViewModel.getFarePrice(routeId, startBusStop, endBusStop);
+        ticketViewModel.getFarePrice(routeId, startBusStop, endBusStop);
 
         // Observe LiveData
-        paymentViewModel.getFarePriceLiveData().observe(this, fare -> {
+        ticketViewModel.getFarePriceLiveData().observe(this, fare -> {
             Log("getFarePrice", "Observe LiveData", String.valueOf(fare));
             try {
                 Log("getFarePrice", "fare price received");
@@ -2422,7 +2435,7 @@ public class MainActivity
             }
         });
 
-        paymentViewModel.getErrorLiveData().observe(this, errorMessage -> {
+        ticketViewModel.getErrorLiveData().observe(this, errorMessage -> {
             Log("getFarePrice", "Handle errors", errorMessage);
         });
     }
@@ -2637,18 +2650,36 @@ public class MainActivity
 
     private void showBusDetails(BusLocationModel bus) {
 
+        FullWidthDialog dialog = new FullWidthDialog(this);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        dialog.setContentView(R.layout.bus_details_layout);
+
+        ImageView busDetails_Image = dialog.findViewById(R.id.busDetails_Image);
+        TextView busDetails_route = dialog.findViewById(R.id.busDetails_Route);
+        TextView busDetails_VehicleNumber = dialog.findViewById(R.id.busDetails_VehicleNumber);
+        TextView busDetails_GetOnPlace = dialog.findViewById(R.id.busDetails_GetOnPlace);
+        TextView busDetails_GetOnTime = dialog.findViewById(R.id.busDetails_GetOnTime);
+        TextView busDetails_GetDownPlace = dialog.findViewById(R.id.busDetails_GetDownPlace);
+        TextView busDetails_GetDownTime = dialog.findViewById(R.id.busDetails_GetDownTime);
+        TextView busDetails_TicketPrice = dialog.findViewById(R.id.busDetails_TicketPrice);
+        ImageButton busDetails_CloseButton = dialog.findViewById(R.id.busDetails_CloseButton);
+        Button busDetails_purchaseTicketButton = dialog.findViewById(R.id.purchaseTicketButton);
+
+
+
         // Initiate the views
-        RelativeLayout busDetails_RelativeLayout = findViewById(R.id.busDetails_RelativeLayout);
-        ImageView busDetails_Image = findViewById(R.id.busDetails_Image);
-        TextView busDetails_route = findViewById(R.id.busDetails_Route);
-        TextView busDetails_VehicleNumber = findViewById(R.id.busDetails_VehicleNumber);
-        TextView busDetails_GetOnPlace = findViewById(R.id.busDetails_GetOnPlace);
-        TextView busDetails_GetOnTime = findViewById(R.id.busDetails_GetOnTime);
-        TextView busDetails_GetDownPlace = findViewById(R.id.busDetails_GetDownPlace);
-        TextView busDetails_GetDownTime = findViewById(R.id.busDetails_GetDownTime);
-        TextView busDetails_TicketPrice = findViewById(R.id.busDetails_TicketPrice);
-        ImageButton busDetails_CloseButton = findViewById(R.id.busDetails_CloseButton);
-        Button busDetails_purchaseTicketButton = findViewById(R.id.purchaseTicketButton);
+       // RelativeLayout busDetails_RelativeLayout = findViewById(R.id.busDetails_RelativeLayout);
+//        ImageView busDetails_Image = findViewById(R.id.busDetails_Image);
+//        TextView busDetails_route = findViewById(R.id.busDetails_Route);
+//        TextView busDetails_VehicleNumber = findViewById(R.id.busDetails_VehicleNumber);
+//        TextView busDetails_GetOnPlace = findViewById(R.id.busDetails_GetOnPlace);
+//        TextView busDetails_GetOnTime = findViewById(R.id.busDetails_GetOnTime);
+//        TextView busDetails_GetDownPlace = findViewById(R.id.busDetails_GetDownPlace);
+//        TextView busDetails_GetDownTime = findViewById(R.id.busDetails_GetDownTime);
+//        TextView busDetails_TicketPrice = findViewById(R.id.busDetails_TicketPrice);
+//        ImageButton busDetails_CloseButton = findViewById(R.id.busDetails_CloseButton);
+//        Button busDetails_purchaseTicketButton = findViewById(R.id.purchaseTicketButton);
 
         // Get the Ticket details
         TicketModel ticket = findTicketByRouteNumber(bus.getBus().getRouteId());
@@ -2668,10 +2699,10 @@ public class MainActivity
             busDetails_GetDownTime.setText(timestampToFormattedTime(departureTimeInMillis));
 
             // Trigger the request to fetch fare price
-            paymentViewModel.getFarePrice(ticket.getRouteNumber(), ticket.getArrivalStopName(), ticket.getDepartureStopName());
+            ticketViewModel.getFarePrice(ticket.getRouteNumber(), ticket.getArrivalStopName(), ticket.getDepartureStopName());
 
             // Observe LiveData for fare price
-            paymentViewModel.getFarePriceLiveData().observe(this, fare -> {
+            ticketViewModel.getFarePriceLiveData().observe(this, fare -> {
                 try {
                     if (fare != null) {
 
@@ -2689,7 +2720,7 @@ public class MainActivity
 
                                 // Pass the Ticket object to the next activity
                                 intent.putExtra("ticket", ticket);
-
+                                dialog.dismiss();
                                 // Start the new activity
                                 startActivity(intent);
                             }
@@ -2708,16 +2739,48 @@ public class MainActivity
             busDetails_CloseButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    toggleItemVisibility(busDetails_RelativeLayout, false);
+                    //toggleItemVisibility(busDetails_RelativeLayout, false);
+                    dialog.dismiss();
                 }
             });
 
-            toggleItemVisibility(busDetails_RelativeLayout, true);
+            // Set dialog position to the bottom
+            WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
+            params.gravity = Gravity.BOTTOM;
+           // params.y = 100;  // Adjust the y position as needed
+
+            // Apply the updated attributes
+            dialog.getWindow().setAttributes(params);
+
+            // Get the root view of the activity
+            ViewGroup rootView = getWindow().getDecorView().findViewById(android.R.id.content);
+
+            // Show a semi-transparent overlay
+            View overlay = new View(MainActivity.this);
+            overlay.setLayoutParams(new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT));
+            overlay.setBackgroundColor(Color.parseColor("#80000000")); // #80 for 50% alpha. #BF 75%
+
+            // Add the overlay to the root view
+            rootView.addView(overlay);
+
+            // Set an OnDismissListener to remove the overlay when the dialog dismisses
+            dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialogInterface) {
+                    rootView.removeView(overlay);
+                }
+            });
+
+            dialog.show();
+          //  toggleItemVisibility(busDetails_RelativeLayout, true);
         } else {
             Toast.makeText(this, "Sorry! Bus details not found", Toast.LENGTH_SHORT).show();
             Log("showBusDetails", "ERROR", "Cannot find the ticket");
 
         }
+
 
 
     }

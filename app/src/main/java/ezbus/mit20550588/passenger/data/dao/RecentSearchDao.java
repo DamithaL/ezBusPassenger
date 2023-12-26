@@ -1,5 +1,3 @@
-// Location: ezbus.mit20550588.passenger.data.dao
-
 package ezbus.mit20550588.passenger.data.dao;
 
 import androidx.lifecycle.LiveData;

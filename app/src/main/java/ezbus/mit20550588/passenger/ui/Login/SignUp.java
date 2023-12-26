@@ -29,6 +29,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import ezbus.mit20550588.passenger.R;
+import ezbus.mit20550588.passenger.data.model.UserModel;
 import ezbus.mit20550588.passenger.data.network.ApiServiceAuthentication;
 import ezbus.mit20550588.passenger.data.viewModel.AuthResult;
 import ezbus.mit20550588.passenger.data.viewModel.AuthViewModel;
@@ -218,10 +219,15 @@ public class SignUp extends AppCompatActivity {
             Log("handleAuthResult", "Login successful");
 
             // Update the user login status
-            UserStateManager userManager = UserStateManager.getInstance(getApplicationContext());
+            UserStateManager userManager = UserStateManager.getInstance();
+
             userManager.setUserLoggedIn(true);
+            userManager.setUser(authResult.getUser());
+
+            Log("Signed up","NEW USER", userManager.getUser().toString());
 
             showLoginSuccessDialog(authResult.getUser().getName());
+
 
         } else {
             // Authentication failed, show an error message

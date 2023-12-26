@@ -1,13 +1,8 @@
 package ezbus.mit20550588.passenger.ui.PurchaseTicket;
 
-import static ezbus.mit20550588.passenger.util.Constants.BASE_URL;
 import static ezbus.mit20550588.passenger.util.Constants.Log;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -16,40 +11,34 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.stripe.android.paymentsheet.PaymentSheet;
-import com.stripe.android.paymentsheet.PaymentSheetResult;
-import com.stripe.android.paymentsheet.addresselement.AddressDetails;
-import com.stripe.android.paymentsheet.addresselement.AddressLauncher;
-import com.stripe.android.paymentsheet.addresselement.AddressLauncherResult;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import ezbus.mit20550588.passenger.R;
+import ezbus.mit20550588.passenger.data.model.PurchasedTicketModel;
 import ezbus.mit20550588.passenger.data.model.TicketModel;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
+import ezbus.mit20550588.passenger.data.model.TicketOrder;
+import ezbus.mit20550588.passenger.data.viewModel.PaymentViewModel;
+import ezbus.mit20550588.passenger.data.viewModel.PurchasedTicketViewModel;
+import ezbus.mit20550588.passenger.util.DateUtils;
+import lk.payhere.androidsdk.PHConstants;
+import lk.payhere.androidsdk.PHResponse;
+import lk.payhere.androidsdk.model.StatusResponse;
 
 public class PurchaseTicket extends AppCompatActivity {
 
-    private String paymentIntentClientSecret;
-    private PaymentSheet paymentSheet;
-
-
     private Button payButton;
-    private AddressLauncher addressLauncher;
+    private TicketModel ticket;
+    private PayHere payHereInstance;
 
-    private AddressDetails shippingDetails;
+    private String orderID;
+    private PaymentViewModel paymentViewModel;
+    private static final int PAYHERE_REQUEST = 11001;
 
-    private Button addressButton;
+    private PurchasedTicketViewModel purchasedTicketViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,13 +47,90 @@ public class PurchaseTicket extends AppCompatActivity {
 
         // Retrieve the TicketModel object from the Intent
         Intent intent = getIntent();
-        TicketModel ticket = (TicketModel) intent.getSerializableExtra("ticket");
+        ticket = (TicketModel) intent.getSerializableExtra("ticket");
 
         // Display route information and ticket details
         if (ticket != null) {
             displayTicketDetails(ticket);
         }
 
+        initializePaymentViewModel();
+
+        // Initialize the class-level variable
+        payHereInstance = new PayHere();
+
+        initializeButtons();
+
+    }
+
+    private void initializePaymentViewModel() {
+        paymentViewModel = new ViewModelProvider(this).get(PaymentViewModel.class);
+
+        // Observe ticket order live data -- this is for sending ticket data to PayHere Instance
+        paymentViewModel.getTicketOrderLiveData().observe(this, payHereRequest -> {
+            if (payHereRequest != null) {
+                Log("getTicketOrderLiveData", "payHereRequest", payHereRequest.toString());
+
+                // Ensure payHereInstance is not null before calling initiatePayHerePayment
+                if (payHereInstance != null) {
+
+                    if (payHereRequest.getOrderId() != null) {
+                        orderID = payHereRequest.getOrderId();
+                        // Call the initiatePayHerePayment method
+                        payHereInstance.initiatePayHerePayment(this, payHereRequest);
+                    }
+
+                }
+            }
+        });
+
+        // Observe payment validation status -- this is for sending payment data to server for verification and storing
+        paymentViewModel.getPaymentStatusLiveData().observe(this, paymentStatus -> {
+            if (paymentStatus != null) {
+                Log("getPaymentStatusLiveData", "paymentStatus", paymentStatus.toString());
+
+                if (paymentStatus.getStatus() == 200) {
+                    Log("getPaymentStatusLiveData", paymentStatus.getMessage());
+
+                    // PAYMENT IS SUCCESSFUL AND VERIFIED/STORED BY THE SERVER
+
+                    // NOW STORE IN LOCAL DATABASE
+                    // Initialize the ViewModel
+                    purchasedTicketViewModel = new ViewModelProvider(this).get(PurchasedTicketViewModel.class);
+
+                    PurchasedTicketModel newTicket = new PurchasedTicketModel(
+                            ticket,
+                            orderID,
+                            DateUtils.parseDate(DateUtils.getCurrentDate()),
+                            false,
+                            null);
+
+                    purchasedTicketViewModel.insert(newTicket);
+
+                    Intent intent = new Intent(PurchaseTicket.this, MyTickets.class);
+                    startActivity(intent);
+
+                } else {
+                    Log("getPaymentStatusLiveData", "ERROR", paymentStatus.getMessage());
+                    Toast.makeText(PurchaseTicket.this, paymentStatus.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        // Observe the error message LiveData
+        paymentViewModel.getErrorLiveData().observe(this, errorMessage -> {
+            if (errorMessage != null) {
+                // Update your UI to display the error message (e.g., show a Toast or update a TextView)
+                Log("getErrorLiveData", errorMessage);
+                TextView errorTextView = findViewById(R.id.errorMessageTextView);
+
+                errorTextView.setText(errorMessage);
+                //  showToast(errorMessage);
+            }
+        });
+    }
+
+    private void initializeButtons() {
         // Back button
         ImageButton backButton = findViewById(R.id.BackButton);
         backButton.setOnClickListener(new View.OnClickListener() {
@@ -75,141 +141,20 @@ public class PurchaseTicket extends AppCompatActivity {
             }
         });
 
-        // Hook up the pay button
-        payButton = findViewById(R.id.YesButton);
-        payButton.setOnClickListener(this::onPayClicked);
-        payButton.setEnabled(false);
-
-        paymentSheet = new PaymentSheet(this, this::onPaymentSheetResult);
-
-        // Hook up the address button
-       // addressButton = findViewById(R.id.address_button);
-        // addressButton.setOnClickListener(this::onAddressClicked);
-      //  addressLauncher = new AddressLauncher(this, this::onAddressLauncherResult);
-
-        fetchPaymentIntent();
-
-    }
-
-    private void showAlert(String title, @Nullable String message) {
-        runOnUiThread(() -> {
-            AlertDialog dialog = new AlertDialog.Builder(this)
-                    .setTitle(title)
-                    .setMessage(message)
-                    .setPositiveButton("Ok", null)
-                    .create();
-            dialog.show();
-        });
-    }
-
-
-    private void showToast(String message) {
-        runOnUiThread(() -> Toast.makeText(this, message, Toast.LENGTH_LONG).show());
-    }
-
-    private void fetchPaymentIntent() {
-        final String shoppingCartContent = "{\"items\": [ {\"id\":\"xl-tshirt\"}]}";
-
-        final RequestBody requestBody = RequestBody.create(
-                MediaType.get("application/json; charset=utf-8"),
-                shoppingCartContent
-        );
-
-        Request request = new Request.Builder()
-                .url(BASE_URL + "payment/create-payment-intent")
-                .post(requestBody)
-                .build();
-
-        new OkHttpClient()
-                .newCall(request)
-                .enqueue(new Callback() {
-                    @Override
-                    public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                        showAlert("Failed to load data", "Error: " + e.toString());
-                    }
-
-                    @Override
-                    public void onResponse(
-                            @NonNull Call call,
-                            @NonNull Response response
-                    ) throws IOException {
-                        if (!response.isSuccessful()) {
-                            showAlert(
-                                    "Failed to load page",
-                                    "Error: " + response.toString()
-                            );
-                        } else {
-                            final JSONObject responseJson = parseResponse(response.body());
-                            paymentIntentClientSecret = responseJson.optString("clientSecret");
-                            runOnUiThread(() -> payButton.setEnabled(true));
-                            Log( "fetchPaymentIntent","Retrieved PaymentIntent");
-                        }
-                    }
-                });
-    }
-
-
-    private void onPaymentSheetResult(
-            final PaymentSheetResult paymentSheetResult
-    ) {
-        if (paymentSheetResult instanceof PaymentSheetResult.Completed) {
-            showToast("Payment complete!");
-        } else if (paymentSheetResult instanceof PaymentSheetResult.Canceled) {
-            Log( "onPaymentSheetResult","Payment canceled!");
-        } else if (paymentSheetResult instanceof PaymentSheetResult.Failed) {
-            Throwable error = ((PaymentSheetResult.Failed) paymentSheetResult).getError();
-            showAlert("Payment failed", error.getLocalizedMessage());
-        }
-    }
-
-    private void onAddressLauncherResult(AddressLauncherResult result) {
-        // TODO: Handle result and update your UI
-        if (result instanceof AddressLauncherResult.Succeeded) {
-            shippingDetails = ((AddressLauncherResult.Succeeded) result).getAddress();
-        } else if (result instanceof AddressLauncherResult.Canceled) {
-            // TODO: Handle cancel
-        }
-    }
-
-    private JSONObject parseResponse(ResponseBody responseBody) {
-        if (responseBody != null) {
-            try {
-                return new JSONObject(responseBody.string());
-            } catch (IOException | JSONException e) {
-                Log( "parseResponse","Error parsing response", e.getMessage());
-
-            }
-        }
-
-        return new JSONObject();
-    }
-
-    private void onPayClicked(View view) {
-        PaymentSheet.Configuration configuration = new PaymentSheet.Configuration("Example, Inc.");
-
-        // Present Payment Sheet
-        paymentSheet.presentWithPaymentIntent(paymentIntentClientSecret, configuration);
-    }
-
-
-    private void displayTicketDetails(TicketModel ticket) {
-        TextView routeNumberTextView = findViewById(R.id.routeTextView);
-        TextView startStopTextView = findViewById(R.id.startStopTextView);
-        TextView endStopTextView = findViewById(R.id.endStopTextView);
-        TextView farePriceTextView = findViewById(R.id.farePriceTextView);
-
-        routeNumberTextView.setText(ticket.getRouteNumber()+ " | "+ ticket.getRouteName());
-        startStopTextView.setText(ticket.getArrivalStopName());
-        endStopTextView.setText(ticket.getDepartureStopName());
-        farePriceTextView.setText("Rs." + String.format("%.2f", ticket.getFarePrice()));
-
         // Yes button
         Button yesButton = findViewById(R.id.YesButton);
         yesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                // TODO: 2023-12-23
+                Log("Yes button", "clicked");
+
+                // Send the ticket order to server to validate
+                TicketOrder newTicketOrder = new TicketOrder(ticket);
+                // Trigger validate in ViewModel
+                paymentViewModel.validateTicketOrder(newTicketOrder);
+
+                Log("Yes button clicked", "ticket order", newTicketOrder.toString());
 
             }
         });
@@ -223,7 +168,83 @@ public class PurchaseTicket extends AppCompatActivity {
                 finish();
             }
         });
+
     }
 
+    private void displayTicketDetails(TicketModel ticket) {
+        TextView routeNumberTextView = findViewById(R.id.routeTextView);
+        TextView startStopTextView = findViewById(R.id.startStopTextView);
+        TextView endStopTextView = findViewById(R.id.endStopTextView);
+        TextView farePriceTextView = findViewById(R.id.farePriceTextView);
+
+        routeNumberTextView.setText(ticket.getRouteNumber() + " | " + ticket.getRouteName());
+        startStopTextView.setText(ticket.getArrivalStopName());
+        endStopTextView.setText(ticket.getDepartureStopName());
+        farePriceTextView.setText("Rs." + String.format("%.2f", ticket.getFarePrice()));
+    }
+
+    // This is results from PayHere instance -- This will be verified next from the server by getPaymentStatusLiveData observation
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        Log("onActivityResult", "started");
+
+        if (requestCode == PAYHERE_REQUEST && data != null && data.hasExtra(PHConstants.INTENT_EXTRA_RESULT)) {
+            PHResponse<StatusResponse> response = (PHResponse<StatusResponse>) data.getSerializableExtra(PHConstants.INTENT_EXTRA_RESULT);
+
+            Log("onActivityResult", "resultCode", String.valueOf(resultCode));
+
+            if (resultCode == Activity.RESULT_OK) {
+
+                Log("onActivityResult", "RESULT_OK");
+                handlePaymentDone(response);
+
+            } else if (resultCode == Activity.RESULT_CANCELED) {
+                Log("onActivityResult", "RESULT_CANCELED");
+                handlePaymentCancel(response);
+            }
+        }
+    }
+
+    private void handlePaymentDone(
+            PHResponse<StatusResponse> response) {
+
+        if (response != null && response.isSuccess()) {
+
+            Log("Payment successful. Details", response.getData().toString());
+
+            Map<String, Object> paymentStatus = new HashMap<>();
+            paymentStatus.put("orderId", orderID);
+            paymentStatus.put("paymentNo", response.getData().getPaymentNo());
+            paymentStatus.put("purchasedDate", DateUtils.getCurrentDate());
+            paymentViewModel.notifyPayment(paymentStatus);
+
+        } else {
+            // this happens when user enters a wrong card details or bank denies the payment
+            Log("Payment failed. Details", "Result: no response");
+            Map<String, Object> paymentStatus = new HashMap<>();
+            paymentStatus.put("orderId", orderID);
+            paymentStatus.put("isOrderCancelled", true);
+            paymentViewModel.notifyPaymentCancel(paymentStatus);
+        }
+    }
+
+    private void handlePaymentCancel(
+            PHResponse<StatusResponse> response) {
+
+        if (response != null) {
+            Log("Payment canceled. Details", "message", response.toString());
+        } else {
+            Log("Payment canceled. Details", "User canceled the payment request");
+        }
+
+        Map<String, Object> paymentStatus = new HashMap<>();
+        paymentStatus.put("orderId", orderID);
+        paymentStatus.put("isOrderCancelled", true);
+        paymentViewModel.notifyPaymentCancel(paymentStatus);
+
+
+    }
 
 }

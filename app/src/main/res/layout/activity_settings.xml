@@ -84,6 +84,7 @@
                     </TextView>
 
                     <TextView
+                        android:id="@+id/countOfNewTicketTextView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="4 Tickets"
@@ -95,7 +96,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="available for use"
+                        android:text="available to redeem"
 
                         android:textSize="16sp"
                         android:layout_marginBottom="10dp"                  >
