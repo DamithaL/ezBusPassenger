@@ -60,13 +60,20 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Please enter the six-digit code we sent to your email to verify your account"
-            android:alpha="0.7"/>
+           android:textColor="@color/gray"/>
 
         <View
             android:id="@+id/view4"
             android:layout_width="wrap_content"
-            android:layout_height="50dp" />
+            android:layout_height="40dp" />
 
+        <TextView
+            android:id="@+id/errorMessageTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:textColor="@color/color_red"/>
 
         <GridLayout
             android:id="@+id/gridLayoutCode"
@@ -132,7 +139,7 @@
             android:text="Please be patient as it may take a few minutes for the verification code to arrive. If you do not receive the code promptly, kindly check your spam folder."
             android:layout_gravity="center"
             android:textAlignment="center"
-            android:alpha="0.7"
+            android:textColor="@color/gray"
             android:layout_centerVertical="true"/>
 
         <View
@@ -162,6 +169,26 @@
 
     </LinearLayout>
 
+    <!-- Loading ProgressBar -->
+    <RelativeLayout
+        android:id="@+id/loadingProgressBar"
+        android:layout_width="match_parent"
+        android:visibility="gone"
+        android:layout_height="match_parent">
 
+        <!-- Dark overlay -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#80000000" />
+
+        <!-- ProgressBar -->
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_gravity="center" />
+
+    </RelativeLayout>
 
 </RelativeLayout>

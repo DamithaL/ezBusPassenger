@@ -1,7 +1,6 @@
 package ezbus.mit20550588.passenger.data.model;
 
 
-
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.io.Serializable;
@@ -11,31 +10,28 @@ public class UserModel implements Serializable {
     private final String name;
     private final String email;
     private String hashedPassword;  // Store the hashed password
-    private String token;
+    private Boolean isVerified;
 
-    public UserModel(String name, String email, String password) {
+
+    public UserModel(String name, String email, String toBeHashedPassword) {
 
         // Validate inputs here
-        if (name == null || email == null || password == null) {
+        if (name == null || email == null || toBeHashedPassword == null) {
             throw new IllegalArgumentException("All fields must be provided");
         }
-
         this.name = name;
         this.email = email;
-        this.hashedPassword = hashPassword(password);  // Hash and store the password
+        this.hashedPassword = hashPassword(toBeHashedPassword);  // Hash and store the password
     }
 
-    // to get the user details from server
-    public UserModel(String name, String email, String password, String token) {
+    // to get the user details from server --- in this password will be already hashed. therefor will not hash again
+    public UserModel(String name, String email, String password, Boolean isVerified) {
         this.name = name;
         this.email = email;
-        this.hashedPassword = hashPassword(password);
-        this.token = token;
+        this.hashedPassword = password;
+        this.isVerified = isVerified;
     }
 
-    public String getToken() {
-        return token;
-    }
 
     public String getName() {
         return name;
@@ -52,6 +48,10 @@ public class UserModel implements Serializable {
     public String hashPassword(String password) {
         // Hash and salt the password using BCrypt
         return BCrypt.hashpw(password, BCrypt.gensalt());
+    }
+
+    public Boolean getVerified() {
+        return isVerified;
     }
 
     public boolean checkPassword(String candidatePassword) {

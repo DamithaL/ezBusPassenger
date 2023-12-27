@@ -30,12 +30,15 @@ public class AuthViewModel extends ViewModel {
     private LiveData<AuthResult> authResultLiveData;
     private MutableLiveData<String> errorMessageLiveData;
 
+    private LiveData<String> verificationCodeLiveData;
+
 
     public AuthViewModel() {
         // Create a default constructor
         this.userRepository = new UserRepository(new RetrofitClient().getClient().create(ApiServiceAuthentication.class));
         this.authResultLiveData = userRepository.getAuthResultLiveData();
         this.errorMessageLiveData = userRepository.getErrorMessageLiveData();
+        this.verificationCodeLiveData = userRepository.getVerificationCodeLiveData();
     }
 
     // Existing constructor for dependency injection
@@ -43,10 +46,15 @@ public class AuthViewModel extends ViewModel {
         this.userRepository = userRepository;
         this.authResultLiveData = userRepository.getAuthResultLiveData();
         this.errorMessageLiveData = userRepository.getErrorMessageLiveData();
+        this.verificationCodeLiveData = userRepository.getVerificationCodeLiveData();
     }
 
     public LiveData<String> getErrorMessageLiveData() {
         return errorMessageLiveData;
+    }
+
+    public LiveData<String> getVerificationCodeLiveData() {
+        return verificationCodeLiveData;
     }
 
     public LiveData<AuthResult> getAuthResultLiveData() {
@@ -62,8 +70,8 @@ public class AuthViewModel extends ViewModel {
         // Validate email and password before proceeding
         if (Validator.isValidEmail(email) && !password.isEmpty()) {
             String hashedPassword = hashPasswordSHA(password);
-           userRepository.loginUser(email, hashedPassword);
-           // userRepository.loginUser(email, password);
+            userRepository.loginUser(email, hashedPassword);
+            // userRepository.loginUser(email, password);
         } else if (email.isEmpty() || password.isEmpty()) {
             // Empty Fields
             errorMessageLiveData.setValue("Please fill in all the required fields");
@@ -98,8 +106,8 @@ public class AuthViewModel extends ViewModel {
 
         if (Validator.isValidName(name) && Validator.isValidEmail(email) && Validator.isValidPassword(password) && password.equals(confirmPassword)) {
             String hashedPassword = hashPasswordSHA(password);
-           userRepository.registerUser(name, email, hashedPassword);
-          //  userRepository.registerUser(name, email, password);
+            userRepository.registerUser(name, email, hashedPassword);
+            //  userRepository.registerUser(name, email, password);
         } else {
             if (name.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
                 // Empty Fields
@@ -134,6 +142,11 @@ public class AuthViewModel extends ViewModel {
 
     }
 
+    public void verifyUser(
+            UserModel newUser) {
+        userRepository.verifyUser(newUser);
+    }
+
 
     private void setGreenDrawable(TextInputEditText editText) {
         // Assuming you have an ic_email_green drawable in your resources
@@ -141,7 +154,7 @@ public class AuthViewModel extends ViewModel {
         // Set the tint to green
         drawable.setTint(ContextCompat.getColor(editText.getContext(), android.R.color.holo_green_dark));
 
-       // editText.setCompoundDrawablesWithIntrinsicBounds(R.drawable.icon, 0, 0, 0);
+        // editText.setCompoundDrawablesWithIntrinsicBounds(R.drawable.icon, 0, 0, 0);
         editText.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         // Set the drawable
         editText.setCompoundDrawablesWithIntrinsicBounds(null, null, drawable, null);

@@ -1,9 +1,14 @@
 package ezbus.mit20550588.passenger.data.repository;
 
+import android.util.Log;
+
+import static ezbus.mit20550588.passenger.util.Constants.Log;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import ezbus.mit20550588.passenger.data.model.UserModel;
 import ezbus.mit20550588.passenger.data.network.ApiServiceAuthentication;
@@ -19,6 +24,8 @@ public class UserRepository {
     private MutableLiveData<AuthResult> authResultLiveData = new MutableLiveData<>();
     private MutableLiveData<String> errorMessageLiveData = new MutableLiveData<>();
 
+    private MutableLiveData<String> verificationCodeLiveData = new MutableLiveData<>();
+
 
     public UserRepository(ApiServiceAuthentication apiService) {
         this.apiService = apiService;
@@ -31,7 +38,9 @@ public class UserRepository {
         return errorMessageLiveData;
     }
 
-
+    public MutableLiveData<String> getVerificationCodeLiveData() {
+        return verificationCodeLiveData;
+    }
 
     public void loginUser(String email, String password) {
         LoginRequest loginRequest = new LoginRequest(email, password);
@@ -51,7 +60,7 @@ public class UserRepository {
                             e.printStackTrace();
                         }
                     }
-                    authResultLiveData.setValue(new AuthResult(AuthResult.Status.ERROR, null, errorMessage));
+                   // authResultLiveData.setValue(new AuthResult(AuthResult.Status.ERROR, null, errorMessage));
                     errorMessageLiveData.setValue(errorMessage); // Set error message LiveData
                 }
             }
@@ -59,7 +68,7 @@ public class UserRepository {
             @Override
             public void onFailure(Call<UserModel> call, Throwable t) {
                 String errorMessage = "Network failure.";
-                authResultLiveData.setValue(new AuthResult(AuthResult.Status.ERROR, null, errorMessage));
+               // authResultLiveData.setValue(new AuthResult(AuthResult.Status.ERROR, null, errorMessage));
                 errorMessageLiveData.setValue(errorMessage); // Set error message LiveData
             }
 
@@ -69,18 +78,26 @@ public class UserRepository {
     public void registerUser(String name, String email, String password) {
         RegistrationRequest registrationRequest = new RegistrationRequest(name, email, password);
 
-        apiService.registerUser(registrationRequest).enqueue(new Callback<UserModel>() {
+        apiService.registerUser(registrationRequest).enqueue(new Callback<Map<String, String>>() {
             @Override
-            public void onResponse(Call<UserModel> call, Response<UserModel> response) {
+            public void onResponse(Call<Map<String, String>> call, Response<Map<String, String>> response) {
                 if (response.isSuccessful()) {
                     if (response.code() == 201){
+                        if (response.body() != null) {
+                            try {
+                                String verificationCode = response.body().get("verificationCode").toString();
+                                verificationCodeLiveData.setValue(verificationCode);
+                                Log("User repository", "verificationCode", verificationCode);
+                                Log("User repository", "verificationCodeLiveData", verificationCodeLiveData.toString());
+                            } catch (Exception e) {
+                                errorMessageLiveData.setValue(e.getMessage());
+                            }
 
-                        UserModel user = new UserModel(name, email, password, response.body().getToken());
-                        authResultLiveData.setValue(new AuthResult(AuthResult.Status.SUCCESS, user, null));
+                        }
+
                     }
                     if (response.code() == 208){
                         String errorMessage = "The email is already registered. Forgot your password? Reset it or sign in.";
-                        authResultLiveData.setValue(new AuthResult(AuthResult.Status.ERROR, null, errorMessage));
                         errorMessageLiveData.setValue(errorMessage);
                     }
                 } else {
@@ -93,7 +110,46 @@ public class UserRepository {
                             e.printStackTrace();
                         }
                     }
-                    authResultLiveData.setValue(new AuthResult(AuthResult.Status.ERROR, null, errorMessage));
+                    errorMessageLiveData.setValue(errorMessage); // Set error message LiveData
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Map<String, String>> call, Throwable t) {
+                String errorMessage = "Network failure.";
+                errorMessageLiveData.setValue(errorMessage); // Set error message LiveData
+            }
+        });
+    }
+
+
+    public void verifyUser(UserModel newUser) {
+
+
+        Map<String, String> email = new HashMap<>();
+        email.put("email", newUser.getEmail());
+
+        apiService.verifyUser(email).enqueue(new Callback<UserModel>() {
+            @Override
+            public void onResponse(Call<UserModel> call, Response<UserModel> response) {
+                if (response.isSuccessful()) {
+                    if (response.code() == 200){
+
+                        UserModel user = new UserModel(newUser.getName(), newUser.getEmail(),newUser.getHashedPassword(), false);
+                       authResultLiveData.setValue(new AuthResult(AuthResult.Status.SUCCESS, user, null));
+                    }
+
+                } else {
+
+                    String errorMessage = "Registration failed. ";
+                    if (response.errorBody() != null) {
+                        try {
+                            errorMessage += response.errorBody().string();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
                     errorMessageLiveData.setValue(errorMessage); // Set error message LiveData
 
                 }
@@ -102,11 +158,11 @@ public class UserRepository {
             @Override
             public void onFailure(Call<UserModel> call, Throwable t) {
                 String errorMessage = "Network failure.";
-                authResultLiveData.setValue(new AuthResult(AuthResult.Status.ERROR, null, errorMessage));
                 errorMessageLiveData.setValue(errorMessage); // Set error message LiveData
             }
         });
     }
+
 }
 
 

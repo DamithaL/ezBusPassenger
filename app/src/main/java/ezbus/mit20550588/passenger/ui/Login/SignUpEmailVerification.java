@@ -1,9 +1,17 @@
 package ezbus.mit20550588.passenger.ui.Login;
 
-import androidx.appcompat.app.AppCompatActivity;
+import static ezbus.mit20550588.passenger.util.Constants.AUTH_SUCCESS_DIALOG_DURATION;
+import static ezbus.mit20550588.passenger.util.Constants.Log;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+
+import android.app.Dialog;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.Html;
 import android.text.Spannable;
@@ -14,12 +22,22 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.material.textfield.TextInputEditText;
 
 import ezbus.mit20550588.passenger.R;
+import ezbus.mit20550588.passenger.data.model.PurchasedTicketModel;
+import ezbus.mit20550588.passenger.data.model.UserModel;
+import ezbus.mit20550588.passenger.data.viewModel.AuthResult;
+import ezbus.mit20550588.passenger.data.viewModel.AuthViewModel;
 import ezbus.mit20550588.passenger.ui.Login.AccountCreated;
+import ezbus.mit20550588.passenger.ui.MainActivity;
+import ezbus.mit20550588.passenger.util.UserStateManager;
 
 public class SignUpEmailVerification extends AppCompatActivity {
 
@@ -32,12 +50,25 @@ public class SignUpEmailVerification extends AppCompatActivity {
     // Variable to store the last known text in the EditText field
     private CharSequence lastText = "";
 
+    private AuthViewModel authViewModel;
+
+    private UserModel newUser;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up_email_verification);
 
+        Intent intent = getIntent();
+        String verificationCode = intent.getStringExtra("verificationCode");
+        newUser = (UserModel) intent.getSerializableExtra("user");
+
+
+        Log("SignUpEmailVerification", "newUser", newUser.toString());
         // EZBus Passenger app main text
+
+        // Hide the loading progress bar
+        findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
 
         TextView textView0 = findViewById(R.id.main_app_name);
         String html = "<font color=#025a66>EZBus</font> <font color=#0A969F>Passenger</font>";
@@ -77,34 +108,66 @@ public class SignUpEmailVerification extends AppCompatActivity {
         textView.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
 
 
+        // user entered verification code
+        EditText editTextDigit1 = findViewById(R.id.editTextDigit1);
+        EditText editTextDigit2 = findViewById(R.id.editTextDigit2);
+        EditText editTextDigit3 = findViewById(R.id.editTextDigit3);
+        EditText editTextDigit4 = findViewById(R.id.editTextDigit4);
+        EditText editTextDigit5 = findViewById(R.id.editTextDigit5);
+        EditText editTextDigit6 = findViewById(R.id.editTextDigit6);
+
 
         // verify button
         Button VerifyButton = (Button) this.findViewById(R.id.verifyButton);
         VerifyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(),
-                        AccountCreated.class);
-                startActivity(intent);
+//                Intent intent = new Intent(getApplicationContext(),
+//                        AccountCreated.class);
+//                startActivity(intent);
+                TextView errorTextView = findViewById(R.id.errorMessageTextView);
+                errorTextView.setText("");
+
+
+                // Show the loading progress bar
+                findViewById(R.id.loadingProgressBar).setVisibility(View.VISIBLE);
+
+                Log("SignUpEmailVerification", "Verify button clicked");
+                String digit1 = editTextDigit1.getText().toString();
+                String digit2 = editTextDigit2.getText().toString();
+                String digit3 = editTextDigit3.getText().toString();
+                String digit4 = editTextDigit4.getText().toString();
+                String digit5 = editTextDigit5.getText().toString();
+                String digit6 = editTextDigit6.getText().toString();
+
+                String userEnteredCode = digit1 + digit2 + digit3 + digit4 + digit5 + digit6;
+
+                Log("SignUpEmailVerification", "verification code", verificationCode);
+                Log("SignUpEmailVerification", "user entered code", userEnteredCode);
+
+                if (userEnteredCode.equals(verificationCode)) {
+                    Log("SignUpEmailVerification", "Correct verification code entered");
+                    // email is verified
+                    verifyUser();
+                }
+                else {
+
+                    // Hide the loading progress bar
+                    findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
+
+                    errorTextView.setText("The verification code was entered incorrectly. Check the code and try again.");
+                }
             }
         });
 
 
-        // Initialize your EditText fields
-        editTextDigit1 = findViewById(R.id.editTextDigit1);
-        editTextDigit2 = findViewById(R.id.editTextDigit2);
-        editTextDigit3 = findViewById(R.id.editTextDigit3);
-        editTextDigit4 = findViewById(R.id.editTextDigit4);
-        editTextDigit5 = findViewById(R.id.editTextDigit5);
-        editTextDigit6 = findViewById(R.id.editTextDigit6);
-
         // Set the focus change listener for each EditText
-        setFocusChangeListener(editTextDigit1,0);
-        setFocusChangeListener(editTextDigit2,1);
-        setFocusChangeListener(editTextDigit3,2);
-        setFocusChangeListener(editTextDigit4,3);
-        setFocusChangeListener(editTextDigit5,4);
-        setFocusChangeListener(editTextDigit6,5);
+        setFocusChangeListener(editTextDigit1, 0);
+        setFocusChangeListener(editTextDigit2, 1);
+        setFocusChangeListener(editTextDigit3, 2);
+        setFocusChangeListener(editTextDigit4, 3);
+        setFocusChangeListener(editTextDigit5, 4);
+        setFocusChangeListener(editTextDigit6, 5);
 
         // Set the initial digit focused
         editTextDigit1.requestFocus();
@@ -117,6 +180,100 @@ public class SignUpEmailVerification extends AppCompatActivity {
         addTextWatcher(editTextDigit5, 4);
         addTextWatcher(editTextDigit6, 5);
 
+    }
+
+    private void verifyUser() {
+        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+
+        // Trigger login operation in ViewModel
+        authViewModel.verifyUser(newUser);
+
+
+        // Observe authentication result
+        authViewModel.getAuthResultLiveData().observe(this, authResult -> {
+            if (authResult != null) {
+
+                // Hide the loading progress bar
+                findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
+                handleAuthResult(authResult);
+            }
+        });
+
+        // Observe the error message LiveData
+        authViewModel.getErrorMessageLiveData().observe(this, errorMessage -> {
+            if (errorMessage != null) {
+
+                // Update your UI to display the error message (e.g., show a Toast or update a TextView)
+
+                // Hide the loading progress bar
+                findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
+
+                TextView errorTextView = findViewById(R.id.errorMessageTextView);
+                errorTextView.setText(errorMessage);
+
+            }
+        });
+
+    }
+
+    private void handleAuthResult(AuthResult authResult) {
+        Log("handleAuthResult", "Login successful");
+
+        // Update the user login status
+        UserStateManager userManager = UserStateManager.getInstance();
+
+        userManager.setUserLoggedIn(true);
+        userManager.setUser(authResult.getUser());
+
+        Log("Signed up", "NEW USER", userManager.getUser().toString());
+
+        showLoginSuccessDialog(authResult.getUser().getName());
+
+    }
+
+    private void showLoginSuccessDialog(String name) {
+        Dialog dialog = new Dialog(SignUpEmailVerification.this);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        dialog.setContentView(R.layout.rounded_alert_dialog);
+
+        TextView welcomeText = dialog.findViewById(R.id.welcomeText);
+        welcomeText.setText(getString(R.string.signup_results_welcome_text_1));
+        TextView messageText = dialog.findViewById(R.id.messageTextView);
+        messageText.setText(getString(R.string.signup_results_welcome_text_2));
+        TextView userNameText = dialog.findViewById(R.id.userNameText);
+        userNameText.setText(name);
+
+        // Get the root view of the activity
+        ViewGroup rootView = getWindow().getDecorView().findViewById(android.R.id.content);
+
+        // Show a semi-transparent overlay
+        View overlay = new View(SignUpEmailVerification.this);
+        overlay.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+        overlay.setBackgroundColor(Color.parseColor("#80000000")); // #80 for 50% alpha
+
+        // Add the overlay to the root view
+        rootView.addView(overlay);
+
+        dialog.show();
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                dialog.dismiss();
+                navigateToMainActivity();
+            }
+        }, AUTH_SUCCESS_DIALOG_DURATION); // 5000 milliseconds = 5 seconds
+
+
+    }
+
+    private void navigateToMainActivity() {
+        Intent intent = new Intent(SignUpEmailVerification.this, MainActivity.class);
+        startActivity(intent);
+        finish();
     }
 
 
@@ -185,7 +342,6 @@ public class SignUpEmailVerification extends AppCompatActivity {
                     deletePreviousNumber(editText, lastText);
 
 
-
                 }
             }
 
@@ -221,8 +377,6 @@ public class SignUpEmailVerification extends AppCompatActivity {
     }
 
 
-
-
     // Find the next EditText programmatically
     private EditText findNextEditText(EditText currentEditText) {
         switch (currentEditText.getId()) {
@@ -243,9 +397,6 @@ public class SignUpEmailVerification extends AppCompatActivity {
                 return null;
         }
     }
-
-
-
 
 
     // Find the previous EditText programmatically

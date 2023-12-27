@@ -34,8 +34,10 @@ import ezbus.mit20550588.passenger.data.network.ApiServiceAuthentication;
 import ezbus.mit20550588.passenger.data.viewModel.AuthResult;
 import ezbus.mit20550588.passenger.data.viewModel.AuthViewModel;
 import ezbus.mit20550588.passenger.ui.MainActivity;
+import ezbus.mit20550588.passenger.ui.PurchaseTicket.RedeemTicket;
 import ezbus.mit20550588.passenger.ui.Settings.PrivacyPolicyActivity;
 import ezbus.mit20550588.passenger.ui.Settings.TermConditions;
+import ezbus.mit20550588.passenger.ui.virtualTicket;
 import ezbus.mit20550588.passenger.util.UserStateManager;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -43,6 +45,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class SignUp extends AppCompatActivity {
 
     private AuthViewModel authViewModel;
+
+    private UserModel newUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,9 +65,13 @@ public class SignUp extends AppCompatActivity {
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
         // Observe authentication result
-        authViewModel.getAuthResultLiveData().observe(this, authResult -> {
-            if (authResult != null) {
-                handleAuthResult(authResult);
+        authViewModel.getVerificationCodeLiveData().observe(this, verificationCode -> {
+            if (verificationCode != null) {
+
+                // Hide the loading progress bar
+                findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
+
+                handleSignUpResult(verificationCode);
             }
         });
 
@@ -71,6 +79,9 @@ public class SignUp extends AppCompatActivity {
         authViewModel.getErrorMessageLiveData().observe(this, errorMessage -> {
             if (errorMessage != null) {
                 // Update your UI to display the error message (e.g., show a Toast or update a TextView)
+                // Hide the loading progress bar
+                findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
+
                 TextView errorTextView = findViewById(R.id.errorMessageTextView);
                 errorTextView.setText(errorMessage);
                 //  showToast(errorMessage);
@@ -79,6 +90,9 @@ public class SignUp extends AppCompatActivity {
     }
 
     private void initializeUI() {
+
+        // Hide the loading progress bar
+        findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
 
         // EZBus Passenger app main text
         TextView textView0 = findViewById(R.id.main_app_name);
@@ -185,6 +199,9 @@ public class SignUp extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
+                // Show the loading progress bar
+                findViewById(R.id.loadingProgressBar).setVisibility(View.VISIBLE);
+
                 SignupSubmit();
             }
         });
@@ -206,6 +223,10 @@ public class SignUp extends AppCompatActivity {
         String password = passwordText.getText().toString();
         String confirmPassword = confirmPasswordText.getText().toString();
 
+        newUser = new UserModel(name, email, password, false);
+        Log("Sign Up", "newUser", newUser.toString());
+
+
         // Trigger login operation in ViewModel
         authViewModel.registerUser(name, email, password,confirmPassword, nameText, emailText,passwordText, confirmPasswordText, passwordTextInputLayout, confirmPasswordTextInputLayout);
 
@@ -214,66 +235,27 @@ public class SignUp extends AppCompatActivity {
     }
 
 
-    private void handleAuthResult(AuthResult authResult) {
-        if (authResult.getStatus() == AuthResult.Status.SUCCESS) {
-            Log("handleAuthResult", "Login successful");
+    private void handleSignUpResult(String verificationCode) {
+        if (verificationCode != null) {
+            Log("handleAuthResult", "Sign up successful");
 
-            // Update the user login status
-            UserStateManager userManager = UserStateManager.getInstance();
+            // Go to verification
+            Intent intent = new Intent(SignUp.this, SignUpEmailVerification.class);
+            intent.putExtra("verificationCode", verificationCode);
+            intent.putExtra("user", newUser);
 
-            userManager.setUserLoggedIn(true);
-            userManager.setUser(authResult.getUser());
+            Log("Sign up","handleAuthResult: verificationCode", verificationCode);
+            Log("Sign up","handleAuthResult: newUser", newUser.toString());
 
-            Log("Signed up","NEW USER", userManager.getUser().toString());
-
-            showLoginSuccessDialog(authResult.getUser().getName());
-
-
+            startActivity(intent);
+            finish();
         } else {
             // Authentication failed, show an error message
-            showToast(authResult.getErrorMessage().toString());
-            Log("handleAuthResult", "Login failed with code: " + authResult.getErrorMessage());
+            showToast("An issue has occurred. No verification code has been sent.");
+            Log("handleAuthResult", "Sign up failed");
         }
     }
 
-    private void showLoginSuccessDialog(String name) {
-        Dialog dialog = new Dialog(SignUp.this);
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-
-        dialog.setContentView(R.layout.rounded_alert_dialog);
-
-        TextView welcomeText = dialog.findViewById(R.id.welcomeText);
-        welcomeText.setText(getString(R.string.signup_results_welcome_text_1));
-        TextView messageText = dialog.findViewById(R.id.messageTextView);
-        messageText.setText(getString(R.string.signup_results_welcome_text_2));
-        TextView userNameText = dialog.findViewById(R.id.userNameText);
-        userNameText.setText(name);
-
-        // Get the root view of the activity
-        ViewGroup rootView = getWindow().getDecorView().findViewById(android.R.id.content);
-
-        // Show a semi-transparent overlay
-        View overlay = new View(SignUp.this);
-        overlay.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
-        overlay.setBackgroundColor(Color.parseColor("#BF000000")); // #80 for 50% alpha
-
-        // Add the overlay to the root view
-        rootView.addView(overlay);
-
-        dialog.show();
-
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                dialog.dismiss();
-                navigateToMainActivity();
-            }
-        }, AUTH_SUCCESS_DIALOG_DURATION); // 5000 milliseconds = 5 seconds
-
-
-    }
 
     private void showToast(String message) {
         runOnUiThread(new Runnable() {
@@ -283,12 +265,5 @@ public class SignUp extends AppCompatActivity {
             }
         });
     }
-
-    private void navigateToMainActivity() {
-        Intent intent = new Intent(SignUp.this, MainActivity.class);
-        startActivity(intent);
-        finish();
-    }
-
 
 }

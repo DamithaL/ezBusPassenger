@@ -1,5 +1,7 @@
 package ezbus.mit20550588.passenger.data.network;
 
+import java.util.Map;
+
 import ezbus.mit20550588.passenger.data.model.UserModel;
 
 import retrofit2.Call;
@@ -15,7 +17,10 @@ public interface ApiServiceAuthentication {
 
 
     @POST("/auth/signup")
-    Call<UserModel> registerUser (@Body RegistrationRequest registrationRequest);
+    Call<Map<String, String>> registerUser (@Body RegistrationRequest registrationRequest);
+
+    @POST("/auth/verify-user")
+    Call<UserModel> verifyUser (@Body Map<String, String> email);
 
 //
 //    @POST("/auth/login")
