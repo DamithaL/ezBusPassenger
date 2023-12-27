@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.Settings.Settings"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:context=".ui.Settings.Settings">
 
 
     <!-- App Bar- Custom -->
@@ -18,23 +18,22 @@
             android:id="@+id/BackButton"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:src="@drawable/button_back_24"
             android:backgroundTint="@color/white"
-            app:iconTint="@color/black"
-            android:padding="14dp"/>
+            android:padding="14dp"
+            android:src="@drawable/button_back_24"
+            app:iconTint="@color/black" />
 
         <!--App title -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Settings"
             android:layout_centerInParent="true"
+            android:text="Settings"
             android:textColor="@color/black"
-            android:textStyle="bold"
-            android:textSize="@dimen/app_title_font_size"/>
+            android:textSize="@dimen/app_title_font_size"
+            android:textStyle="bold" />
 
     </RelativeLayout>
-
 
 
     <ScrollView
@@ -45,73 +44,69 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp">
+            android:layout_marginEnd="10dp"
+            android:orientation="vertical">
 
             <Space
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/space_size_settings">
-            </Space>
+                android:layout_height="@dimen/space_size_settings"></Space>
 
             <!--   Ticket card -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
-                android:background="@drawable/rounded_edittext_bg"
-                android:orientation="horizontal"
                 android:layout_gravity="center"
-                android:padding="20dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
+                android:background="@drawable/rounded_edittext_bg"
+                android:backgroundTint="#B2EBF2"
                 android:elevation="20dp"
-                android:backgroundTint="#B2EBF2">
+                android:orientation="horizontal"
+                android:padding="20dp">
 
                 <!--  Texts and button of the Ticket card -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:gravity="center">
+                    android:gravity="center"
+                    android:orientation="vertical">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
                         android:text="Your account has"
-                        android:textStyle="bold"
                         android:textSize="16sp"
-                        android:layout_marginBottom="10dp">
-                    </TextView>
+                        android:textStyle="bold"></TextView>
 
                     <TextView
                         android:id="@+id/countOfNewTicketTextView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
                         android:text="4 Tickets"
-                        android:textStyle="bold"
                         android:textSize="16sp"
-                        android:layout_marginBottom="10dp"                  >
-                    </TextView>
+                        android:textStyle="bold"></TextView>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="available to redeem"
+                        android:layout_marginBottom="10dp"
 
-                        android:textSize="16sp"
-                        android:layout_marginBottom="10dp"                  >
-                    </TextView>
+                        android:text="available to redeem"
+                        android:textSize="16sp"></TextView>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/MyTicketsButton"
                         android:layout_width="wrap_content"
                         android:layout_height="60dp"
-                        android:text="My Tickets"
-                        app:rippleColor="@color/quantum_vanillagreen300"
                         android:paddingStart="30dp"
                         android:paddingEnd="30dp"
+                        android:text="My Tickets"
                         android:textAllCaps="false"
-                        app:cornerRadius="30dp"/>
+                        app:cornerRadius="30dp"
+                        app:rippleColor="@color/quantum_vanillagreen300" />
 
                 </LinearLayout>
 
@@ -120,8 +115,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:src="@drawable/bus_tickets_two">
-                </ImageView>
+                    android:src="@drawable/bus_tickets_two"></ImageView>
 
             </LinearLayout>
 
@@ -129,175 +123,66 @@
 
             <Space
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/space_size_settings">
-            </Space>
+                android:layout_height="@dimen/space_size_settings"></Space>
 
             <!-- First tab - Profile, payment, security settings-->
 
-                <!--Profile settings-->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/buttonProfileSettings"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/button_settings_1"
-                    android:textAlignment="textStart"
-                    android:textColor="@color/black"
-                    android:textAllCaps="false"
-                    app:icon="@drawable/sidebar_user_24"
-                    app:iconTint="@color/black"
-                    app:cornerRadius="30dp"
-                    android:backgroundTint="@color/gray100"
-                    app:iconPadding="20dp"
-                    android:paddingStart="20dp"
-                    android:padding="20dp"
-                    app:iconSize="@dimen/icon_size_settings"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    app:rippleColor="@color/button_ripple">
-                </com.google.android.material.button.MaterialButton>
+            <!--Profile settings-->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonProfileSettings"
+                style="@style/SettingsPageButtons"
+                android:text="@string/button_settings_1"
+                app:icon="@drawable/sidebar_user_24"/>
 
-                <!--Payment settings-->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/buttonPaymentSettings"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/button_settings_2"
-                    android:textAlignment="textStart"
-                    android:textColor="@color/black"
-                    android:textAllCaps="false"
-                    app:icon="@drawable/sidebar_payment_24"
-                    app:iconTint="@color/black"
-                    app:cornerRadius="30dp"
-                    android:backgroundTint="@color/gray100"
-                    app:iconPadding="20dp"
-                    android:paddingStart="20dp"
-                    android:padding="20dp"
-                    app:iconSize="@dimen/icon_size_settings"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    app:rippleColor="@color/button_ripple">
-                </com.google.android.material.button.MaterialButton>
+            <!--Payment settings-->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonPaymentSettings"
+                style="@style/SettingsPageButtons"
+                android:text="@string/button_settings_2"
+                app:icon="@drawable/sidebar_payment_24"/>
 
-                <!--Security settings-->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/buttonSecuritySettings"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/button_settings_3"
-                    android:textAlignment="textStart"
-                    android:textColor="@color/black"
-                    android:textAllCaps="false"
-                    app:icon="@drawable/sidebar_security_24"
-                    app:iconTint="@color/black"
-                    app:cornerRadius="30dp"
-                    android:backgroundTint="@color/gray100"
-                    app:iconPadding="20dp"
-                    android:paddingStart="20dp"
-                    android:padding="20dp"
-                    app:iconSize="@dimen/icon_size_settings"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    app:rippleColor="@color/button_ripple">
-                </com.google.android.material.button.MaterialButton>
+            <!--Security settings-->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonSecuritySettings"
+                style="@style/SettingsPageButtons"
+                android:text="@string/button_settings_3"
+                app:icon="@drawable/sidebar_security_24"/>
 
             <Space
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/space_size_settings">
-            </Space>
+                android:layout_height="@dimen/space_size_settings"/>
 
             <!-- Second tab - About us, Contact us, Privacy Policy-->
-                <!--About us-->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/buttonAboutUs"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/button_settings_4"
-                    android:textAlignment="textStart"
-                    android:textColor="@color/black"
-                    android:textAllCaps="false"
-                    app:icon="@drawable/icon_about_us"
-                    app:iconTint="@color/black"
-                    app:cornerRadius="30dp"
-                    android:backgroundTint="@color/gray100"
-                    app:iconPadding="20dp"
-                    android:paddingStart="20dp"
-                    android:padding="20dp"
-                    app:iconSize="@dimen/icon_size_settings"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    app:rippleColor="@color/button_ripple">
-                </com.google.android.material.button.MaterialButton>
-
-                <!--Contact us-->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/buttonContactUs"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/button_settings_5"
-                    android:textAlignment="textStart"
-                    android:textColor="@color/black"
-                    android:textAllCaps="false"
-                    app:icon="@drawable/sidebar_contact_24"
-                    app:iconTint="@color/black"
-                    app:cornerRadius="30dp"
-                    android:backgroundTint="@color/gray100"
-                    app:iconPadding="20dp"
-                    android:paddingStart="20dp"
-                    android:padding="20dp"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    app:iconSize="@dimen/icon_size_settings"
-                    app:rippleColor="@color/button_ripple">
-                </com.google.android.material.button.MaterialButton>
-
-                <!--Privacy policy-->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/privacyPolicyButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/button_settings_6"
-                    android:textAlignment="textStart"
-                    android:textColor="@color/black"
-                    android:textAllCaps="false"
-                    app:icon="@drawable/icon_policy_policy"
-                    app:iconTint="@color/black"
-                    app:cornerRadius="30dp"
-                    android:backgroundTint="@color/gray100"
-                    app:iconPadding="20dp"
-                    android:paddingStart="20dp"
-                    android:padding="20dp"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    app:iconSize="@dimen/icon_size_settings"
-                    app:rippleColor="@color/button_ripple">
-                </com.google.android.material.button.MaterialButton>
-
-                <!--Terms of service-->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/terms_of_service_button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/button_settings_7"
-                    android:textAlignment="textStart"
-                    android:textColor="@color/black"
-                    android:textAllCaps="false"
-                    app:icon="@drawable/icon_terms"
-                    app:iconTint="@color/black"
-                    app:cornerRadius="30dp"
-                    android:backgroundTint="@color/gray100"
-                    app:iconPadding="20dp"
-                    android:paddingStart="20dp"
-                    android:padding="20dp"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    app:iconSize="@dimen/icon_size_settings"
-                    app:rippleColor="@color/button_ripple">
-                </com.google.android.material.button.MaterialButton>
-
+            <!--About us-->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonAboutUs"
+                android:text="@string/button_settings_4"
+                style="@style/SettingsPageButtons"
+                app:icon="@drawable/icon_about_us"/>
+            <!--Contact us-->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonContactUs"
+                android:text="@string/button_settings_5"
+                style="@style/SettingsPageButtons"
+                app:icon="@drawable/sidebar_contact_24"
+        />
+            <!--Privacy policy-->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/privacyPolicyButton"
+                android:text="@string/button_settings_6"
+                style="@style/SettingsPageButtons"
+                app:icon="@drawable/icon_policy_policy"
+            />
+            <!--Terms of service-->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/terms_of_service_button"
+                android:text="@string/button_settings_7"
+                style="@style/SettingsPageButtons"
+                app:icon="@drawable/icon_terms"
+       />
             <Space
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/space_size_settings">
-            </Space>
+                android:layout_height="@dimen/space_size_settings"/>
 
             <!-- Third tab - Log out-->
             <!--Log Out -->
@@ -305,27 +190,26 @@
                 android:id="@+id/logoutButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:backgroundTint="#595959"
+                android:padding="20dp"
+                android:paddingStart="20dp"
                 android:text="Log Out"
                 android:textAlignment="textStart"
                 android:textAllCaps="false"
-                app:icon="@drawable/round_power_settings_new_24"
-                app:cornerRadius="30dp"
-                app:iconSize="@dimen/icon_size_settings"
-                android:backgroundTint="#595959"
-                app:iconPadding="20dp"
-                android:paddingStart="20dp"
-                android:padding="20dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
                 android:theme="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-                app:rippleColor="@color/quantum_googred"          >
+                app:cornerRadius="30dp"
+                app:icon="@drawable/round_power_settings_new_24"
+                app:iconPadding="20dp"
+                app:iconSize="@dimen/icon_size_settings"
+                app:rippleColor="@color/quantum_googred">
 
             </com.google.android.material.button.MaterialButton>
 
             <Space
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/space_size_settings">
-            </Space>
+                android:layout_height="@dimen/space_size_settings"/>
 
         </LinearLayout>
 
