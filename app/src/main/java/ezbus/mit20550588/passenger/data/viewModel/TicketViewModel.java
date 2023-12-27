@@ -1,6 +1,7 @@
 package ezbus.mit20550588.passenger.data.viewModel;
 
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import ezbus.mit20550588.passenger.data.model.TicketOrder;
@@ -11,12 +12,12 @@ import ezbus.mit20550588.passenger.data.repository.TicketRepository;
 public class TicketViewModel extends ViewModel {
 
     private TicketRepository ticketRepository;
-        private LiveData<Double> fareLiveData;
+        private MutableLiveData<Double> fareLiveData = new MutableLiveData<>();
     private LiveData<String> errorLiveData;
 
     private LiveData<TicketOrder> ticketOrderLiveData;
 
-    public TicketViewModel(TicketRepository ticketRepository, LiveData<Double> fareLiveData, LiveData<String> errorLiveData) {
+    public TicketViewModel(TicketRepository ticketRepository, MutableLiveData<Double> fareLiveData, LiveData<String> errorLiveData) {
         this.ticketRepository = new TicketRepository(new RetrofitClient().getClient().create(ApiServiceBus.class));
         this.fareLiveData = fareLiveData;
         this.errorLiveData = errorLiveData;
@@ -25,6 +26,7 @@ public class TicketViewModel extends ViewModel {
     // Constructor to initialize the repository
     public TicketViewModel() {
         this.ticketRepository = new TicketRepository(new RetrofitClient().getClient().create(ApiServiceBus.class));
+        this.fareLiveData = new MutableLiveData<>();
         this.fareLiveData = ticketRepository.getFarePriceLiveData();
         this.errorLiveData = ticketRepository.getErrorLiveData();
     }
@@ -51,6 +53,7 @@ public class TicketViewModel extends ViewModel {
     }
 
     public void getFarePrice(String routeId, String startBusStop, String endBusStop) {
+        fareLiveData.setValue(null);
         ticketRepository.getFarePrice(routeId, startBusStop, endBusStop);
     }
 

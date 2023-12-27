@@ -22,5 +22,9 @@ public interface ApiServicePayment {
 
     @POST("/payment/payhere/cancel")
     Call<Void> notifyPaymentCancel(@Body Map<String, Object> notifyPaymentRequest);
+
+    @POST("/payment/isTicketRedeemed")
+    Call<TicketRedemptionStatus> isTicketRedeemed(@Body Map<String, Object> checkRedeemStatusRequest);
 }
+
 

@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
+import java.util.Date;
 import java.util.List;
 
 import ezbus.mit20550588.passenger.data.model.PurchasedTicketModel;
@@ -41,8 +42,9 @@ public class PurchasedTicketViewModel extends AndroidViewModel {
         return allPurchasedTickets;
     }
 
-    public void update(PurchasedTicketModel purchasedTicket) {
-        Log("PurchasedTicketViewModel", "4");
-        repository.updatePurchasedTicket(purchasedTicket);
+
+    // Update ticket when the server return it as redeemed
+    public void update(PurchasedTicketModel purchasedTicket, Date redeemedDate) {
+        repository.updatePurchasedTicket(purchasedTicket, redeemedDate);
     }
 }

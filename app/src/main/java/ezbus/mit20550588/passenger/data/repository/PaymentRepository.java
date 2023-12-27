@@ -16,9 +16,11 @@ import ezbus.mit20550588.passenger.data.model.TicketOrder;
 import ezbus.mit20550588.passenger.data.network.ApiServiceBus;
 import ezbus.mit20550588.passenger.data.network.ApiServicePayment;
 import ezbus.mit20550588.passenger.data.network.PaymentStatusResponse;
+import ezbus.mit20550588.passenger.data.network.TicketRedemptionStatus;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.http.Body;
 
 public class PaymentRepository {
 
@@ -27,6 +29,8 @@ public class PaymentRepository {
     private MutableLiveData<String> errorLiveData = new MutableLiveData<>();
 
     private MutableLiveData<PaymentStatusResponse> paymentStatusLiveData = new MutableLiveData<>();
+
+    private MutableLiveData<TicketRedemptionStatus> ticketRedemptionStatusLiveData = new MutableLiveData<>();
 
     public PaymentRepository(ApiServicePayment apiService) {
         this.apiService = apiService;
@@ -38,6 +42,10 @@ public class PaymentRepository {
 
     public MutableLiveData<PaymentStatusResponse> getPaymentStatusLiveData() {
         return paymentStatusLiveData;
+    }
+
+    public MutableLiveData<TicketRedemptionStatus> getTicketRedemptionStatusLiveData() {
+        return ticketRedemptionStatusLiveData;
     }
 
     public void validateTicketOrder(TicketOrder ticketOrder) {
@@ -156,5 +164,33 @@ public class PaymentRepository {
             }
         });
     }
+
+    public void isTicketRedeemed(Map<String, Object> checkRedeemStatusRequest) {
+        Call<TicketRedemptionStatus> call = apiService.isTicketRedeemed(checkRedeemStatusRequest);
+
+        call.enqueue(new Callback<TicketRedemptionStatus>() {
+            @Override
+            public void onResponse(Call<TicketRedemptionStatus> call, Response<TicketRedemptionStatus> response) {
+                if (response.isSuccessful()) {
+                    Log("isTicketRedeemed","onResponse", response.toString());
+                    TicketRedemptionStatus ticketRedemptionStatus = response.body();
+                    ticketRedemptionStatusLiveData.setValue(ticketRedemptionStatus);
+                } else {
+                    Log("isTicketRedeemed","onResponse: ERROR", response.toString());
+                    if (response.body() != null) {
+                        errorLiveData.setValue(response.body().getMessage());
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<TicketRedemptionStatus> call, Throwable t) {
+                Log("isTicketRedeemed","onFailure", t.getMessage());
+
+                errorLiveData.setValue("Internal server error. Please try again later");
+            }
+        });
+    }
+
 
 }

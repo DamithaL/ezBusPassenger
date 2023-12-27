@@ -274,7 +274,6 @@ public class MainActivity
 
                 visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
                 visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
-                visibilityMap.put(findViewById(R.id.busDetails_RelativeLayout), false); // Bus details banner
                 visibilityMap.put(findViewById(R.id.current_location_layout), false);
 
                 allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
@@ -838,11 +837,48 @@ public class MainActivity
 
     private void initDirectionsButton() {
         try {
+
+            // TODO: 2023-12-07  SOURCE and DESTINATION LATLANG,NAMES should be passed in correct MVVM path
+
             DirectionsButton = findViewById(R.id.directionsButton);
             DirectionsButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    showDirections();
+                    Log("showDirections", "started showing directions");
+                    if (SourceLocationLatLng == null || SourceLocationName == null) {
+                        Log("showDirections", "Source location is null", "getDeviceLocation called");
+                        // Show current location
+                        getDeviceLocation();
+
+                    }
+
+                    if (SourceLocationLatLng != null
+                            && DestinationLocationLatLng != null
+                            && SourceLocationName != null
+                            && DestinationLocationName != null) {
+
+                        // set Location bars
+                        EditText SourceLocation = findViewById(R.id.sourceLocationText);
+                        EditText DestinationLocation = findViewById(R.id.destinationLocationText);
+
+                        SourceLocation.setText(SourceLocationName);
+                        Log("direction", "SourceLocation text changed");
+                        DestinationLocation.setText(DestinationLocationName);
+                        Log("direction", "DestinationLocation text changed");
+
+                        direction(SourceLocationLatLng, DestinationLocationLatLng);
+
+                        /////------- ITEMS VISIBILITY  -------/////
+                        Map<View, Boolean> visibilityMap = new HashMap<>();
+
+                        visibilityMap.put(findViewById(R.id.SearchBarRelLayout), false);  // Search bar
+                        visibilityMap.put(recentSearchLayout, false);  // recent search
+                        visibilityMap.put(recyclerViewForAutocomplete, false);  // autocomplete
+                        visibilityMap.put(DirectionsButton, false); // Directions button
+                        visibilityMap.put(findViewById(R.id.directionBar), true); // Direction Bar
+
+                        allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
+                    }
                 }
             });
         } catch (Exception e) {
@@ -1691,48 +1727,6 @@ public class MainActivity
     }
 
     // ------------- Draw directions on map ------------- //
-    private void showDirections() {
-
-        // TODO: 2023-12-07  SOURCE and DESTINATION LATLANG,NAMES should be passed in correct MVVM path
-
-        Log("showDirections", "started showing directions");
-        if (SourceLocationLatLng == null || SourceLocationName == null) {
-            Log("showDirections", "Source location is null", "getDeviceLocation called");
-            // Show current location
-            getDeviceLocation();
-
-        }
-
-        if (SourceLocationLatLng != null
-                && DestinationLocationLatLng != null
-                && SourceLocationName != null
-                && DestinationLocationName != null) {
-
-            // set Location bars
-            EditText SourceLocation = findViewById(R.id.sourceLocationText);
-            EditText DestinationLocation = findViewById(R.id.destinationLocationText);
-
-            SourceLocation.setText(SourceLocationName);
-            Log("direction", "SourceLocation text changed");
-            DestinationLocation.setText(DestinationLocationName);
-            Log("direction", "DestinationLocation text changed");
-
-            direction(SourceLocationLatLng, DestinationLocationLatLng);
-
-            /////------- ITEMS VISIBILITY  -------/////
-            Map<View, Boolean> visibilityMap = new HashMap<>();
-
-            visibilityMap.put(findViewById(R.id.SearchBarRelLayout), false);  // Search bar
-            visibilityMap.put(recentSearchLayout, false);  // recent search
-            visibilityMap.put(recyclerViewForAutocomplete, false);  // autocomplete
-            visibilityMap.put(DirectionsButton, false); // Directions button
-            visibilityMap.put(findViewById(R.id.directionBar), true); // Direction Bar
-
-            allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
-        }
-
-    }
-
     public BitmapDescriptor getBitmapDescriptorWithDrawable(Drawable drawable, int circleColor, int strokeWidth, int strokeColor, int size) {
         int padding = 10; // Adjust the padding as needed
         int diameter = Math.max(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight()) + strokeWidth * 2;
@@ -1781,7 +1775,8 @@ public class MainActivity
         toggleItemVisibility(findViewById(R.id.loadingProgressBar), true);
 
         // Remove any existing markers
-        myMap.clear();
+       // myMap.clear();
+        clearBusMapMarkers();
 
         // Marking START & END points
 
@@ -2663,23 +2658,9 @@ public class MainActivity
         TextView busDetails_GetDownPlace = dialog.findViewById(R.id.busDetails_GetDownPlace);
         TextView busDetails_GetDownTime = dialog.findViewById(R.id.busDetails_GetDownTime);
         TextView busDetails_TicketPrice = dialog.findViewById(R.id.busDetails_TicketPrice);
+        TextView busDetails_perPersonTextView = dialog.findViewById(R.id.busDetails_perPersonTextView);
         ImageButton busDetails_CloseButton = dialog.findViewById(R.id.busDetails_CloseButton);
         Button busDetails_purchaseTicketButton = dialog.findViewById(R.id.purchaseTicketButton);
-
-
-
-        // Initiate the views
-       // RelativeLayout busDetails_RelativeLayout = findViewById(R.id.busDetails_RelativeLayout);
-//        ImageView busDetails_Image = findViewById(R.id.busDetails_Image);
-//        TextView busDetails_route = findViewById(R.id.busDetails_Route);
-//        TextView busDetails_VehicleNumber = findViewById(R.id.busDetails_VehicleNumber);
-//        TextView busDetails_GetOnPlace = findViewById(R.id.busDetails_GetOnPlace);
-//        TextView busDetails_GetOnTime = findViewById(R.id.busDetails_GetOnTime);
-//        TextView busDetails_GetDownPlace = findViewById(R.id.busDetails_GetDownPlace);
-//        TextView busDetails_GetDownTime = findViewById(R.id.busDetails_GetDownTime);
-//        TextView busDetails_TicketPrice = findViewById(R.id.busDetails_TicketPrice);
-//        ImageButton busDetails_CloseButton = findViewById(R.id.busDetails_CloseButton);
-//        Button busDetails_purchaseTicketButton = findViewById(R.id.purchaseTicketButton);
 
         // Get the Ticket details
         TicketModel ticket = findTicketByRouteNumber(bus.getBus().getRouteId());
@@ -2698,18 +2679,24 @@ public class MainActivity
             long departureTimeInMillis = Long.parseLong(ticket.getDepartureStopTime()) * 1000L;
             busDetails_GetDownTime.setText(timestampToFormattedTime(departureTimeInMillis));
 
+            busDetails_purchaseTicketButton.setEnabled(false);
+            busDetails_TicketPrice.setText("(Calculating the ticket price...)");
+            busDetails_perPersonTextView.setText("");
             // Trigger the request to fetch fare price
             ticketViewModel.getFarePrice(ticket.getRouteNumber(), ticket.getArrivalStopName(), ticket.getDepartureStopName());
 
             // Observe LiveData for fare price
             ticketViewModel.getFarePriceLiveData().observe(this, fare -> {
                 try {
+                    Log("showBusDetails", "observing", "getFarePriceLiveData");
                     if (fare != null) {
-
+                        Log("showBusDetails", "fare", fare.toString());
+                        busDetails_purchaseTicketButton.setEnabled(true);
                         // Format the double with 2 decimal places
                         String formattedFare = String.format("%.2f", fare);
 
                         busDetails_TicketPrice.setText("Rs." + formattedFare);
+                        busDetails_perPersonTextView.setText(" per person");
                         ticket.setFarePrice(fare);
 
                         busDetails_purchaseTicketButton.setOnClickListener(new View.OnClickListener() {
@@ -2728,7 +2715,7 @@ public class MainActivity
 
 
                     } else {
-                        busDetails_TicketPrice.setText("(Calculating...)");
+                        busDetails_TicketPrice.setText("(Calculating the ticket price...)");
                         // TODO: Make the purchase button inactive
                     }
                 } catch (Exception e) {
@@ -2739,7 +2726,7 @@ public class MainActivity
             busDetails_CloseButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    //toggleItemVisibility(busDetails_RelativeLayout, false);
+
                     dialog.dismiss();
                 }
             });
@@ -2774,7 +2761,7 @@ public class MainActivity
             });
 
             dialog.show();
-          //  toggleItemVisibility(busDetails_RelativeLayout, true);
+
         } else {
             Toast.makeText(this, "Sorry! Bus details not found", Toast.LENGTH_SHORT).show();
             Log("showBusDetails", "ERROR", "Cannot find the ticket");
@@ -2824,18 +2811,22 @@ public class MainActivity
             for (Marker marker : busMarkers.values()) {
                 marker.remove();
             }
-            busMarkers.clear();
+            myMap.clear();
         }
 
         if (busMarkers != null) {
             busMarkers.clear();
         }
 
+        if (ticketList != null) {
+            ticketList.clear();
+        }
 
-        toggleItemVisibility(findViewById(R.id.busDetails_RelativeLayout), false);
 
         Log("clearBusMapMarkers", "bus location observation stopped");
     }
+
+    // TODO: 2023-12-27  bus colors, toast messages when busses are not available, bus trip direction
 
     // ORIGINAL METHODS - CODE
 

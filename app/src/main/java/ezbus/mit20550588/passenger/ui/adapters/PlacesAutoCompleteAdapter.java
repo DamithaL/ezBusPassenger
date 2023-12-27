@@ -188,29 +188,31 @@ public class PlacesAutoCompleteAdapter extends RecyclerView.Adapter<PlacesAutoCo
 
         @Override
         public void onClick(View v) {
-            PlaceAutocomplete item = mResultList.get(getAdapterPosition());
-            if (v.getId() == R.id.place_item_view) {
+            if (!mResultList.isEmpty()) {
+                PlaceAutocomplete item = mResultList.get(getAdapterPosition());
+                if (v.getId() == R.id.place_item_view) {
 
-                String placeId = String.valueOf(item.placeId);
+                    String placeId = String.valueOf(item.placeId);
 
-                List<Place.Field> placeFields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG
-                       // Place.Field.ADDRESS
-                );
-                FetchPlaceRequest request = FetchPlaceRequest.builder(placeId, placeFields).build();
-                placesClient.fetchPlace(request).addOnSuccessListener(new OnSuccessListener<FetchPlaceResponse>() {
-                    @Override
-                    public void onSuccess(FetchPlaceResponse response) {
-                        Place place = response.getPlace();
-                        clickListener.handleAutocompleteItemClick(place);
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        if (exception instanceof ApiException) {
-                            Toast.makeText(mContext, exception.getMessage() + "", Toast.LENGTH_SHORT).show();
+                    List<Place.Field> placeFields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG
+                            // Place.Field.ADDRESS
+                    );
+                    FetchPlaceRequest request = FetchPlaceRequest.builder(placeId, placeFields).build();
+                    placesClient.fetchPlace(request).addOnSuccessListener(new OnSuccessListener<FetchPlaceResponse>() {
+                        @Override
+                        public void onSuccess(FetchPlaceResponse response) {
+                            Place place = response.getPlace();
+                            clickListener.handleAutocompleteItemClick(place);
                         }
-                    }
-                });
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            if (exception instanceof ApiException) {
+                                Toast.makeText(mContext, exception.getMessage() + "", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+                }
             }
         }
     }

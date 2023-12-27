@@ -2,6 +2,7 @@ package ezbus.mit20550588.passenger.ui.adapters;
 
 import static ezbus.mit20550588.passenger.util.Constants.Log;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +16,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import ezbus.mit20550588.passenger.R;
 import ezbus.mit20550588.passenger.data.model.PurchasedTicketModel;
 import ezbus.mit20550588.passenger.data.model.RecentSearchModel;
+import ezbus.mit20550588.passenger.data.model.TicketModel;
+import ezbus.mit20550588.passenger.ui.MainActivity;
+import ezbus.mit20550588.passenger.ui.PurchaseTicket.PurchaseTicket;
+import ezbus.mit20550588.passenger.ui.PurchaseTicket.RedeemTicket;
 
 public class NewTicketAdapter extends ListAdapter<PurchasedTicketModel, RecyclerView.ViewHolder> {
 
@@ -107,7 +112,9 @@ public class NewTicketAdapter extends ListAdapter<PurchasedTicketModel, Recycler
             newTicketViewHolder.redeemButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-
+                    Intent intent = new Intent(holder.itemView.getContext(), RedeemTicket.class);
+                    intent.putExtra("ticket", currentTicket);
+                    holder.itemView.getContext().startActivity(intent);
                 }
             });
 

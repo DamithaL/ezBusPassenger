@@ -31,6 +31,8 @@ android {
         viewBinding true
     }
     namespace 'ezbus.mit20550588.passenger'
+
+
 }
 
 configurations.implementation {
@@ -86,6 +88,13 @@ dependencies {
 
     implementation 'lk.payhere:androidsdk:3.0.4'
     implementation 'com.google.code.gson:gson:2.10' // ignore if you have already added
+
+    // QR Code
+    implementation 'com.google.zxing:core:3.4.1'
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+
+    implementation 'org.json:json:20210307'  // Adjust the version as needed
+
 
 
 }

@@ -19,7 +19,7 @@ public class TicketRepository {
         this.busApiService = busApiService;
     }
 
-    public LiveData<Double> getFarePriceLiveData() {
+    public MutableLiveData<Double> getFarePriceLiveData() {
         return fareLiveData;
     }
 

@@ -179,10 +179,10 @@
                 android:textSize="16sp" />
 
             <TextView
+                android:id="@+id/busDetails_perPersonTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
-
                 android:text=" per person"
                 android:textSize="16sp" />
         </LinearLayout>
@@ -194,11 +194,13 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:elevation="10dp"
-            android:backgroundTint="@color/my_primary"
+            android:backgroundTint="@drawable/rounded_bg_button"
             android:text="Purchase Ticket"
             android:textColor="@android:color/white"
             android:textSize="14sp"
             app:shapeAppearanceOverlay="@style/RoundedCorner"
+
+
              />
 
     </LinearLayout>

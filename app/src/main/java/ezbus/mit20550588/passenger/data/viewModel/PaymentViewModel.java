@@ -11,6 +11,7 @@ import ezbus.mit20550588.passenger.data.network.ApiServiceBus;
 import ezbus.mit20550588.passenger.data.network.ApiServicePayment;
 import ezbus.mit20550588.passenger.data.network.PaymentStatusResponse;
 import ezbus.mit20550588.passenger.data.network.RetrofitClient;
+import ezbus.mit20550588.passenger.data.network.TicketRedemptionStatus;
 import ezbus.mit20550588.passenger.data.repository.PaymentRepository;
 import ezbus.mit20550588.passenger.data.repository.TicketRepository;
 
@@ -23,6 +24,8 @@ public class PaymentViewModel extends ViewModel {
 
     private LiveData<PaymentStatusResponse> paymentStatusLiveData;
 
+    private LiveData<TicketRedemptionStatus> ticketRedemptionStatus;
+
     // Constructor to initialize the repository
     public PaymentViewModel() {
         this.paymentRepository = new PaymentRepository(new RetrofitClient().getClient().create(ApiServicePayment.class));
@@ -30,6 +33,7 @@ public class PaymentViewModel extends ViewModel {
         this.errorLiveData = paymentRepository.getErrorLiveData();
         this.ticketOrderLiveData = paymentRepository.getTicketOrderLiveData();
         this.paymentStatusLiveData = paymentRepository.getPaymentStatusLiveData();
+        this.ticketRedemptionStatus = paymentRepository.getTicketRedemptionStatusLiveData();
     }
 
     // Existing constructor for dependency injection
@@ -38,6 +42,7 @@ public class PaymentViewModel extends ViewModel {
         this.ticketOrderLiveData = paymentRepository.getTicketOrderLiveData();
         this.errorLiveData = paymentRepository.getErrorLiveData();
         this.paymentStatusLiveData = paymentRepository.getPaymentStatusLiveData();
+        this.ticketRedemptionStatus = paymentRepository.getTicketRedemptionStatusLiveData();
     }
 
 
@@ -53,6 +58,10 @@ public class PaymentViewModel extends ViewModel {
         return paymentStatusLiveData;
     }
 
+    public LiveData<TicketRedemptionStatus> getTicketRedemptionStatus() {
+        return ticketRedemptionStatus;
+    }
+
     public void validateTicketOrder(TicketOrder ticket) {
 
         paymentRepository.validateTicketOrder(ticket);
@@ -64,6 +73,10 @@ public class PaymentViewModel extends ViewModel {
 
     public void notifyPaymentCancel(Map<String, Object> notifyPaymentRequest) {
         paymentRepository.notifyPaymentCancel(notifyPaymentRequest);
+    }
+
+    public void isTicketRedeemed(Map<String, Object> checkRedeemStatusRequest) {
+        paymentRepository.isTicketRedeemed(checkRedeemStatusRequest);
     }
 
 

@@ -6,6 +6,7 @@ import android.app.Application;
 
 import androidx.lifecycle.LiveData;
 
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -13,6 +14,7 @@ import java.util.concurrent.Executors;
 import ezbus.mit20550588.passenger.data.dao.PurchasedTicketDao;
 import ezbus.mit20550588.passenger.data.database.AppDatabase;
 import ezbus.mit20550588.passenger.data.model.PurchasedTicketModel;
+import ezbus.mit20550588.passenger.data.model.RecentSearchModel;
 
 public class PurchasedTicketRepository {
     private PurchasedTicketDao purchasedTicketDao;
@@ -41,10 +43,11 @@ public class PurchasedTicketRepository {
     }
 
     // Method to update the date of a purchased ticket
-    public void updatePurchasedTicket(PurchasedTicketModel purchasedTicket) {
+    public void updatePurchasedTicket(PurchasedTicketModel purchasedTicket, Date redeemedDate) {
         Log("PurchasedTicketRepository", "4");
         UpdateAsyncTask updateTask = new UpdateAsyncTask(purchasedTicketDao);
-        updateTask.performBackgroundTask(purchasedTicket);
+        updateTask.performBackgroundTask(redeemedDate, purchasedTicket);
+
     }
 
     private static class InsertAsyncTask {
@@ -77,17 +80,21 @@ public class PurchasedTicketRepository {
         private Executor executor = Executors.newSingleThreadExecutor();
         private PurchasedTicketDao purchasedTicketDao;
 
+
+
         public UpdateAsyncTask(PurchasedTicketDao purchasedTicketDao) {
             Log("PurchasedTicketRepository", "7");
             this.purchasedTicketDao = purchasedTicketDao;
         }
 
-        public void performBackgroundTask(PurchasedTicketModel... purchasedTicket) {
+        public void performBackgroundTask(Date redeemedDate, PurchasedTicketModel... purchasedTicket) {
             executor.execute(() -> {
                 Log("PurchasedTicketRepository", "8");
                 if (purchasedTicket.length > 0) {
-                    Log("PurchasedTicketRepository", "9");
-                    purchasedTicketDao.updatePurchasedTicket(purchasedTicket[0]);
+                    PurchasedTicketModel ticket = purchasedTicket[0];
+                    ticket.setRedeemed(true);
+                    ticket.setRedeemedDate(redeemedDate);
+                    purchasedTicketDao.updatePurchasedTicket(ticket);
                 }
             });
         }

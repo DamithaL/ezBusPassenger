@@ -2,21 +2,25 @@ package ezbus.mit20550588.passenger.data.model;
 
 import static ezbus.mit20550588.passenger.util.Constants.Log;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import ezbus.mit20550588.passenger.util.DateUtils;
 
 @Entity(tableName = "purchased_ticket_table")
-public class PurchasedTicketModel {
+public class PurchasedTicketModel implements Serializable {
 
     @PrimaryKey(autoGenerate = true)
     private int ticketId;
-   private TicketModel ticket;
+    private TicketModel ticket;
     private String orderId;
     private Date purchasedDate;
     private boolean isRedeemed;
@@ -57,6 +61,7 @@ public class PurchasedTicketModel {
     public String getRedeemedDateAsString() {
         return DateUtils.formatDateToString(redeemedDate);
     }
+
     public void setTicketId(int ticketId) {
         Log("PurchasedTicketModel", "6");
         this.ticketId = ticketId;
@@ -72,15 +77,15 @@ public class PurchasedTicketModel {
         this.redeemedDate = redeemedDate;
     }
 
-    public PurchasedTicketModel(
-          TicketModel ticket,
-            String orderId, Date purchasedDate, boolean isRedeemed, Date redeemedDate) {
+    public PurchasedTicketModel(TicketModel ticket, String orderId, Date purchasedDate, boolean isRedeemed, Date redeemedDate) {
         Log("PurchasedTicketModel", "10");
-       this.ticket = ticket;
+        this.ticket = ticket;
         this.orderId = orderId;
         this.purchasedDate = purchasedDate;
         this.isRedeemed = isRedeemed;
         this.redeemedDate = redeemedDate;
         Log("PurchasedTicketModel", "9");
     }
+
+
 }
