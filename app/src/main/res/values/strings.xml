@@ -2,12 +2,12 @@
 
     <!-- Application  -->
     <string name="main_app_name">EZBus</string>
-    <string name="sub_app_name">Passenger</string>
+    <string name="sub_app_name">Manager</string>
     <string name="splash_screen_logo_description">App logo - an image of a bus</string>
-    <string name="splash_screen_loading_text">Loading EZBus Passenger...</string>
+    <string name="splash_screen_loading_text">Loading EZBus Manager...</string>
 
     <!-- Login screens  -->
-    <string name="app_name">ezBusPassengerApplication</string>
+    <string name="app_name">ezBusManagerApplication</string>
     <string name="app_logo_name">EZBus</string>
     <string name="app_tag_line">Real-time public bus tracking and contactless fare payment system</string>
     <string name="title_activity_login">LoginActivity</string>
@@ -31,6 +31,43 @@
     <string name="sign_up_text_input_hint_password_confirm">Please confirm your password</string>
     <string name="signup_results_welcome_text_1">Welcome to our community!</string>
     <string name="signup_results_welcome_text_2">You\'ve signed up successfully.</string>
+
+    <!-- Bus Fleet Register screen  -->
+    <string name="fleet_register_headline">Register your Bus Fleet</string>
+    <string name="fleet_register_instruction">Please enter your bus fleet details to proceed</string>
+    <string name="fleet_register_text_input_hint_fleet_name">Bus Fleet Name</string>
+    <string name="fleet_register_text_input_hint_fleet_registration_number">Bus Fleet Registration Number</string>
+    <string name="fleet_register_instruction_2">Send the registration request to the administrator.</string>
+    <string name="fleet_register_help">If you encounter issues or already have a registered fleet, contact us for assistance.</string>
+    <string name="fleet_register_results_pending_1">Registration Request Sent!</string>
+    <string name="fleet_register_results_pending_2">Your registration request is now under review. You will receive a notification once it has been approved or rejected.</string>
+    <string name="fleet_register_results_approved_1">Congratulations! Registration Request Approved</string>
+    <string name="fleet_register_results_approved_2">Your bus fleet registration request has been approved. You can now proceed with creating bus accounts.</string>
+    <string name="fleet_register_results_approved_button">Continue</string>
+    <string name="fleet_register_results_rejected_1">Sorry! Registration Request Rejected</string>
+    <string name="fleet_register_results_rejected_2">We regret to inform you that your fleet registration request has been rejected due to </string>
+    <string name="fleet_register_results_rejected_3">If you require further assistance, please contact us. Alternatively, you may retry the registration with the correct details.</string>
+    <string name="fleet_register_results_rejected_button">Retry Registration</string>
+    <string name="fleet_status_check_results_suspended_1">Account Suspended</string>
+    <string name="fleet_status_check_results_suspended_2">We regret to inform you that your account has been temporarily suspended due to </string>
+    <string name="fleet_status_check_results_suspended_3">Please review our terms and conditions to understand the reason for suspension. If you believe this is an error, please contact us for assistance.</string>
+
+    <!-- No busses screen  -->
+    <string name="no_busses_headline">You\'re all set!</string>
+    <string name="no_busses_instruction">Let\'s get started by adding buses to your fleet.</string>
+    <string name="no_busses_button">Add Your First Bus</string>
+
+    <!-- Add bus screen  -->
+    <string name="add_bus_headline">Add a New Bus</string>
+    <string name="add_bus_instruction">Please fill in the details below to add a new bus to the system.</string>
+    <string name="add_bus_text_input_hint_bus_number">Bus Registration Number</string>
+    <string name="add_bus_text_input_hint_bus_route_number">Bus Route Number</string>
+    <string name="add_bus_text_input_hint_bus_route_name">Bus Route Name</string>
+    <string name="add_bus_text_input_hint_bus_color">Click to choose Bus Colour</string>
+    <string name="add_bus_text_input_hint_bus_emergency_contact_number">Emergency Contact Number</string>
+    <string name="add_bus_button_text">Add Bus</string>
+    <string name="add_bus_help">If you encounter issues, contact us for assistance.</string>
+
 
     <!-- Map screen   -->
     <string name="MAPS_API_KEY">AIzaSyDDTamV9IieqbDXoWKxjEHmBo7jRcNuhFg</string>

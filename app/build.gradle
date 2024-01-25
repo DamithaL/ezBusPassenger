@@ -7,7 +7,7 @@ android {
     compileSdk 34
 
     defaultConfig {
-        applicationId "ezbus.mit20550588.passenger"
+        applicationId "ezbus.mit20550588.manager"
         minSdk 23
         targetSdk 34
         versionCode 1
@@ -30,7 +30,7 @@ android {
     buildFeatures {
         viewBinding true
     }
-    namespace 'ezbus.mit20550588.passenger'
+    namespace 'ezbus.mit20550588.manager'
 
 
 }
@@ -93,8 +93,11 @@ dependencies {
     implementation 'com.google.zxing:core:3.4.1'
     implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
 
+    // For the JSON parsing
     implementation 'org.json:json:20210307'  // Adjust the version as needed
 
+    // For the color picker
+    implementation 'com.github.yukuku:ambilwarna:2.0.1'
 
 
 }

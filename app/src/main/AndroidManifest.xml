@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" >
+    xmlns:tools="http://schemas.android.com/tools"
+    package="ezbus.mit20550588.manager">
     <!-- ////////// For Google Maps APIs ////////////// -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -16,87 +17,73 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.EzBusPassenger"
+        android:theme="@style/Theme.EzBusManager"
         android:usesCleartextTraffic="true"
-        tools:targetApi="31" >
+        tools:targetApi="31">
         <activity
-            android:name=".ui.PurchaseTicket.RedeemTicket"
+            android:name=".ui.Login.FleetRegistration"
             android:exported="false"
-            android:theme="@style/Theme.Settings"/>
-        <activity
-            android:name=".ui.PurchaseTicket.MyTickets"
-            android:exported="true"
-            android:theme="@style/Theme.Settings" >
-
-            <!-- <intent-filter> -->
-            <!-- <action android:name="android.intent.action.MAIN" /> -->
-            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
-            <!-- </intent-filter> -->
-        </activity>
-        <activity
-            android:name=".ui.PurchaseTicket.PurchaseTicket"
-            android:exported="false"
-            android:theme="@style/Theme.Settings" />
+           />
         <activity
             android:name=".ui.Settings.ContactUs"
             android:exported="false"
-            android:theme="@style/Theme.Settings" />
+           />
         <activity
             android:name=".ui.Settings.AboutUs"
             android:exported="false"
-            android:theme="@style/Theme.Settings" />
+          />
         <activity
             android:name=".ui.Settings.SecuritySettings"
             android:exported="false"
-            android:theme="@style/Theme.Settings" />
+             />
         <activity
             android:name=".ui.Settings.PaymentSettings"
             android:exported="false"
-            android:theme="@style/Theme.Settings" />
+            />
         <activity
             android:name=".ui.Settings.ProfileSettings"
             android:exported="false"
-            android:theme="@style/Theme.Settings" />
+             />
         <activity
             android:name=".ui.Login.AccountSetupCompleted"
             android:exported="false"
-            android:theme="@style/Theme.Login" />
+           />
         <activity
             android:name=".ui.Login.AddPayment"
             android:exported="false"
-            android:theme="@style/Theme.Login" />
+            />
         <activity
             android:name=".ui.Login.AccountCreated"
             android:exported="false"
-            android:theme="@style/Theme.Login" />
+          />
         <activity
             android:name=".ui.Login.SignUpEmailVerification"
             android:exported="false"
-            android:theme="@style/Theme.Login" />
+           />
         <activity
             android:name=".ui.ForgotPassword.PasswordChanged"
             android:exported="false"
-            android:theme="@style/Theme.Login" />
+            />
         <activity
             android:name=".ui.ForgotPassword.CreateNewPassword"
             android:exported="false"
-            android:theme="@style/Theme.Login" />
+            />
         <activity
             android:name=".ui.ForgotPassword.ForgotPasswordCodeCheck"
             android:exported="false"
-            android:theme="@style/Theme.Login" />
+            />
         <activity
             android:name=".ui.ForgotPassword.ForgotPassword"
             android:exported="false"
-            android:theme="@style/Theme.Login" />
+             />
         <activity
             android:name=".ui.Login.SignUp"
             android:exported="false"
-            android:theme="@style/Theme.Login" />
+           />
         <activity
             android:name=".ui.Login.Login"
             android:exported="false"
-            android:theme="@style/Theme.Login" >
+           >
 
             <!-- <intent-filter> -->
             <!-- <action android:name="android.intent.action.MAIN" /> -->
@@ -108,25 +95,22 @@
         <activity
             android:name=".ui.Settings.TermConditions"
             android:exported="false"
-            android:theme="@style/Theme.Settings" />
+            />
         <activity
             android:name=".ui.Settings.PrivacyPolicyActivity"
             android:exported="false"
-            android:theme="@style/Theme.Settings" />
+           />
         <activity
             android:name=".ui.Settings.Settings"
             android:exported="true"
-            android:theme="@style/Theme.Settings" >
+       >
 
             <!-- <intent-filter> -->
             <!-- <action android:name="android.intent.action.MAIN" /> -->
             <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
             <!-- </intent-filter> -->
         </activity>
-        <activity
-            android:name=".ui.virtualTicket"
-            android:exported="false"
-            android:theme="@style/Theme.Settings" />
+
         <!--
              TODO: Before you run your application, you need a Google Maps API key.
 
@@ -147,7 +131,7 @@
 
         <activity
             android:name=".ui.MainActivity"
-            android:exported="true" >
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
