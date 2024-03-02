@@ -55,7 +55,7 @@ public class AddPayment extends AppCompatActivity {
         spannableString.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 35, 51, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Make the "Terms of Service" part a different color
-        spannableString.setSpan(new ForegroundColorSpan(getColor(R.color.my_primary)), 35, 51, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(new ForegroundColorSpan(getColor(R.color.colorPrimary)), 35, 51, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Apply the SpannableString to the TextView
         conditionsTextView.setText(spannableString);
@@ -81,7 +81,7 @@ public class AddPayment extends AppCompatActivity {
         spannableString.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 56, 70, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Make the "Privacy Policy" part a different color
-        spannableString.setSpan(new ForegroundColorSpan(getColor(R.color.my_primary)), 56, 70, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(new ForegroundColorSpan(getColor(R.color.colorPrimary)), 56, 70, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Apply the SpannableString to the TextView
         conditionsTextView.setText(spannableString);
@@ -113,7 +113,7 @@ public class AddPayment extends AppCompatActivity {
         spannableStringSkip.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, 4, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Make the "Skip" part a different color
-        spannableStringSkip.setSpan(new ForegroundColorSpan(getColor(R.color.my_primary)), 0, 4, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableStringSkip.setSpan(new ForegroundColorSpan(getColor(R.color.colorPrimary)), 0, 4, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Apply the SpannableString to the TextView
         skipTextView.setText(spannableStringSkip);

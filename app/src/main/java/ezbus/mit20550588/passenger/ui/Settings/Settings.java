@@ -42,7 +42,7 @@ public class Settings extends AppCompatActivity {
             }
         });
 
-        // My Tickets Buttoon
+        // My Tickets Button
         MaterialButton MyTicketsButton = findViewById(R.id.MyTicketsButton);
         MyTicketsButton.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -5,6 +5,7 @@ import org.json.JSONObject;
 
 import static ezbus.mit20550588.passenger.util.Constants.Log;
 import static ezbus.mit20550588.passenger.util.Converters.timestampToFormattedTime;
+import static ezbus.mit20550588.passenger.util.PasswordHash.hashPasswordSHA;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -90,9 +91,10 @@ public class RedeemTicket extends AppCompatActivity {
 
             UserStateManager userManager = UserStateManager.getInstance();
             String userEmail = userManager.getUser().getEmail();
+            String hashedEmail = hashPasswordSHA(userEmail);
             String orderId = ticket.getOrderId();
             try {
-                jsonObject.put("userEmail", userEmail);
+                jsonObject.put("hashedEmail", hashedEmail);
                 jsonObject.put("orderId", orderId);
             } catch (JSONException e) {
                 Log("RedeemTicket", "QRCodeGen: ERROR", e.getMessage());
@@ -100,14 +102,16 @@ public class RedeemTicket extends AppCompatActivity {
             // Convert the JSON object to a string
             String qrCodeDatajsonString = jsonObject.toString();
 
+
+
             Log("RedeemTicket", "QRCode", qrCodeDatajsonString);
 
             // CHECK IF TICKET IS ALREADY REDEEMED
             paymentViewModel = new ViewModelProvider(this).get(PaymentViewModel.class);
 
-            Map<String, Object> checkRedeemStatusRequest = new HashMap<>();
+            Map<String, String> checkRedeemStatusRequest = new HashMap<>();
             checkRedeemStatusRequest.put("orderId", orderId);
-            checkRedeemStatusRequest.put("userEmail", userEmail);
+            checkRedeemStatusRequest.put("hashedEmail", hashedEmail);
             paymentViewModel.isTicketRedeemed(checkRedeemStatusRequest);
 
             // Observe ticket order live data -- this is for sending ticket data to PayHere Instance

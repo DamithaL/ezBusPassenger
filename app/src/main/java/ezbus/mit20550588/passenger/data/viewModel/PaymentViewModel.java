@@ -75,7 +75,7 @@ public class PaymentViewModel extends ViewModel {
         paymentRepository.notifyPaymentCancel(notifyPaymentRequest);
     }
 
-    public void isTicketRedeemed(Map<String, Object> checkRedeemStatusRequest) {
+    public void isTicketRedeemed(Map<String, String> checkRedeemStatusRequest) {
         paymentRepository.isTicketRedeemed(checkRedeemStatusRequest);
     }
 

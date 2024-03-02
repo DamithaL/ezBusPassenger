@@ -24,13 +24,6 @@ public class ForgotPassword extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forgot_password);
 
-        // EZBus Passenger app main text
-
-        TextView textView0 = findViewById(R.id.main_app_name);
-        String html = "<font color=#025a66>EZBus</font> <font color=#0A969F>Passenger</font>";
-        textView0.setText(Html.fromHtml(html));
-
-
         // Login Text
 
         TextView textView = findViewById(R.id.loginText);
@@ -58,7 +51,7 @@ public class ForgotPassword extends AppCompatActivity {
         spannableString.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 8, 13, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Make the "Login" part a different color
-        spannableString.setSpan(new ForegroundColorSpan(getColor(R.color.my_primary)), 8, 13, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(new ForegroundColorSpan(getColor(R.color.colorPrimary)), 8, 13, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Apply the SpannableString to the TextView
         textView.setText(spannableString);

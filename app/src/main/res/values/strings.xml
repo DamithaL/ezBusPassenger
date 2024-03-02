@@ -69,11 +69,12 @@
     <!--    Contact us -->
     <string name="contact_us_welcome">We value your feedback and inquiries! Reach out to us for any questions related to EZBus</string>
     <string name="contact_us_name">Damitha Liyanaarachchi</string>
-    <string name="contact_us_email">damithaliyanaarachchi@gmail.com</string>
+    <string name="contact_us_email">ezbus.srilanka@gmail.com</string>
     <string name="contact_us_phone">0777 123 456</string>
     <string name="contact_us_linkedin">https://www.linkedin.com/in/damitha-liyanaarachchi-084b3a54/</string>
     <string name="contact_us_share">Share the app with your friends, family, and fellow commuters.</string>
     <string name="contact_us_quick_chat_welcome">Got a quick question or need instant assistance? We\'re here to help! Chat with us!</string>
+    <string name="contact_us_quick_chat_response">Your message has been received successfully. \n\nWe\'ll get back to you soon. Thank you for reaching out!</string>
 
     <!-- Privacy and TOS pages   -->
     <string name="privacy_url">https://sites.google.com/view/ezbuspassenger-privacy-policy</string>

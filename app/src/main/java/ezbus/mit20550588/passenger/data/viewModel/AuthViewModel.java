@@ -16,6 +16,8 @@ import androidx.lifecycle.ViewModel;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.util.Map;
+
 import ezbus.mit20550588.passenger.R;
 import ezbus.mit20550588.passenger.data.model.UserModel;
 import ezbus.mit20550588.passenger.data.network.ApiServiceAuthentication;
@@ -32,6 +34,8 @@ public class AuthViewModel extends ViewModel {
 
     private LiveData<String> verificationCodeLiveData;
 
+    private LiveData<String> chatResponse;
+
 
     public AuthViewModel() {
         // Create a default constructor
@@ -39,6 +43,8 @@ public class AuthViewModel extends ViewModel {
         this.authResultLiveData = userRepository.getAuthResultLiveData();
         this.errorMessageLiveData = userRepository.getErrorMessageLiveData();
         this.verificationCodeLiveData = userRepository.getVerificationCodeLiveData();
+        this.chatResponse = userRepository.getChatResponse();
+
     }
 
     // Existing constructor for dependency injection
@@ -47,6 +53,7 @@ public class AuthViewModel extends ViewModel {
         this.authResultLiveData = userRepository.getAuthResultLiveData();
         this.errorMessageLiveData = userRepository.getErrorMessageLiveData();
         this.verificationCodeLiveData = userRepository.getVerificationCodeLiveData();
+        this.chatResponse = userRepository.getChatResponse();
     }
 
     public LiveData<String> getErrorMessageLiveData() {
@@ -60,6 +67,11 @@ public class AuthViewModel extends ViewModel {
     public LiveData<AuthResult> getAuthResultLiveData() {
         return authResultLiveData;
     }
+
+    public LiveData<String> getChatResponse() {
+        return chatResponse;
+    }
+
 
     public void loginUser(String email, String password, TextInputEditText emailTextInput, TextInputEditText passwordTextInput, TextInputLayout passwordTextInputLayout) {
 
@@ -146,6 +158,11 @@ public class AuthViewModel extends ViewModel {
             UserModel newUser) {
         userRepository.verifyUser(newUser);
     }
+
+    public void sendChat(Map<String, String> chatData) {
+        userRepository.sendChat(chatData);
+    }
+
 
 
     private void setGreenDrawable(TextInputEditText editText) {

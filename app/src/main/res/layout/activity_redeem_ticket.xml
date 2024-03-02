@@ -55,6 +55,7 @@
             android:layout_height="match_parent"
             android:background="@drawable/bg_qr_rounded"    />
 
+        <!-- Error View -->
         <RelativeLayout
             android:id="@+id/errorView"
             android:visibility="gone"

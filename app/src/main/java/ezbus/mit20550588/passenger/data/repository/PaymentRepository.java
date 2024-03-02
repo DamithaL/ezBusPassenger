@@ -165,7 +165,7 @@ public class PaymentRepository {
         });
     }
 
-    public void isTicketRedeemed(Map<String, Object> checkRedeemStatusRequest) {
+    public void isTicketRedeemed(Map<String, String> checkRedeemStatusRequest) {
         Call<TicketRedemptionStatus> call = apiService.isTicketRedeemed(checkRedeemStatusRequest);
 
         call.enqueue(new Callback<TicketRedemptionStatus>() {

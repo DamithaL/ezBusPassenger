@@ -24,8 +24,8 @@ public class TicketRepository {
     }
 
 
-    public void getFarePrice(String routeId, String startBusStop, String endBusStop) {
-        Call<String> call = busApiService.getFare(routeId, startBusStop, endBusStop);
+    public void getFarePrice(String routeNumber, String routeName, String startBusStop, String endBusStop) {
+        Call<String> call = busApiService.getFare(routeNumber, routeName, startBusStop, endBusStop);
 
         call.enqueue(new Callback<String>() {
             @Override

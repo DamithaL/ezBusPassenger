@@ -66,7 +66,7 @@ public class ForgotPasswordCodeCheck extends AppCompatActivity {
         spannableString.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 40, 51, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Make the "Resend code" part a different color
-        spannableString.setSpan(new ForegroundColorSpan(getColor(R.color.my_primary)), 40, 51, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(new ForegroundColorSpan(getColor(R.color.colorPrimary)), 40, 51, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Apply the SpannableString to the TextView
         textView.setText(spannableString);

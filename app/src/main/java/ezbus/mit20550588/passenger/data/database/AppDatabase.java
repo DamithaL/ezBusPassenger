@@ -53,8 +53,8 @@ public abstract class AppDatabase extends RoomDatabase {
         public void onCreate(@NonNull SupportSQLiteDatabase db) {
             super.onCreate(db);
 
-            PlaceHolderDataAsyncTask firstTask = new PlaceHolderDataAsyncTask(instance);
-            firstTask.performBackgroundTask();
+//            PlaceHolderDataAsyncTask firstTask = new PlaceHolderDataAsyncTask(instance);
+//            firstTask.performBackgroundTask();
         }
     };
 

@@ -151,7 +151,7 @@ public class MainActivity
 
     // ---- searches ---- //
     private PlacesAutoCompleteAdapter mAutoCompleteAdapter;
-    private RecyclerView recyclerViewForAutocomplete;
+    private RecyclerView autoCompleteLayout;
     private RelativeLayout recentSearchLayout;
     private RecentSearchViewModel recentSearchViewModel;
     private Integer after_LocatingByRecentSearch_Method;
@@ -169,7 +169,8 @@ public class MainActivity
 
     // ---- bus locations ---- //
     private BusLocationViewModel busLocationViewModel;
-    private Set<String> availableBusIds = new HashSet<>();
+
+    private Set<String> availableBusRegNumbers = new HashSet<>();
     private ArrayList<BusLocationModel> availableBusList = new ArrayList<>();
     private Map<String, Marker> busMarkers = new HashMap<>();
 
@@ -188,7 +189,7 @@ public class MainActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        getSupportActionBar().hide();
+
 
         authentication();
 
@@ -232,7 +233,7 @@ public class MainActivity
         // Stop any operations that should not continue when the activity is not visible.
         // Example: If your app is streaming audio or video, you might pause or stop the streaming process in the onStop method. This prevents unnecessary resource usage when the user is not actively using the app.
 
-        clearBusMapMarkers();
+        clearAllMapMarkers();
 
         Log("onStop", "MainActivity stopped");
 
@@ -245,7 +246,7 @@ public class MainActivity
         // Example: If your app is using any resources or services that need to be released explicitly, such as stopping a location tracking service, you might do so in the onDestroy method.
         // Remove any existing markers
 
-        clearBusMapMarkers();
+        clearAllMapMarkers();
 
         Log("onDestroy", "MainActivity destroyed");
     }
@@ -272,8 +273,8 @@ public class MainActivity
                 /////------- ITEMS VISIBILITY  -------/////
                 Map<View, Boolean> visibilityMap = new HashMap<>();
 
-                visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-                visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                recentSearchLayoutVisibility(false);
+                autoCompleteLayoutVisibility(false);
                 visibilityMap.put(findViewById(R.id.current_location_layout), false);
 
                 allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
@@ -355,9 +356,9 @@ public class MainActivity
 
                         if (tag instanceof String) {
                             // The tag is a String, so you can cast it and use it
-                            String busId = (String) tag;
+                            String busRegNumber = (String) tag;
                             // Find the corresponding Bus in the availableBusList
-                            BusLocationModel correspondingBus = findBusById(busId);
+                            BusLocationModel correspondingBus = findBusByRegNumber(busRegNumber);
                             if (correspondingBus != null) {
                                 Log("Marker Clicked", "Corresponding Bus: " + correspondingBus);
                                 showBusDetails(correspondingBus);
@@ -464,7 +465,7 @@ public class MainActivity
 
 
     // ------------------------------- INITIALIZATION METHODS ------------------------------- //
-    private void authentication(){
+    private void authentication() {
 
         UserStateManager userManager = UserStateManager.getInstance();
 
@@ -511,6 +512,9 @@ public class MainActivity
     }
 
     private void uiInitializations() {
+        // make status bar transparent
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+
         initSearchAutoComplete();
         initRecentSearches();
         initSearchBar();
@@ -542,8 +546,8 @@ public class MainActivity
         /////------- ITEMS VISIBILITY  -------/////
         Map<View, Boolean> visibilityMap = new HashMap<>();
 
-        visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-        visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+        recentSearchLayoutVisibility(false);
+        autoCompleteLayoutVisibility(false);
         visibilityMap.put(findViewById(R.id.current_location_layout), false); // hide current location banner
 
         allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
@@ -572,7 +576,13 @@ public class MainActivity
                 /////------- ITEMS VISIBILITY  -------/////
                 Map<View, Boolean> visibilityMap = new HashMap<>();
 
-                visibilityMap.put(recentSearchLayout, isEmpty(placeSearchEditText)); // Recent Search Layout
+                if (mAutoCompleteAdapter.getItemCount() == 0) {
+                    recentSearchLayoutVisibility(true);
+                } else {
+                    autoCompleteLayoutVisibility(true);
+                }
+
+
                 visibilityMap.put(DirectionsButton, false); // Directions button
 
                 allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
@@ -590,11 +600,23 @@ public class MainActivity
                 // Check if the EditText is losing focus
                 searchBarBackButton(hasFocus);
                 Log("initSearchBar", "SearchBar Has focus?", String.valueOf(hasFocus));
+                Log("initSearchBar", "SearchBar text", placeSearchEditText.getText().toString());
+                Log("initSearchBar", "SearchBar text is Empty?", String.valueOf(isEmpty(placeSearchEditText)));
 
                 /////------- ITEMS VISIBILITY  -------/////
                 Map<View, Boolean> visibilityMap = new HashMap<>();
 
-                visibilityMap.put(recentSearchLayout, hasFocus); // Recent Search Layout
+                if (hasFocus) {
+                    if (mAutoCompleteAdapter.getItemCount() == 0) {
+                        recentSearchLayoutVisibility(true);
+                    } else {
+                        autoCompleteLayoutVisibility(true);
+                    }
+                } else {
+                    autoCompleteLayoutVisibility(false);
+                    recentSearchLayoutVisibility(false);
+                }
+
                 if (locationMarked != null) {
                     visibilityMap.put(DirectionsButton, !hasFocus && locationMarked); // Directions button
                 }
@@ -617,8 +639,9 @@ public class MainActivity
 
                     /////------- ITEMS VISIBILITY  -------/////
                     Map<View, Boolean> visibilityMap = new HashMap<>();
-                    visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-                    visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                    recentSearchLayoutVisibility(false);
+                    autoCompleteLayoutVisibility(false);
+
                     allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
                     findViewById(R.id.place_search_layout).clearFocus(); // Clear the focus from search bar
                     hideKeyboard(textView); // Hide the keyboard
@@ -634,23 +657,24 @@ public class MainActivity
     }
 
     private void initSearchAutoComplete() {
-        recyclerViewForAutocomplete = (RecyclerView) findViewById(R.id.places_recycler_view);
+        autoCompleteLayout = findViewById(R.id.places_recycler_view);
 
         Places.initialize(this, getResources().getString(R.string.MAPS_API_KEY));
 
         mAutoCompleteAdapter = new PlacesAutoCompleteAdapter(this);
-        recyclerViewForAutocomplete.setLayoutManager(new LinearLayoutManager(this));
+        autoCompleteLayout.setLayoutManager(new LinearLayoutManager(this));
         mAutoCompleteAdapter.setClickListener(this);
-        recyclerViewForAutocomplete.setAdapter(mAutoCompleteAdapter);
+        autoCompleteLayout.setAdapter(mAutoCompleteAdapter);
         mAutoCompleteAdapter.notifyDataSetChanged();
-
         Log("initSearchAutoComplete", "initialized");
 
 
     }
 
     private void initRecentSearches() {
+
         recentSearchLayout = findViewById(R.id.recent_search_layout);
+        ;
         RecyclerView recyclerViewForRecentSearches = (RecyclerView) findViewById(R.id.recent_search_recycler_view);
         recyclerViewForRecentSearches.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewForRecentSearches.setHasFixedSize(true);
@@ -663,7 +687,9 @@ public class MainActivity
 
                 /////------- ITEMS VISIBILITY  -------/////
                 Map<View, Boolean> visibilityMap = new HashMap<>();
-                visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
+
+                recentSearchLayoutVisibility(false);
+
                 visibilityMap.put((View) findViewById(R.id.current_location_layout), false); // hide current location banner
                 if (locationMarked != null) {
                     visibilityMap.put(DirectionsButton, locationMarked); // Directions button
@@ -707,8 +733,8 @@ public class MainActivity
             @Override
             public void onClick(View v) {
                 // Open the SettingsActivity when the fab is clicked
-               Intent intent = new Intent(MainActivity.this, Settings.class);
-               // Intent intent = new Intent(MainActivity.this, CheckoutActivity.class);
+                Intent intent = new Intent(MainActivity.this, Settings.class);
+                // Intent intent = new Intent(MainActivity.this, CheckoutActivity.class);
                 startActivity(intent);
             }
         });
@@ -724,7 +750,7 @@ public class MainActivity
 
                 Log("initCurrentLocationButton", "clicked gps icon");
                 getDeviceLocation();
-                if (CurrentLocationLatLng != null ){
+                if (CurrentLocationLatLng != null) {
                     myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(CurrentLocationLatLng,
                             DEFAULT_ZOOM));
                 }
@@ -771,69 +797,6 @@ public class MainActivity
 
         Log("initFullScreenMapButton", "ended");
     }
-//
-//    private int getTargetHeight() {
-//        // Measure the view with unspecified height to get the "wrap_content" height
-//        RelativeLayout mapAndSearchContainer = findViewById(R.id.mapAndSearchContainer);
-//        mapAndSearchContainer.measure(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-//        return mapAndSearchContainer.getMeasuredHeight();
-//    }
-//
-//    private void expandView() {
-//        Log("expandView", "initialized");
-//        RelativeLayout directionBar = findViewById(R.id.directionBar);
-//        RelativeLayout mapAndSearchContainer = findViewById(R.id.mapAndSearchContainer);
-//
-//
-//
-//        if (directionBar == null || mapAndSearchContainer == null) {
-//            // Handle the case where views are not found
-//            return;
-//        }
-//
-//        // Expand the map to full screen
-//        ViewWeightAnimationWrapper mapAnimationWrapper = new ViewWeightAnimationWrapper(mapAndSearchContainer);
-//        startHeightAnimation(mapAnimationWrapper, initialMapAndSearchBarHeight, targetHeight);
-//
-//        // Hide the 'directionBar' by setting its height to 0
-//        ViewWeightAnimationWrapper recyclerAnimationWrapper = new ViewWeightAnimationWrapper(directionBar);
-//        startHeightAnimation(recyclerAnimationWrapper, initialDirectionBarHeight, 0);
-//
-//        Log("expandView", "ended");
-//    }
-//
-//    private void collapseView() {
-//        Log("collapseView", "initialized");
-//        RelativeLayout directionBar = findViewById(R.id.directionBar);
-//        RelativeLayout mapAndSearchContainer = findViewById(R.id.mapAndSearchContainer);
-//
-//        if (directionBar == null || mapAndSearchContainer == null) {
-//            // Handle the case where views are not found
-//            return;
-//        }
-//
-//        // Contract the map to half of the screen
-//        ViewWeightAnimationWrapper mapAnimationWrapper = new ViewWeightAnimationWrapper(mapAndSearchContainer);
-//        startHeightAnimation(mapAnimationWrapper, targetHeight, initialMapAndSearchBarHeight);
-//
-//        // Show the 'directionBar' by setting its height to its initial height
-//        ViewWeightAnimationWrapper recyclerAnimationWrapper = new ViewWeightAnimationWrapper(directionBar);
-//        startHeightAnimation(recyclerAnimationWrapper, 0, initialDirectionBarHeight);
-//        Log("collapseView", "ended");
-//    }
-//
-//    private void startHeightAnimation(ViewWeightAnimationWrapper wrapper, int startHeight, int endHeight) {
-//        Log("startHeightAnimation", "initialized");
-//        ValueAnimator animator = ValueAnimator.ofInt(startHeight, endHeight);
-//        animator.setDuration(800);
-//        animator.addUpdateListener(animation -> {
-//            int value = (int) animation.getAnimatedValue();
-//            wrapper.setHeight(value);
-//        });
-//        animator.start();
-//        Log("startHeightAnimation", "ended");
-//    }
-
 
     private void initDirectionsButton() {
         try {
@@ -872,8 +835,8 @@ public class MainActivity
                         Map<View, Boolean> visibilityMap = new HashMap<>();
 
                         visibilityMap.put(findViewById(R.id.SearchBarRelLayout), false);  // Search bar
-                        visibilityMap.put(recentSearchLayout, false);  // recent search
-                        visibilityMap.put(recyclerViewForAutocomplete, false);  // autocomplete
+                        recentSearchLayoutVisibility(false);
+                        autoCompleteLayoutVisibility(false);
                         visibilityMap.put(DirectionsButton, false); // Directions button
                         visibilityMap.put(findViewById(R.id.directionBar), true); // Direction Bar
 
@@ -891,6 +854,66 @@ public class MainActivity
     private void initBusLocationView() {
         // Initialize ViewModel and Repository
         busLocationViewModel = new ViewModelProvider(this).get(BusLocationViewModel.class);
+
+        // Observe LiveData
+        busLocationViewModel.getBusLocationsLiveData().observe(this, availableBusses -> {
+            Log("initBusLocationView", "getBusLocationsLiveData", "Observe LiveData: " + availableBusses.toString());
+            try {
+                if (!availableBusses.isEmpty()) {
+                    for (BusLocationModel bus : availableBusses) {
+                        Log("initBusLocationView", "getBusLocationsLiveData", "bus: " + bus.toString());
+                        // Check if the bus ID is already added
+                        if (!availableBusRegNumbers.contains(bus.getBus().getBusRegNumber())) {
+                            // Add new buses to the arrays
+                            availableBusList.add(bus);
+                            availableBusRegNumbers.add(bus.getBus().getBusRegNumber());
+                            Log("initBusLocationView", "getBusLocationsLiveData", "bus is added to the list");
+                            Log("initBusLocationView", "getBusLocationsLiveData", "busLocations: " + availableBusList.toString());
+                        } else {
+                            Log("initBusLocationView", "getBusLocationsLiveData", "bus is already on the list");
+                        }
+                    }
+                } else {
+                    Log("initBusLocationView", "getBusLocationsLiveData", "No busses in the response");
+                }
+            } catch (Exception e) {
+                Log("initBusLocationView", "getBusLocationsLiveData", "ERROR: " + e.getMessage());
+                Toast.makeText(this, "Network error: Unable to connect to the server.", Toast.LENGTH_SHORT).show();
+                //throw new RuntimeException(e);
+            }
+
+            // Update UI with bus locations --- if these called in the getBusLocationsLiveData, it will go in a feedback cycle
+            Log("initBusLocationView", "getBusLocationsLiveData", "availableBusRegNumbers: " + availableBusRegNumbers.toString());
+            if (!availableBusRegNumbers.isEmpty()) {
+                addMapMarkers();
+                getUpdateBusLocations();
+            }
+
+
+        });
+
+        // Observe LiveData to get updated bus locations
+        busLocationViewModel.getUpdatedBusLocationsLiveData().observe(this, updatedBusLocations -> {
+            // Update markers on the map with the new bus locations
+            Log("initBusLocationView", "updateBusLocationsAndMarkers", "observing bus location live data");
+            updateMarkerPositions(updatedBusLocations);
+        });
+
+        busLocationViewModel.getErrorLiveData().observe(this, errorMessage -> {
+            Log("initBusLocationView", "Handle errors", errorMessage.getMessage());
+            if (errorMessage.getCode() == 404) {
+                // Clear the map markers
+                if (busMarkers != null) {
+                    busMarkers.clear();
+                }
+
+                busLocationViewModel.stopBusLocationUpdate();
+
+                Toast.makeText(this, "No buses available on the route currently.", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Network error: Unable to connect to the server.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void initTicketView() {
@@ -920,9 +943,9 @@ public class MainActivity
                 Map<View, Boolean> visibilityMap = new HashMap<>();
 
                 visibilityMap.put(findViewById(R.id.SearchBarRelLayout), false);  // Search bar
-                visibilityMap.put(recentSearchLayout, true); // Recent Search Layout
+                recentSearchLayoutVisibility(true);
+                autoCompleteLayoutVisibility(false);
                 visibilityMap.put(DirectionsButton, false); // Directions button
-                visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
                 visibilityMap.put(findViewById(R.id.current_location_layout), true); // Current location
 
                 allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
@@ -941,7 +964,7 @@ public class MainActivity
 
                 /////------- ITEMS VISIBILITY  -------/////
                 Map<View, Boolean> visibilityMap = new HashMap<>();
-                visibilityMap.put(recentSearchLayout, hasFocus); // Recent Search Layout
+                recentSearchLayoutVisibility(hasFocus);
                 visibilityMap.put(findViewById(R.id.current_location_layout), hasFocus); // Current location
                 allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
             }
@@ -960,10 +983,11 @@ public class MainActivity
                     String enteredText = textView.getText().toString();
                     Log("initSourceLocationBar", "SearchBar", "Submitted query");
 
+
                     /////------- ITEMS VISIBILITY  -------/////
                     Map<View, Boolean> visibilityMap = new HashMap<>();
-                    visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-                    visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                    recentSearchLayoutVisibility(false); // Recent Search Layout
+                    autoCompleteLayoutVisibility(false); // Autocomplete Layout
                     visibilityMap.put(findViewById(R.id.current_location_layout), false); // hide current location banner
                     allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
                     findViewById(R.id.sourceLocationText).clearFocus(); // Clear the focus from search bar
@@ -1001,9 +1025,9 @@ public class MainActivity
                 Map<View, Boolean> visibilityMap = new HashMap<>();
 
                 visibilityMap.put(findViewById(R.id.SearchBarRelLayout), false);  // Search bar
-                visibilityMap.put(recentSearchLayout, true); // Recent Search Layout
+                recentSearchLayoutVisibility(true); // Recent Search Layout
                 visibilityMap.put(DirectionsButton, false); // Directions button
-                visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                autoCompleteLayoutVisibility(false); // Autocomplete Layout
                 visibilityMap.put(findViewById(R.id.current_location_layout), true); // Current location
 
                 allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
@@ -1022,7 +1046,7 @@ public class MainActivity
 
                 /////------- ITEMS VISIBILITY  -------/////
                 Map<View, Boolean> visibilityMap = new HashMap<>();
-                visibilityMap.put(recentSearchLayout, hasFocus); // Recent Search Layout
+                recentSearchLayoutVisibility(hasFocus);
                 visibilityMap.put(findViewById(R.id.current_location_layout), hasFocus); // Current location
                 allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
             }
@@ -1043,8 +1067,8 @@ public class MainActivity
 
                     /////------- ITEMS VISIBILITY  -------/////
                     Map<View, Boolean> visibilityMap = new HashMap<>();
-                    visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-                    visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                    recentSearchLayoutVisibility(false); // Recent Search Layout
+                    autoCompleteLayoutVisibility(false); // Autocomplete Layout
                     visibilityMap.put(findViewById(R.id.current_location_layout), false); // hide current location banner
                     allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
                     DestinationLocationText.clearFocus(); // Clear the focus from search bar
@@ -1058,7 +1082,6 @@ public class MainActivity
             }
         });
     }
-
 
     private void initCurrentLocationOption(String SourceOrDestination) {
         Log("initCurrentLocationOption", "Started");
@@ -1093,8 +1116,8 @@ public class MainActivity
                 /////------- ITEMS VISIBILITY  -------/////
                 Map<View, Boolean> visibilityMap = new HashMap<>();
 
-                visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-                visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                recentSearchLayoutVisibility(false); // Recent Search Layout
+                autoCompleteLayoutVisibility(false); // Autocomplete Layout
                 visibilityMap.put(DirectionsButton, false); // Directions button
                 visibilityMap.put((findViewById(R.id.current_location_layout)), false); // current location
 
@@ -1113,16 +1136,15 @@ public class MainActivity
             @Override
             public void onClick(View view) {
 
-                // Clear Polylines
-                clearDirectionRoute();
+                clearAllMapMarkers();
                 locationMarked = true;
 
                 /////------- ITEMS VISIBILITY  -------/////
                 Map<View, Boolean> visibilityMap = new HashMap<>();
 
                 visibilityMap.put(findViewById(R.id.SearchBarRelLayout), true);  // Search bar
-                visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-                visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                recentSearchLayoutVisibility(false); // Recent Search Layout
+                autoCompleteLayoutVisibility(false); // Autocomplete Layout
                 if (locationMarked != null) {
                     visibilityMap.put(DirectionsButton, locationMarked); // Directions button
                 }
@@ -1248,8 +1270,8 @@ public class MainActivity
         /////------- ITEMS VISIBILITY  -------/////
         Map<View, Boolean> visibilityMap = new HashMap<>();
 
-        visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-        visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+        recentSearchLayoutVisibility(false); // Recent Search Layout
+        autoCompleteLayoutVisibility(false); // Autocomplete Layout
         visibilityMap.put(DirectionsButton, true); // Directions button
 
         allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
@@ -1263,8 +1285,8 @@ public class MainActivity
         /////------- ITEMS VISIBILITY  -------/////
         Map<View, Boolean> visibilityMap = new HashMap<>();
 
-        visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-        visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+        recentSearchLayoutVisibility(false); // Recent Search Layout
+        autoCompleteLayoutVisibility(false); // Autocomplete Layout
         visibilityMap.put(DirectionsButton, false); // Directions button
 
         allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
@@ -1278,8 +1300,8 @@ public class MainActivity
         /////------- ITEMS VISIBILITY  -------/////
         Map<View, Boolean> visibilityMap = new HashMap<>();
 
-        visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-        visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+        recentSearchLayoutVisibility(false); // Recent Search Layout
+        autoCompleteLayoutVisibility(false); // Autocomplete Layout
         visibilityMap.put(DirectionsButton, false); // Directions button
 
         allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
@@ -1335,9 +1357,9 @@ public class MainActivity
 
             /////------- ITEMS VISIBILITY  -------/////
             Map<View, Boolean> visibilityMap = new HashMap<>();
+            recentSearchLayoutVisibility(isTextEmpty);
 
-            visibilityMap.put(recentSearchLayout, isTextEmpty); // Recent Search Layout
-            visibilityMap.put(recyclerViewForAutocomplete, !isTextEmpty); // Autocomplete Layout
+            autoCompleteLayoutVisibility(!isTextEmpty);// Autocomplete Layout
             visibilityMap.put(DirectionsButton, false); // Directions button
 
             allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
@@ -1370,8 +1392,9 @@ public class MainActivity
             /////------- ITEMS VISIBILITY  -------/////
             Map<View, Boolean> visibilityMap = new HashMap<>();
 
-            visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-            visibilityMap.put(recyclerViewForAutocomplete, true); // Autocomplete Layout
+            recentSearchLayoutVisibility(false); // Recent Search Layout
+
+            autoCompleteLayoutVisibility(true); // Autocomplete Layout
             visibilityMap.put(DirectionsButton, false); // Directions button
 
             allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
@@ -1404,8 +1427,8 @@ public class MainActivity
             /////------- ITEMS VISIBILITY  -------/////
             Map<View, Boolean> visibilityMap = new HashMap<>();
 
-            visibilityMap.put(recentSearchLayout, isTextEmpty); // Recent Search Layout
-            visibilityMap.put(recyclerViewForAutocomplete, !isTextEmpty); // Autocomplete Layout
+            recentSearchLayoutVisibility(isTextEmpty);
+            autoCompleteLayoutVisibility(!isTextEmpty);// Autocomplete Layout
             visibilityMap.put(DirectionsButton, false); // Directions button
 
             allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
@@ -1449,8 +1472,8 @@ public class MainActivity
 
                 locationMarked = true;
 
-                visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-                visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                recentSearchLayoutVisibility(false); // Recent Search Layout
+                autoCompleteLayoutVisibility(false); // Autocomplete Layout
                 visibilityMap.put(DirectionsButton, true); // Directions button
                 findViewById(R.id.place_search_layout).clearFocus(); // Clear the focus from search bar
 
@@ -1464,8 +1487,8 @@ public class MainActivity
                 SourceLocationName = place.getName();
                 SourceLocationLatLng = place.getLatLng();
 
-                visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-                visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                recentSearchLayoutVisibility(false); // Recent Search Layout
+                autoCompleteLayoutVisibility(false); // Autocomplete Layout
                 visibilityMap.put(DirectionsButton, false); // Directions button
                 findViewById(R.id.sourceLocationInputLayout).clearFocus(); // Clear the focus from search bar
 
@@ -1479,8 +1502,8 @@ public class MainActivity
                 DestinationLocationName = place.getName();
                 DestinationLocationLatLng = place.getLatLng();
 
-                visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-                visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+                recentSearchLayoutVisibility(false); // Recent Search Layout
+                autoCompleteLayoutVisibility(false); // Autocomplete Layout
                 visibilityMap.put(DirectionsButton, false); // Directions button
                 findViewById(R.id.destinationLocationInputLayout).clearFocus(); // Clear the focus from search bar
             }
@@ -1583,14 +1606,14 @@ public class MainActivity
         // 2 for --- source location bar
         // 3 for --- destination bar
         if (after_LocatingByRecentSearch_Method == 1) {
-            visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-            visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+            recentSearchLayoutVisibility(false); // Recent Search Layout
+            autoCompleteLayoutVisibility(false); // Autocomplete Layout
             visibilityMap.put(DirectionsButton, true); // Directions button
             findViewById(R.id.place_search_layout).clearFocus(); // Clear the focus from search bar
 
         } else {
-            visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-            visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+            recentSearchLayoutVisibility(false); // Recent Search Layout
+            autoCompleteLayoutVisibility(false); // Autocomplete Layout
             visibilityMap.put(DirectionsButton, false); // Directions button
             findViewById(R.id.sourceLocationInputLayout).clearFocus(); // Clear the focus from search bar
             findViewById(R.id.destinationLocationInputLayout).clearFocus(); // Clear the focus from search bar
@@ -1771,12 +1794,14 @@ public class MainActivity
 
         Log("direction", "Started");
 
+        List<Map<String, String>> busRoutes = new ArrayList<>();
+
         // Show waiting progress bar
         toggleItemVisibility(findViewById(R.id.loadingProgressBar), true);
 
         // Remove any existing markers
-       // myMap.clear();
-        clearBusMapMarkers();
+        // myMap.clear();
+        clearAllMapMarkers();
 
         // Marking START & END points
 
@@ -1922,8 +1947,8 @@ public class MainActivity
                                                     String departureStopTime = transitDetails.getJSONObject("departure_time").getString("value");
 
                                                     // Display bus details as needed
-//                                                    Log("Bus Details", "Route Name: ", routeName);
-//                                                    Log("Bus Details", "Route Number: ", routeNumber);
+                                                    Log("Bus Details", "Route Name: ", routeName);
+                                                    Log("Bus Details", "Route Number: ", routeNumber);
 //                                                    Log("Bus Details", "Number of Stops: ", numStops);
 //                                                    Log("Bus Details", "Arrival Stop Name: ", arrivalStopName);
 //                                                    Log("Bus Details", "Arrival Stop Time: ", arrivalStopTime);
@@ -1944,8 +1969,11 @@ public class MainActivity
                                                    3. check the arrival time to the bus stop
                                                             but for now add them all.
                                                 */
-                                                    getBussesOnRoute(routeNumber);
-                                                    Log("direction", "onResponse", "showBussesOnRoute");
+
+                                                    Map<String, String> newBusRoute = new HashMap<>();
+                                                    newBusRoute.put("routeNumber", routeNumber);
+                                                    newBusRoute.put("routeName", routeName);
+                                                    busRoutes.add(newBusRoute);
                                                 }
 
 
@@ -1958,6 +1986,14 @@ public class MainActivity
 
                                         directionRoutePolyline = myMap.addPolyline(polylineOptions);
                                     }
+                                }
+
+                                if (busRoutes.size() > 0) {
+                                    Log("direction", "bus routes", "found");
+                                    getBussesOnRoute(busRoutes);
+                                } else {
+                                    Log("direction", "onResponse", "No bus routes found.");
+                                    Toast.makeText(MainActivity.this, "No bus routes found.", Toast.LENGTH_SHORT).show();
                                 }
 
                                 Log("direction", "onResponse", "directionRoutePolyline done");
@@ -2031,209 +2067,6 @@ public class MainActivity
         queue.add(directionsRequest);
 
     }
-
-    // getMostAvailableRoute
-//    private void getMostAvailableRoute(LatLng origin, LatLng destination) {
-//        // Time to look for
-//        // Get tomorrow's date
-//        Calendar tomorrow = Calendar.getInstance();
-//        tomorrow.add(Calendar.DAY_OF_YEAR, 1);
-//
-//        // Set the time to 12:00 noon
-//        tomorrow.set(Calendar.HOUR_OF_DAY, 12);
-//        tomorrow.set(Calendar.MINUTE, 0);
-//        tomorrow.set(Calendar.SECOND, 0);
-//        tomorrow.set(Calendar.MILLISECOND, 0);
-//
-//        // Convert the date to a Unix timestamp
-//        long timestampInSeconds = tomorrow.getTimeInMillis() / 1000;
-//
-//        // Construct the URL for the Google Directions API request
-//        String apiKey = "AIzaSyDDTamV9IieqbDXoWKxjEHmBo7jRcNuhFg"; // Replace with your actual API key
-//        String url = "https://maps.googleapis.com/maps/api/directions/json" +
-//                "?origin=" + origin.latitude + "," + origin.longitude +
-//                "&destination=" + destination.latitude + "," + destination.longitude +
-//                "&mode=transit" +  // Specify transit mode (bus)
-//                "&departure_time=" + timestampInSeconds +
-//            //    "&alternatives=true" +
-//                "&key=" + apiKey;
-//
-//        Log("Directions", "Markers", "Added");
-//
-//        // Create a request to the Directions API
-//        JsonObjectRequest directionsRequest = new JsonObjectRequest(Request.Method.GET, url, null,
-//                new Response.Listener<JSONObject>() {
-//                    @Override
-//                    public void onResponse(JSONObject response) {
-//
-//                        Log("Directions", "onResponse", "Started");
-//                        try {
-//                            // Parse the JSON response
-//                            JSONArray routes = response.getJSONArray("routes");
-//                            if (routes.length() > 0) {
-//                                Log("Directions", "onResponse", "Route(s) found");
-//
-//                                // Process each route
-//                                for (int j = 0; j < routes.length(); j++) {
-//                                    JSONObject route = routes.getJSONObject(j);
-//
-//                                    JSONArray legs = route.getJSONArray("legs");
-//                                    if (legs.length() > 0) {
-//                                        JSONObject leg = legs.getJSONObject(0);
-//                                        JSONArray steps = leg.getJSONArray("steps");
-//
-//                                        // Process each step
-//                                        for (int k = 0; k < steps.length(); k++) {
-//                                            JSONObject step = steps.getJSONObject(k);
-//
-//
-//                                            // Extract the encoded polyline
-//                                            JSONObject stepPolyline = step.getJSONObject("polyline");
-//                                            String encodedPolyline = stepPolyline.getString("points");
-//
-//                                            // Decode the polyline and add it to the map as a Polyline with the specific color
-//                                            List<LatLng> decodedPolyline = decodePolyline(encodedPolyline);
-//
-//                                            List<PatternItem> pattern = Arrays.asList(
-//                                                    new Dot(),
-//                                                    //   new Gap(20),
-//                                                    //  new Dash(30),
-//                                                    new Gap(20));
-//
-//                                            PolylineOptions polylineOptions = new PolylineOptions()
-//                                                    .addAll(decodedPolyline)
-//                                                    // .pattern(pattern)
-//
-//                                                    .width(25)
-//                                                    .clickable(true)
-//                                                    //  .jointType(JointType.ROUND)
-//                                                    .color(Color.BLACK);
-//
-//                                            // Check if the step has travel_mode
-//                                            if (step.has("travel_mode")) {
-//                                                String travelMode = step.getString("travel_mode");
-//
-//
-//                                                // Call method1 for WALKING
-//                                                if ("WALKING".equals(travelMode)) {
-//                                                    polylineOptions.pattern(pattern);
-//                                                    polylineOptions.color(Color.BLUE);
-//                                                }
-//                                                // Call method2 for TRANSIT
-//                                                else if ("TRANSIT".equals(travelMode)) {
-//
-//
-//                                                    // Check if the step is a transit step
-//                                                    if (step.has("transit_details")) {
-//                                                        Log("Directions", "transit details", "FOUND");
-//                                                        // Extract transit details
-//                                                        JSONObject transitDetails = step.getJSONObject("transit_details");
-//                                                        String routeName = transitDetails.getJSONObject("line").getString("name");
-//                                                        String routeNumber = transitDetails.getJSONObject("line").getString("short_name");
-//                                                        String numStops = transitDetails.getString("num_stops");
-//                                                        String arrivalStop = transitDetails.getJSONObject("arrival_stop").getString("name");
-//
-//                                                        // Display bus details as needed
-//                                                        Log("Bus Details", "Route Name: ", routeName);
-//                                                        Log("Bus Details", "Route Number: ", routeNumber);
-//                                                        Log("Bus Details", "Number of Stops: ", numStops);
-//                                                        Log("Bus Details", "Arrival Stop: ", arrivalStop);
-//
-//                                                        // show available busses on the route
-//                                                /* ------ these should added only if the busses arrive at the intersections
-//                                                            after the person gets there.
-//                                                   1. check route id
-//                                                   2. check the direction
-//                                                   3. check the arrival time to the bus stop
-//                                                            but for now add them all.
-//                                                */
-//                                                        getBussesOnRoute(routeNumber);
-//                                                        Log("direction", "onResponse", "showBussesOnRoute");
-//                                                    }
-//
-//
-//                                                    polylineOptions.addSpan(new StyleSpan(Color.RED))
-//                                                            .addSpan(new StyleSpan(Color.rgb(3, 161, 14)));
-//                                                }
-//                                            }
-//
-//                                            myMap.addPolyline(polylineOptions);
-//
-//                                            directionRoutePolyline = myMap.addPolyline(polylineOptions);
-//                                        }
-//                                    }
-//
-//                                    Log("direction", "onResponse", "directionRoutePolyline done");
-//
-//                                    locationMarked = false;
-//
-//                                    // After adding the polyline, adjust the camera to fit the entire route
-//                                    JSONObject overviewPolyline = route.getJSONObject("overview_polyline");
-//                                    String encodedPolyline = overviewPolyline.getString("points");
-//                                    List<LatLng> decodedPolyline = decodePolyline(encodedPolyline);
-//
-//                                    LatLngBounds.Builder builder = new LatLngBounds.Builder();
-//                                    for (LatLng point : decodedPolyline) {
-//                                        builder.include(point);
-//                                    }
-//
-//                                    LatLngBounds bounds = builder.build();
-//                                    int padding = 100; // Adjust this padding as needed
-//
-//                                    // Animate the camera to fit the entire route with padding
-//                                    myMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
-//
-//                                    // Hide waiting progress bar
-//                                    toggleItemVisibility(findViewById(R.id.loadingProgressBar), false);
-//                                }
-//
-//                            } else {
-//                                Log("Directions", "onResponse", "No routes found.");
-//                                Toast.makeText(MainActivity.this, "No routes found.", Toast.LENGTH_SHORT).show();
-//                                // Hide waiting progress bar
-//                                toggleItemVisibility(findViewById(R.id.loadingProgressBar), false);
-//                            }
-//                        } catch (JSONException e) {
-//                            // Handle the exception, log an error, or take appropriate action
-//                            Log("Bus Details", "Error parsing JSON", e.getStackTrace().toString());
-//                            e.printStackTrace();
-//                            // Hide waiting progress bar
-//                            toggleItemVisibility(findViewById(R.id.loadingProgressBar), false);
-//                            throw new RuntimeException(e);
-//
-//                        }
-//                    }
-//                },
-//                new Response.ErrorListener() {
-//                    @Override
-//                    public void onErrorResponse(VolleyError error) {
-//                        Log("Directions", "Volley ERROR");
-//                        Log("Directions", "Volley ERROR - message", error.getMessage());
-//                        Log("Directions", "Volley ERROR - Stack Trace", error.getStackTrace().toString());
-//                        Log("Directions", "Volley ERROR - Cause", error.getCause().toString());
-//
-//                        Toast.makeText(MainActivity.this, "Error fetching directions.", Toast.LENGTH_SHORT).show();
-//
-//                        // show the directions button again
-//                        toggleItemVisibility(findViewById(R.id.directionsButton), true);
-//                        // Hide waiting progress bar
-//                        toggleItemVisibility(findViewById(R.id.loadingProgressBar), false);
-//                    }
-//                });
-//
-//        // Set a retry policy for the request
-//        RetryPolicy retryPolicy = new DefaultRetryPolicy(
-//                0,
-//                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-//                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
-//        );
-//
-//        Log("Directions", "directionsRequest", "retry policy");
-//        directionsRequest.setRetryPolicy(retryPolicy);
-//
-//        RequestQueue queue = Volley.newRequestQueue(this);
-//        queue.add(directionsRequest);
-//    }
 
     private int getRandomColor() {
         Random random = new Random();
@@ -2318,7 +2151,7 @@ public class MainActivity
 
         clearDirectionRoute();
         //clearBusMapMarkers();
-        clearBusMapMarkers();
+        clearAllMapMarkers();
 
         EditText SourceLocation = findViewById(R.id.sourceLocationText);
         EditText DestinationLocation = findViewById(R.id.destinationLocationText);
@@ -2349,75 +2182,34 @@ public class MainActivity
         /////------- ITEMS VISIBILITY  -------/////
         Map<View, Boolean> visibilityMap = new HashMap<>();
 
-        visibilityMap.put(recentSearchLayout, false); // Recent Search Layout
-        visibilityMap.put(recyclerViewForAutocomplete, false); // Autocomplete Layout
+        recentSearchLayoutVisibility(false); // Recent Search Layout
+        autoCompleteLayoutVisibility(false); // Autocomplete Layout
 
         allItemVisibilitySwitcher(visibilityMap); // Toggle visibility based on the map
 
 
     }
 
-    private void getBussesOnRoute(String routeNumber) {
+    private void getBussesOnRoute(List<Map<String, String>> busRoutes) {
 
         Log("getBussesOnRoute", "Started");
-
         // Trigger the request to fetch bus locations
-        busLocationViewModel.getBusLocations(routeNumber);
+        Log("getBussesOnRoute", "busRoutes", busRoutes.toString());
+        for (Map<String, String> busRoute : busRoutes) {
+            String routeNumber = busRoute.get("routeNumber");
+            String routeName = busRoute.get("routeName");
+            Log("getBussesOnRoute", "routeNumber: " + routeNumber, "routeName: " + routeName);
+            busLocationViewModel.getBusLocations(routeNumber, routeName);
+        }
 
-        // Observe LiveData
-        busLocationViewModel.getBusLocationsLiveData().observe(this, availableBusses -> {
-            Log("getBussesOnRoute", "Observe LiveData", availableBusses.toString());
-            try {
-                if (!availableBusses.isEmpty()) {
-                    for (BusLocationModel bus : availableBusses) {
-                        Log("getBussesOnRoute", "bus", bus.toString());
-
-                        // Check if the bus ID is already added
-                        if (!availableBusIds.contains(bus.getBus().getBusId())) {
-                            Log("getBussesOnRoute", "busLocations", availableBusList.toString());
-                            Log("getBussesOnRoute", "bus is added to the list");
-
-                            // getFarePrice(routeNumber, String startBusStop, String endBusStop)
-
-
-                            // Add new buses to the arrays
-                            // availableBusListDetails.add(bus);
-                            availableBusList.add(bus);
-                            availableBusIds.add(bus.getBus().getBusId());
-                        } else {
-                            Log("getBussesOnRoute", "bus is already on the list");
-                        }
-                    }
-                } else {
-                    Log("getBussesOnRoute", "No busses in the response");
-                }
-            } catch (Exception e) {
-                Log("getBussesOnRoute", "ERROR", e.getMessage());
-                Toast.makeText(this, "Network error: Unable to connect to the server.", Toast.LENGTH_SHORT).show();
-                //throw new RuntimeException(e);
-            }
-
-            // Update UI with bus locations --- if these called in the getBusLocationsLiveData, it will go in a feedback cycle
-            if (availableBusIds != null) {
-                addMapMarkers();
-                updateBusMarkers();
-            }
-
-
-        });
-
-
-        busLocationViewModel.getErrorLiveData().observe(this, errorMessage -> {
-            Log("getBussesOnRoute", "Handle errors", errorMessage);
-        });
     }
 
-    private void getFarePrice(String routeId, String startBusStop, String endBusStop) {
+    private void getFarePrice(String routeNumber, String routeName, String startBusStop, String endBusStop) {
 
         Log("getFarePrice", "Started");
 
         // Trigger the request to fetch bus locations
-        ticketViewModel.getFarePrice(routeId, startBusStop, endBusStop);
+        ticketViewModel.getFarePrice(routeNumber, routeName, startBusStop, endBusStop);
 
         // Observe LiveData
         ticketViewModel.getFarePriceLiveData().observe(this, fare -> {
@@ -2482,8 +2274,8 @@ public class MainActivity
 //        });
 //
 //
-//        busLocationViewModel.getErrorLiveData().observe(this, errorMessage -> {
-//            Log("getBussesOnRoute", "Handle errors", errorMessage);
+//        busLocationViewModel.getErrorLiveData().observe(this, ErrorResponse -> {
+//            Log("getBussesOnRoute", "Handle errors", ErrorResponse);
 //        });
 //    }
 
@@ -2499,18 +2291,18 @@ public class MainActivity
                     Log("addMapMarkers", "location", busLocation.getLocation().toString());
                     try {
                         String title = "";
-                        if (busLocation.getBus().getBusNumber() == null || busLocation.getBus().getBusNumber().isEmpty()) {
+                        if (busLocation.getBus().getBusRegNumber() == null || busLocation.getBus().getBusRegNumber().isEmpty()) {
                             title = "Bus number: error";
                         } else {
-                            title = "Bus number: " + busLocation.getBus().getBusNumber();
+                            title = "Bus number: " + busLocation.getBus().getBusRegNumber();
                         }
 
                         String snippet = "";
-                        if (busLocation.getBus().getBusNumber() == null || busLocation.getBus().getBusNumber().isEmpty()) {
+                        if (busLocation.getBus().getBusRegNumber() == null || busLocation.getBus().getBusRegNumber().isEmpty()) {
                             snippet = "Route: error";
                         } else {
                             // TODO: 2023-12-20 add Estimated arrival:
-                            snippet = "Route: " + busLocation.getBus().getRouteId();
+                            snippet = "Route: " + busLocation.getBus().getBusRouteNumber();
                         }
 
 
@@ -2540,12 +2332,12 @@ public class MainActivity
 
                         // Add marker to the map and update the busMarkers map
                         Marker newMarker = myMap.addMarker(markerOptions);
-                        String markerId = busLocation.getBus().getBusId();
+                        String markerId = busLocation.getBus().getBusRegNumber();
                         if (newMarker != null) {
                             newMarker.setTag(markerId);
                         }
 
-                        busMarkers.put(busLocation.getBus().getBusId(), newMarker);
+                        busMarkers.put(busLocation.getBus().getBusRegNumber(), newMarker);
                         Log("addNewBusMarker", "marker added");
 
 
@@ -2559,32 +2351,16 @@ public class MainActivity
         }
     }
 
-    private void updateBusMarkers() {
+    private void getUpdateBusLocations() {
         // Method to  get updated bus locations and update markers every 5 seconds
         Log("updateBusLocationsAndMarkers", "Started");
-        // Check if availableBusIds set is not empty
-        if (!availableBusIds.isEmpty()) {
-            // Call the ViewModel method to update bus locations for the available busIds
-            Log("updateBusLocationsAndMarkers", "updateBusLocations called", availableBusIds.toString());
+        // Check if availableBusRegNumbers set is not empty
+        if (!availableBusRegNumbers.isEmpty()) {
+            // Call the ViewModel method to update bus locations for the available bus RegNumbers
+            Log("updateBusLocationsAndMarkers", "updateBusLocations called", availableBusRegNumbers.toString());
 
             // TO GET THE ROUTE ID AND BUSSTOP ID FOR THE HASBUSPASSED FUNCTION
-
-            busLocationViewModel.updateBusLocations(availableBusIds
-                    //   , routeId, busStopId
-            );
-
-            // Observe LiveData to get updated bus locations
-            busLocationViewModel.getUpdatedBusLocationsLiveData().observe(this, updatedBusLocations -> {
-                // Update markers on the map with the new bus locations
-                Log("updateBusLocationsAndMarkers", "observing bus location live data");
-                updateMarkerPositions(updatedBusLocations);
-            });
-
-            // Observe LiveData for errors
-            busLocationViewModel.getErrorLiveData().observe(this, errorMessage -> {
-                // Handle errors, e.g., display an error message
-                Log("updateBusMarkers", "Error: ", errorMessage);
-            });
+            busLocationViewModel.updateBusLocations(availableBusRegNumbers);
         } else {
             Log("updateBusMarkers", "Available bus IDs set is empty");
         }
@@ -2594,19 +2370,19 @@ public class MainActivity
         try {
             Log("updateMarkerPositions", "Started");
 
-            // Check if the availableBusIds set is not empty
-            if (availableBusIds.isEmpty()) {
+            // Check if the availableBusRegNumbers set is not empty
+            if (availableBusRegNumbers.isEmpty()) {
                 Log("updateMarkerPositions", "Available bus IDs set is empty");
                 return; // No need to proceed if the set is empty
             }
 
             // Iterate through the list of updated bus locations
             for (BusLocationModel updatedBus : updatedBusLocations) {
-                // Check if the updatedBus is in the availableBusIds set
-                if (availableBusIds.contains(updatedBus.getBus().getBusId())) {
+                // Check if the updatedBus is in the availableBusRegNumbers set
+                if (availableBusRegNumbers.contains(updatedBus.getBus().getBusRegNumber())) {
                     // Check if the bus marker is already on the map
-                    if (busMarkers.containsKey(updatedBus.getBus().getBusId())) {
-                        Marker marker = busMarkers.get(updatedBus.getBus().getBusId());
+                    if (busMarkers.containsKey(updatedBus.getBus().getBusRegNumber())) {
+                        Marker marker = busMarkers.get(updatedBus.getBus().getBusRegNumber());
                         if (marker != null) {
                             // Update the marker position on the map
                             LatLng newLatLng = new LatLng(updatedBus.getLocation().latitude, updatedBus.getLocation().longitude);
@@ -2614,10 +2390,10 @@ public class MainActivity
                         }
                     } else {
                         // Handle the case where the bus marker is not on the map
-                        Log("updateMarkerPositions", " Bus marker not found on the map for bus ID " + updatedBus.getBus().getBusId());
+                        Log("updateMarkerPositions", " Bus marker not found on the map for bus ID " + updatedBus.getBus().getBusRegNumber());
                     }
                 } else {
-                    Log("updateMarkerPositions", "Bus ID" + updatedBus.getBus().getBusId() + " not in available bus IDs set");
+                    Log("updateMarkerPositions", "Bus ID" + updatedBus.getBus().getBusRegNumber() + " not in available bus IDs set");
                 }
             }
         } catch (Exception e) {
@@ -2625,18 +2401,18 @@ public class MainActivity
         }
     }
 
-    private BusLocationModel findBusById(String busId) {
+    private BusLocationModel findBusByRegNumber(String busRegNumber) {
         for (BusLocationModel bus : availableBusList) {
-            if (bus.getBus().getBusId().equals(busId)) {
+            if (bus.getBus().getBusRegNumber().equals(busRegNumber)) {
                 return bus;
             }
         }
         return null; // Not found
     }
 
-    private TicketModel findTicketByRouteNumber(String routeNumber) {
+    private TicketModel findTicketByRouteNumber(String routeNumber, String routeName) {
         for (TicketModel ticket : ticketList) {
-            if (ticket.getRouteNumber().equals(routeNumber)) {
+            if (ticket.getRouteNumber().equals(routeNumber) && ticket.getRouteName().equals(routeName)) {
                 return ticket;
             }
         }
@@ -2663,13 +2439,13 @@ public class MainActivity
         Button busDetails_purchaseTicketButton = dialog.findViewById(R.id.purchaseTicketButton);
 
         // Get the Ticket details
-        TicketModel ticket = findTicketByRouteNumber(bus.getBus().getRouteId());
+        TicketModel ticket = findTicketByRouteNumber(bus.getBus().getBusRouteNumber(), bus.getBus().getBusRouteName());
         if (ticket != null) {
             Log("showBusDetails", "A valid ticket found");
 
             // Assign the details to views
             busDetails_route.setText(ticket.getRouteNumber() + " | " + ticket.getRouteName());
-            busDetails_VehicleNumber.setText(bus.getBus().getBusNumber());
+            busDetails_VehicleNumber.setText(bus.getBus().getBusRegNumber());
             busDetails_GetOnPlace.setText(ticket.getArrivalStopName());
             busDetails_GetDownPlace.setText(ticket.getDepartureStopName());
 
@@ -2682,8 +2458,6 @@ public class MainActivity
             busDetails_purchaseTicketButton.setEnabled(false);
             busDetails_TicketPrice.setText("(Calculating the ticket price...)");
             busDetails_perPersonTextView.setText("");
-            // Trigger the request to fetch fare price
-            ticketViewModel.getFarePrice(ticket.getRouteNumber(), ticket.getArrivalStopName(), ticket.getDepartureStopName());
 
             // Observe LiveData for fare price
             ticketViewModel.getFarePriceLiveData().observe(this, fare -> {
@@ -2723,6 +2497,10 @@ public class MainActivity
                 }
             });
 
+            // Trigger the request to fetch fare price
+            ticketViewModel.getFarePrice(ticket.getRouteNumber(), ticket.getRouteName(), ticket.getArrivalStopName(), ticket.getDepartureStopName());
+
+
             busDetails_CloseButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -2734,7 +2512,7 @@ public class MainActivity
             // Set dialog position to the bottom
             WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
             params.gravity = Gravity.BOTTOM;
-           // params.y = 100;  // Adjust the y position as needed
+            // params.y = 100;  // Adjust the y position as needed
 
             // Apply the updated attributes
             dialog.getWindow().setAttributes(params);
@@ -2769,48 +2547,24 @@ public class MainActivity
         }
 
 
-
     }
 
-//    private void setCameraView() {
-//
-//        // Set a boundary to start
-//        double bottomBoundary = busLocation.getLocation().latitude - .1;
-//        double leftBoundary = busLocation.getLocation().longitude - .1;
-//        double topBoundary = busLocation.getLocation().latitude + .1;
-//        double rightBoundary = busLocation.getLocation().longitude + .1;
-//
-//        mapBoundarySL = new LatLngBounds(
-//                new LatLng(bottomBoundary, leftBoundary),
-//                new LatLng(topBoundary, rightBoundary)
-//        );
-//
-//        myMap.moveCamera(CameraUpdateFactory.newLatLngBounds(mapBoundarySL, 0));
-//    }
 
-    private void clearBusMapMarkers() {
+    private void clearAllMapMarkers() {
         // Stop updating bus locations by removing the observer
-        if (busLocationViewModel != null) {
-            busLocationViewModel.getBusLocationsLiveData().removeObservers(this);
-            busLocationViewModel.getUpdatedBusLocationsLiveData().removeObservers(this);
-            // Reset data in the ViewModel and Repository
-            busLocationViewModel.resetData();
-        }
+        busLocationViewModel.stopBusLocationUpdate();
 
         // Clear the bus locations list
         if (availableBusList != null) {
             availableBusList.clear();
         }
 
-        if (availableBusIds != null) {
-            availableBusIds.clear();
+        if (availableBusRegNumbers != null) {
+            availableBusRegNumbers.clear();
         }
 
         // myMap.clear(); will remove all the objects on the map, including markers, polylines, and other overlays from the map
         if (myMap != null) {
-            for (Marker marker : busMarkers.values()) {
-                marker.remove();
-            }
             myMap.clear();
         }
 
@@ -2823,12 +2577,11 @@ public class MainActivity
         }
 
 
-        Log("clearBusMapMarkers", "bus location observation stopped");
+        Log("clearAllMapMarkers", "bus location observation stopped");
     }
 
     // TODO: 2023-12-27  bus colors, toast messages when busses are not available, bus trip direction
 
-    // ORIGINAL METHODS - CODE
 
     // ------------------------------- UTILITY METHODS ------------------------------- //
     private void toggleItemVisibility(View view, boolean isVisible) {
@@ -2847,6 +2600,31 @@ public class MainActivity
                 view.setVisibility(isVisible ? View.VISIBLE : View.GONE);
                 // Log("toggleItemsVisibility", view.toString(), String.valueOf(isVisible));
             }
+        }
+    }
+
+    private void recentSearchLayoutVisibility(Boolean visibility) {
+        if (recentSearchLayout == null) {
+            recentSearchLayout = findViewById(R.id.recent_search_layout);
+            ;
+        }
+        if (visibility) {
+            recentSearchLayout.setVisibility(View.VISIBLE);
+            autoCompleteLayout.setVisibility(View.GONE);
+        } else {
+            recentSearchLayout.setVisibility(View.GONE);
+        }
+    }
+
+    private void autoCompleteLayoutVisibility(Boolean visibility) {
+        if (autoCompleteLayout == null) {
+            autoCompleteLayout = findViewById(R.id.places_recycler_view);
+        }
+        if (visibility) {
+            autoCompleteLayout.setVisibility(View.VISIBLE);
+            recentSearchLayout.setVisibility(View.GONE);
+        } else {
+            autoCompleteLayout.setVisibility(View.GONE);
         }
     }
 

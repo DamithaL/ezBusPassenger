@@ -1,5 +1,8 @@
 package ezbus.mit20550588.passenger.data.repository;
 
+import static android.provider.Settings.System.getString;
+
+
 import android.util.Log;
 
 import static ezbus.mit20550588.passenger.util.Constants.Log;
@@ -10,6 +13,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import ezbus.mit20550588.passenger.R;
 import ezbus.mit20550588.passenger.data.model.UserModel;
 import ezbus.mit20550588.passenger.data.network.ApiServiceAuthentication;
 import ezbus.mit20550588.passenger.data.network.LoginRequest;
@@ -18,6 +22,8 @@ import ezbus.mit20550588.passenger.data.viewModel.AuthResult;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.http.Body;
+import retrofit2.http.POST;
 
 public class UserRepository {
     private ApiServiceAuthentication apiService;
@@ -25,7 +31,7 @@ public class UserRepository {
     private MutableLiveData<String> errorMessageLiveData = new MutableLiveData<>();
 
     private MutableLiveData<String> verificationCodeLiveData = new MutableLiveData<>();
-
+    private MutableLiveData<String> chatResponse = new MutableLiveData<>();
 
     public UserRepository(ApiServiceAuthentication apiService) {
         this.apiService = apiService;
@@ -40,6 +46,10 @@ public class UserRepository {
 
     public MutableLiveData<String> getVerificationCodeLiveData() {
         return verificationCodeLiveData;
+    }
+
+    public MutableLiveData<String> getChatResponse() {
+        return chatResponse;
     }
 
     public void loginUser(String email, String password) {
@@ -60,7 +70,7 @@ public class UserRepository {
                             e.printStackTrace();
                         }
                     }
-                   // authResultLiveData.setValue(new AuthResult(AuthResult.Status.ERROR, null, errorMessage));
+                   // authResultLiveData.setValue(new AuthResult(AuthResult.Status.ERROR, null, ErrorResponse));
                     errorMessageLiveData.setValue(errorMessage); // Set error message LiveData
                 }
             }
@@ -68,7 +78,7 @@ public class UserRepository {
             @Override
             public void onFailure(Call<UserModel> call, Throwable t) {
                 String errorMessage = "Network failure.";
-               // authResultLiveData.setValue(new AuthResult(AuthResult.Status.ERROR, null, errorMessage));
+               // authResultLiveData.setValue(new AuthResult(AuthResult.Status.ERROR, null, ErrorResponse));
                 errorMessageLiveData.setValue(errorMessage); // Set error message LiveData
             }
 
@@ -157,6 +167,41 @@ public class UserRepository {
 
             @Override
             public void onFailure(Call<UserModel> call, Throwable t) {
+                String errorMessage = "Network failure.";
+                errorMessageLiveData.setValue(errorMessage); // Set error message LiveData
+            }
+        });
+    }
+
+
+    public void sendChat(Map<String, String> chatData) {
+
+        apiService.sendChat(chatData).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+
+                    String responseMessage = "Your message has been received successfully. We'll get back to you soon. Thank you for reaching out!";
+
+                    chatResponse.setValue(responseMessage);
+
+                } else {
+
+                    String errorMessage = "Chat sending failed. ";
+                    if (response.errorBody() != null) {
+                        try {
+                            errorMessage += response.errorBody().string();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    errorMessageLiveData.setValue(errorMessage); // Set error message LiveData
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
                 String errorMessage = "Network failure.";
                 errorMessageLiveData.setValue(errorMessage); // Set error message LiveData
             }

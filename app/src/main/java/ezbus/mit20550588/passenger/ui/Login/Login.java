@@ -75,7 +75,7 @@ public class Login extends AppCompatActivity {
                 // Update your UI to display the error message (e.g., show a Toast or update a TextView)
                 TextView errorTextView = findViewById(R.id.errorMessageTextView);
                 errorTextView.setText(errorMessage);
-                //  showToast(errorMessage);
+                //  showToast(ErrorResponse);
             }
         });
     }
@@ -93,14 +93,11 @@ public class Login extends AppCompatActivity {
 
 
     private void initializeUI() {
-        // EZBus Passenger app main text
 
-        TextView textView0 = findViewById(R.id.main_app_name);
-        String html = "<font color=Color.WHITE>EZBus</font> <font color=#74EEF5>Passenger</font>";
-        textView0.setText(Html.fromHtml(html));
+        // Change the status bar color
+        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.login_status_bar_color));
 
         // SignUp Text
-
         TextView textView = findViewById(R.id.signUpText);
 
         // Create the SpannableString
@@ -126,7 +123,7 @@ public class Login extends AppCompatActivity {
         spannableString.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 23, 30, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Make the "Sign up" part a different color
-        spannableString.setSpan(new ForegroundColorSpan(getColor(R.color.my_primary)), 23, 30, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(new ForegroundColorSpan(getColor(R.color.colorPrimary)), 23, 30, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Apply the SpannableString to the TextView
         textView.setText(spannableString);

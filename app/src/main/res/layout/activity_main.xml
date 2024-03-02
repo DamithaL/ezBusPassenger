@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -10,13 +9,16 @@
     tools:context=".ui.MainActivity">
 
 
+
     <!--Direction bar-->
     <RelativeLayout
         android:id="@+id/directionBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:elevation="40dp"
-        android:padding="10dp"
+        android:paddingHorizontal="10dp"
+        android:paddingBottom="10dp"
+        android:layout_marginTop="?android:attr/actionBarSize"
         android:visibility="gone">
 
         <!--Back button + Source Location-->
@@ -165,7 +167,8 @@
         android:id="@+id/mapAndSearchContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/directionBar">
+        android:layout_below="@id/directionBar"
+       >
 
         <!--     Map Frame Layout -->
         <FrameLayout
@@ -188,7 +191,9 @@
             android:id="@+id/RelativeLayout1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="10dp">
+            android:layout_marginTop="?android:attr/actionBarSize"
+            android:paddingHorizontal="10dp"
+            android:paddingBottom="10dp">
 
             <!--Search text Relative layout (Search text bar + Settings btn) -->
             <RelativeLayout
@@ -211,6 +216,7 @@
                     android:tooltipText="@string/tooltip_text_search_bar"
                     app:boxBackgroundMode="none"
                     app:endIconMode="clear_text"
+                    app:cursorColor="@color/white"
                     app:hintEnabled="false"
                     app:startIconDrawable="@drawable/places_ic_search">
 
@@ -225,6 +231,8 @@
                         android:imeOptions="actionDone"
                         android:inputType="textPostalAddress"
                         android:padding="10dp"
+                        android:textColor="@color/white"
+                        android:textColorHint="@color/colorOnPrimary"
                         android:textSize="20sp" />
 
                 </com.google.android.material.textfield.TextInputLayout>
@@ -239,7 +247,7 @@
                     android:padding="3dp"
                     android:src="@drawable/sidebar_settings_24"
                     android:tooltipText="@string/tooltip_text_settings_button"
-                    app:backgroundTint="@color/brand_blue"
+                    app:backgroundTint="@color/colorPrimary"
                     app:tint="@color/white" />
 
 
@@ -442,8 +450,6 @@
 
 
     </RelativeLayout>
-
-
 
 
 </RelativeLayout>

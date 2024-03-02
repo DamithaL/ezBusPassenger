@@ -33,7 +33,8 @@ public class PayHere {
         InitRequest req = createInitRequest(payHereRequest);
 
         // Set the NotifyUrl
-        req.setNotifyUrl("http://localhost:3000/payment/payhere/initiate");
+      req.setNotifyUrl("http://localhost:3000/payment/initiate");
+
 
 //        req.setNotifyUrl("http://localhost:3000/payment/payhere/notify");
 

@@ -10,64 +10,31 @@ import java.util.Date;
 
 public class BusModel {
 
-    private LatLng location;
-    private String busId;
-    private String busNumber;
-    private String routeId;
+    private String busRegNumber;
+    private String busRouteNumber;
+    private String busRouteName;
     private String busColor;
 
-    private boolean hasBusPassedBusStop;
-
-    private Date lastUpdatedTime;
-
-    public BusModel(String busId, String busNumber, double latitude, double longitude, String routeId, String busColor, LatLng location, boolean hasBusPassedBusStop) {
-        this.busId = busId;
-        this.busNumber = busNumber;
-        this.routeId = routeId;
+    public BusModel(String busRegNumber, String busRouteNumber, String busRouteName, String busColor) {
+        this.busRegNumber = busRegNumber;
+        this.busRouteNumber = busRouteNumber;
+        this.busRouteName = busRouteName;
         this.busColor = busColor;
-        this.location = location;
-        this.hasBusPassedBusStop = hasBusPassedBusStop;
-       
     }
 
-    public String getBusId() {
-        return busId;
+    public String getBusRegNumber() {
+        return busRegNumber;
     }
 
-    public String getBusNumber() {
-        return busNumber;
+    public String getBusRouteNumber() {
+        return busRouteNumber;
     }
 
-    public Date getLastUpdatedTime() {
-        return lastUpdatedTime;
-    }
-
-    public String getRouteId() {
-        return routeId;
+    public String getBusRouteName() {
+        return busRouteName;
     }
 
     public String getBusColor() {
         return busColor;
-    }
-
-    public LatLng getLocation() {
-        return location;
-    }
-
-    public boolean hasBusPassedBusStop() {
-        return hasBusPassedBusStop;
-    }
-
-    @Override
-    public String toString() {
-        return "BusModel{" +
-                "location=" + location +
-                ", busId='" + busId + '\'' +
-                ", busNumber='" + busNumber + '\'' +
-                ", routeId='" + routeId + '\'' +
-                ", busColor='" + busColor + '\'' +
-                ", hasBusPassedBusStop=" + hasBusPassedBusStop +
-                ", lastUpdatedTime=" + lastUpdatedTime +
-                '}';
     }
 }

@@ -46,4 +46,10 @@ public interface PurchasedTicketDao {
     @Query("SELECT COUNT(*) FROM purchased_ticket_table WHERE isRedeemed = 0")
     LiveData<Integer> getCountOfNewTickets();
 
+    @Query("DELETE FROM purchased_ticket_table")
+    void deleteAllPurchasedTickets();
+
+    @Insert
+    void insertPurchasedTickets(List<PurchasedTicketModel> purchasedTickets);
+
 }

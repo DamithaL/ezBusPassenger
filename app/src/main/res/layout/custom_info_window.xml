@@ -35,7 +35,7 @@
         android:layout_height="wrap_content"
         android:text="Purchase Ticket"
         android:textSize="11sp"
-        android:backgroundTint="@color/my_primary"
+        android:backgroundTint="@color/colorPrimary"
         android:textColor="@android:color/white"
         app:cornerRadius="30dp"/>
 </LinearLayout>

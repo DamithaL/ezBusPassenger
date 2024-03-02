@@ -9,6 +9,7 @@
 
     <!-- Background overlay -->
     <RelativeLayout
+        android:id="@+id/backgroundOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:alpha="0.6"
@@ -22,17 +23,34 @@
         android:padding="20dp">
 
         <!-- App name -->
-        <TextView
-            android:id="@+id/main_app_name"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
             android:layout_marginBottom="30dp"
-            android:text="@string/main_app_name"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:textColor="@color/black"
-            android:textSize="28sp"
-            android:textStyle="bold" />
+            android:layout_gravity="center">
+            <TextView
+                android:id="@+id/main_app_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/main_app_name"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textColor="@color/white"
+                android:textSize="32sp"
+                android:textStyle="bold" />
+            <TextView
+                android:id="@+id/sub_app_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sub_app_name"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textColor="@color/colorSecondary"
+                android:textSize="22sp"
+                android:paddingStart="5dp"
+                android:alpha="0.8"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <!-- Headline -->
         <TextView
@@ -41,7 +59,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
             android:text="Create a New Account"
-            android:textColor="@color/gray"
+
             android:textSize="25sp"
             android:textStyle="bold" />
 

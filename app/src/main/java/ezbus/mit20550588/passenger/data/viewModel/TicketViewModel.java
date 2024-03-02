@@ -52,9 +52,9 @@ public class TicketViewModel extends ViewModel {
         return errorLiveData;
     }
 
-    public void getFarePrice(String routeId, String startBusStop, String endBusStop) {
+    public void getFarePrice(String routeNumber, String routeName, String startBusStop, String endBusStop) {
         fareLiveData.setValue(null);
-        ticketRepository.getFarePrice(routeId, startBusStop, endBusStop);
+        ticketRepository.getFarePrice(routeNumber, routeName, startBusStop, endBusStop);
     }
 
 

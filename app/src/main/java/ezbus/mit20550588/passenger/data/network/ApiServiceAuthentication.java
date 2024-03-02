@@ -12,23 +12,18 @@ public interface ApiServiceAuthentication {
 
     // Base_URL is in RetrofitClient class
 
-    @POST("/auth/login")
+    @POST("/auth/login/passenger")
     Call<UserModel> loginUser(@Body LoginRequest loginRequest);
 
 
-    @POST("/auth/signup")
+    @POST("/auth/signup/passenger")
     Call<Map<String, String>> registerUser (@Body RegistrationRequest registrationRequest);
 
-    @POST("/auth/verify-user")
+    @POST("/auth/verify/passenger")
     Call<UserModel> verifyUser (@Body Map<String, String> email);
 
-//
-//    @POST("/auth/login")
-//    Call<LoginResult> executeLogin(@Body HashMap<String, String> map);
-//
-//
-//    @POST("/auth/signup")
-//    Call<Void> executeSignup (@Body HashMap<String, String> map);
+    @POST("admin/create/chat")
+    Call<Void> sendChat(@Body Map<String, String> chatData);
 }
 
 

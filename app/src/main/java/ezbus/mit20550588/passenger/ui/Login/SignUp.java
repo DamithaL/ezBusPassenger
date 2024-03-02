@@ -1,13 +1,16 @@
 package ezbus.mit20550588.passenger.ui.Login;
 
+import static java.security.AccessController.getContext;
 import static ezbus.mit20550588.passenger.util.Constants.Log;
 import static ezbus.mit20550588.passenger.util.Constants.AUTH_SUCCESS_DIALOG_DURATION;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -22,6 +25,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -84,21 +88,42 @@ public class SignUp extends AppCompatActivity {
 
                 TextView errorTextView = findViewById(R.id.errorMessageTextView);
                 errorTextView.setText(errorMessage);
-                //  showToast(errorMessage);
+                //  showToast(ErrorResponse);
             }
         });
     }
 
     private void initializeUI() {
 
+        // Change the colors based on the current dark mode status
+        RelativeLayout backgroundOverlay = findViewById(R.id.backgroundOverlay);
+        TextView mainAppName = findViewById(R.id.main_app_name);
+        TextView subAppName = findViewById(R.id.sub_app_name);
+
+        // Get the current dark mode status
+        Configuration configuration = getResources().getConfiguration();
+        int currentNightModeStatus = configuration.uiMode & Configuration.UI_MODE_NIGHT_MASK;
+
+        if (currentNightModeStatus == Configuration.UI_MODE_NIGHT_YES) {
+            // Dark mode is active
+            Log("initializeUI", "Dark mode is active");
+            getWindow().setStatusBarColor(getColor(R.color.signup_status_bar_color_dark));
+            backgroundOverlay.setBackgroundColor(getColor(R.color.black));
+            mainAppName.setTextColor(getColor(R.color.colorOnPrimary));
+            subAppName.setTextColor(getColor(R.color.white));
+
+        } else {
+            // Light mode is active
+            Log("initializeUI", "Light mode is active");
+            getWindow().setStatusBarColor(getColor(R.color.signup_status_bar_color_light));
+            backgroundOverlay.setBackgroundColor(getColor(R.color.white));
+            mainAppName.setTextColor(getColor(R.color.colorOnSecondary));
+            subAppName.setTextColor(getColor(R.color.black));
+        }
+
+
         // Hide the loading progress bar
         findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
-
-        // EZBus Passenger app main text
-        TextView textView0 = findViewById(R.id.main_app_name);
-        String html = "<font color=#025a66>EZBus</font> <font color=#0A969F>Passenger</font>";
-        textView0.setText(Html.fromHtml(html));
-
 
         // Condition Text
         TextView conditionsTextView = findViewById(R.id.conditionsText);
@@ -123,7 +148,7 @@ public class SignUp extends AppCompatActivity {
         spannableString.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 38, 54, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Make the "Terms of Service" part a different color
-        spannableString.setSpan(new ForegroundColorSpan(getColor(R.color.my_primary)), 38, 54, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(new ForegroundColorSpan(getColor(R.color.colorPrimary)), 38, 54, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Apply the SpannableString to the TextView
         conditionsTextView.setText(spannableString);
@@ -149,7 +174,7 @@ public class SignUp extends AppCompatActivity {
         spannableString.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 59, 73, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Make the "Privacy Policy" part a different color
-        spannableString.setSpan(new ForegroundColorSpan(getColor(R.color.my_primary)), 59, 73, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(new ForegroundColorSpan(getColor(R.color.colorPrimary)), 59, 73, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Apply the SpannableString to the TextView
         conditionsTextView.setText(spannableString);
@@ -183,7 +208,7 @@ public class SignUp extends AppCompatActivity {
         spannableStringLogin.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 29, 34, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Make the "Terms of Service" part a different color
-        spannableStringLogin.setSpan(new ForegroundColorSpan(getColor(R.color.my_primary)), 29, 34, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableStringLogin.setSpan(new ForegroundColorSpan(getColor(R.color.colorPrimary)), 29, 34, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Apply the SpannableString to the TextView
         loginTextView.setText(spannableStringLogin);

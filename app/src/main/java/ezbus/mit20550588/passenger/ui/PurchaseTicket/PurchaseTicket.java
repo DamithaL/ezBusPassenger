@@ -125,7 +125,7 @@ public class PurchaseTicket extends AppCompatActivity {
                 TextView errorTextView = findViewById(R.id.errorMessageTextView);
 
                 errorTextView.setText(errorMessage);
-                //  showToast(errorMessage);
+                //  showToast(ErrorResponse);
             }
         });
     }

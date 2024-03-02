@@ -37,10 +37,11 @@ import ezbus.mit20550588.passenger.ui.adapters.NewTicketAdapter;
 import ezbus.mit20550588.passenger.ui.adapters.PlacesAutoCompleteAdapter;
 import ezbus.mit20550588.passenger.ui.adapters.RecentSearchAdapter;
 import ezbus.mit20550588.passenger.util.DateUtils;
+import ezbus.mit20550588.passenger.util.UserStateManager;
 
 public class MyTickets extends AppCompatActivity {
     private RecyclerView recyclerViewForNewTickets;
-
+    private UserStateManager userManager;
     private PurchasedTicketViewModel purchasedTicketViewModel;
     private NewTicketAdapter newTicketAdapter;
     PurchasedTicketDao purchasedTicketDao;
@@ -50,6 +51,10 @@ public class MyTickets extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_tickets);
+
+        findViewById(R.id.loadingProgressBar).setVisibility(View.VISIBLE);
+
+        userManager = UserStateManager.getInstance();
 
         // Back button
         ImageButton backButton = findViewById(R.id.BackButton);
@@ -77,7 +82,8 @@ public class MyTickets extends AppCompatActivity {
                 Log("MyTicketsActivity", "Observe live data", "onChanged");
 
                 newTicketAdapter.submitList(purchasedTicketModels);
-               newTicketAdapter.scrollToTop();
+                newTicketAdapter.scrollToTop();
+                findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
             }
         });
 
@@ -85,20 +91,14 @@ public class MyTickets extends AppCompatActivity {
         purchasedTicketViewModel.getCountOfNewTickets().observe(this, new Observer<Integer>() {
             @Override
             public void onChanged(Integer integer) {
-                String newText = "You have "+ integer + " new tickets available to redeem";
+                String newText = "You have " + integer + " new tickets available to redeem";
                 newTicketCountText.setText(newText);
+                findViewById(R.id.loadingProgressBar).setVisibility(View.GONE);
             }
         });
 
-        // Set the item click listener
-//        newTicketAdapter.setOnItemClickListener(recentSearch -> {
-//            // Handle item click, e.g., show the location on the map
-//          //  showLocationOfRecentSearch(recentSearch);
-//
-////            updateSearchDate(recentSearch);
-//        });
         Log("MyTicketsActivity", "initialised");
 
-
+        purchasedTicketViewModel.fetchAllPurchasedTickets(userManager.getUser().getEmail());
     }
 }
